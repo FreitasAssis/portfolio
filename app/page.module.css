@@ -1,0 +1,22 @@
+.skillsContainer {
+    width: 100%;
+    height: 500px;
+    background-image: url("/icons/skills/laptop_wave.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 250px;
+}
+
+.skillsCircle {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    position: absolute;
+    top: 46%;
+    left: 48%;
+    transform: translate(-50%, -50%);
+}
+
+.skills {
+    position: relative;
+}
