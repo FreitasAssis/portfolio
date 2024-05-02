@@ -8,7 +8,7 @@ const TestimonialsPage = () => {
             <Header />
             <div className={`${styles.container} w-full max-w-5xl flex flex-col items-center`}>
                 <h1 className="mb-5 text-2xl font-bold underline">Testimonials</h1>
-                <p className="text-xl text-justify leading-relaxed">This is where yours visitors can tell about you.</p>
+                <p className="text-xl text-justify leading-relaxed">I am building this page.</p>
             </div>
             <Footer />
         </main>

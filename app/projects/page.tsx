@@ -8,7 +8,7 @@ const ProjectsPage = () => {
             <Header />
             <div className={`${styles.container} w-full max-w-5xl flex flex-col items-center`}>
                 <h1 className="mb-5 text-2xl font-bold underline">My projects</h1>
-                <p className="text-xl text-justify leading-relaxed">This is where you can tell visitors about your Projects.</p>
+                <p className="text-xl text-justify leading-relaxed">I am building this page.</p>
             </div>
             <Footer />
         </main>
