@@ -16,7 +16,7 @@ export default function Home() {
     return { x, y };
   };
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="flex min-h-screen flex-col items-center justify-between p-10">
       <Header />
       <div className={styles.skillsContainer}>
         <div className={`${styles.skillsCircle} hidden lg:block`}>
