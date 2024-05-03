@@ -8,7 +8,7 @@ const AboutPage = () => {
             <Header />
             <div className={`${styles.container} w-full max-w-5xl flex flex-col items-center`}>
                 <h1 className="mb-5 text-2xl font-bold underline">Sobre mim</h1>
-                <p className="text-xl text-justify leading-relaxed">
+                <p className={`${styles.about} text-xl text-justify leading-relaxed`}>
                     Santista (nascido em Santos e torcedor do Peixe) e nordestino, moro em Natal/RN, casado e músico nas horas vagas.<br />
                     Apaixonado por desenvolvimento, especializado na criação de experiências digitais de alto desempenho.<br /><br />
                     Minha expertise abrange desde sites dinâmicos até robustos sistemas, passando por web apps e aplicativos nativos.<br />
