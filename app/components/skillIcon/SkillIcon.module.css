@@ -1,14 +1,30 @@
 @keyframes rotate {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
+  0% {
+    transform: rotate(0deg);
   }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
 
 .icon {
-    min-width: 50px;
-    min-height: 50px;
-    animation: rotate 10s linear infinite;
+  min-width: 50px;
+  min-height: 50px;
+}
+
+.rotateIcon {
+  animation: rotate 10s linear infinite;
+}
+
+.bounceIcon {
+  animation: bounce 1s ease infinite;
 }
