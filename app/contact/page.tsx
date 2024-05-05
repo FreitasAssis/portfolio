@@ -32,7 +32,7 @@ const ContactPage = () => {
                 <form
                     action={process.env.FORMSPREE_ENDPOINT}
                     method="POST"
-                    className="w-1/2"
+                    className="w-full lg:w-1/2"
                 >
                     <div className="space-y-12">
                         <div className="border-b border-gray-900/10">

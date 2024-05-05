@@ -40,7 +40,7 @@ const ProjectsPage = () => {
                     </a>
                 </div>
                 <div className={`${styles.timeline} mt-12 flex flex-col`}>
-                    <p className="block mb-5 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">Clique para mais detalhes</p>
+                    <p className="hidden lg:block mb-5 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">Clique para mais detalhes</p>
                     <ol className="items-center sm:flex">
                         {projects.map((project, index) => (
                             <>
@@ -67,7 +67,7 @@ const ProjectsPage = () => {
                         ))}
                     </ol>
                     {
-                        project ? <div className="w-full max-w-5xl flex flex-col mt-5">
+                        project ? <div className="hidden lg:flex flex-col w-full max-w-5xl mt-5">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Atividades:</h3>
                             <p className="text-base font-normal text-gray-500 dark:text-gray-400">{project.description}</p>
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-5">Tecnologias / Métodos:</h3>
