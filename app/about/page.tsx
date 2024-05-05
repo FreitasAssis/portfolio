@@ -1,11 +1,18 @@
+import Link from "next/link";
 import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
+import SkillIcon from "../components/skillIcon/SkillIcon";
 import styles from './page.module.css';
 
 const AboutPage = () => {
     return (
         <main className="flex min-h-screen flex-col items-center justify-between p-10">
-            <Header />
+            <div className="flex flex-row w-full justify-around">
+                <Link href="/">
+                    <SkillIcon icon="/icons/general/home.svg" />
+                </Link>
+                <Header />
+            </div>
             <div className={`${styles.container} w-full max-w-5xl flex flex-col items-center`}>
                 <h1 className="mb-5 text-2xl font-bold underline">Sobre mim</h1>
                 <p className={`${styles.about} text-xl text-justify leading-relaxed`}>

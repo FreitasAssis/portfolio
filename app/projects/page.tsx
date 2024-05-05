@@ -5,6 +5,7 @@ import SkillIcon from "../components/skillIcon/SkillIcon";
 import styles from './page.module.css';
 import projects from '../lib/projects';
 import { useState } from "react";
+import Link from "next/link";
 
 export interface projectType {
     name: string,
@@ -27,8 +28,13 @@ const ProjectsPage = () => {
     }
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-between p-10">
-            <Header />
+        <main className="flex flex-col min-h-screen items-center justify-between p-10">
+            <div className="flex flex-row w-full justify-around">
+                <Link href="/">
+                    <SkillIcon icon="/icons/general/home.svg" />
+                </Link>
+                <Header />
+            </div>
             <div className={`${styles.container} w-full max-w-5xl flex flex-col items-center`}>
                 <h1 className="mb-5 text-2xl font-bold underline">Projetos</h1>
                 <div className="flex flex-row items-center justify-center">
