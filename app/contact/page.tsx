@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
-import SkillIcon from "../components/skillIcon/SkillIcon";
+import Icon from "../components/icon/Icon";
 import styles from './page.module.css';
 import Link from "next/link";
 
@@ -19,9 +19,9 @@ const ContactPage = () => {
 
     return (
         <main className="flex min-h-screen flex-col items-center justify-between p-10">
-            <div className="flex flex-row w-full justify-around">
-                <Link href="/">
-                    <SkillIcon icon="/icons/general/home.svg" />
+            <div className="flex flex-row w-full justify-around items-center">
+                <Link href="/" className="hidden lg:block">
+                    <Icon icon="/icons/general/home.svg" />
                 </Link>
                 <Header />
             </div>
@@ -29,10 +29,10 @@ const ContactPage = () => {
                 <h1 className="mb-5 text-2xl font-bold underline">Contato</h1>
                 <div className="flex flex-row items-center justify-center">
                     <a href="https://www.linkedin.com/in/luiz-dev/" target="_blank" className="mr-5">
-                        <SkillIcon icon="/icons/social/linkedin.webp" />
+                        <Icon icon="/icons/social/linkedin.webp" />
                     </a>
                     <a href="https://github.com/FreitasAssis" target="_blank">
-                        <SkillIcon icon="/icons/social/github.svg" />
+                        <Icon icon="/icons/social/github.svg" />
                     </a>
                 </div>
                 <form
@@ -86,7 +86,7 @@ const ContactPage = () => {
                             onSubmit={(e) => e.preventDefault()}
                         >
                             <span className="mr-5">Enviar</span>
-                            <SkillIcon icon={`${hover ? '/icons/social/email_black.svg' : '/icons/social/email.svg'}`} animation="bounce" width={20} height={20} />
+                            <Icon icon={`${hover ? '/icons/social/email_black.svg' : '/icons/social/email.svg'}`} animation="bounce" width={20} height={20} />
                         </button>
                     </div>
                 </form>

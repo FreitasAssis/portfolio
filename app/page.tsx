@@ -2,7 +2,7 @@ import styles from './page.module.css';
 import skills from './lib/skills.jsx';
 import Header from "./components/header/Header";
 import Footer from "./components/footer/Footer";
-import SkillIcon from './components/skillIcon/SkillIcon';
+import Icon from './components/icon/Icon';
 
 export default function Home() {
   const totalSkills = skills.length;
@@ -29,7 +29,7 @@ export default function Home() {
                   className="absolute flex items-center justify-center"
                   style={{ top: `${y}px`, left: `${x}px` }}
                 >
-                  <SkillIcon key={index} icon={skill.path} />
+                  <Icon key={index} icon={skill.path} />
                 </div>
               );
             })}

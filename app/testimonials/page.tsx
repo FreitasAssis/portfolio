@@ -2,14 +2,14 @@ import Link from "next/link";
 import Footer from "../components/footer/Footer";
 import Header from "../components/header/Header";
 import styles from './page.module.css';
-import SkillIcon from "../components/skillIcon/SkillIcon";
+import Icon from "../components/icon/Icon";
 
 const TestimonialsPage = () => {
     return (
         <main className="flex min-h-screen flex-col items-center justify-between p-10">
-            <div className="flex flex-row w-full justify-around">
-                <Link href="/">
-                    <SkillIcon icon="/icons/general/home.svg" />
+            <div className="flex flex-row w-full justify-around items-center">
+                <Link href="/" className="hidden lg:block">
+                    <Icon icon="/icons/general/home.svg" />
                 </Link>
                 <Header />
             </div>

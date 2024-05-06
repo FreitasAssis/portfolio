@@ -1,16 +1,16 @@
 "use client";
 import React from 'react';
 import Image from 'next/image'
-import styles from './SkillIcon.module.css';
+import styles from './Icon.module.css';
 
-interface SkillIconProps {
+interface IconProps {
     icon: string;
     width?: number;
     height?: number;
     animation?: string;
 }
 
-const SkillIcon: React.FC<SkillIconProps> = ({ icon, width = 50, height = 50, animation }) => {
+const Icon: React.FC<IconProps> = ({ icon, width = 50, height = 50, animation }) => {
     let iconClass = styles.icon;
 
     if (animation === 'rotate') {
@@ -22,4 +22,4 @@ const SkillIcon: React.FC<SkillIconProps> = ({ icon, width = 50, height = 50, an
     return <Image src={icon} className={iconClass} alt="icon" width={width} height={height} />
 }
 
-export default SkillIcon;
+export default Icon;
