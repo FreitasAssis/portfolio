@@ -188,7 +188,7 @@ const TestimonialsPage = () => {
                                 </figure>
                             </div>
                         </section>
-                    )) : <></>}
+                    )) :  <div className={`${styles.loader}`}></div> }
                     <div className={`${showForm ? 'hidden' : 'block'} w-full lg:w-1/2 mt-10 flex items-center justify-end gap-x-6`}>
                         <button
                             type="button"
