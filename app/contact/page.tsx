@@ -39,8 +39,6 @@ const ContactPage = () => {
             if (!response.ok) {
                 throw new Error('Failed to submit the form');
             }
-    
-            const responseData = await response.json();
             setShowThanks(true);
         } catch (error: any) {
             console.error('Error:', error.message);

@@ -46,6 +46,17 @@ const TestimonialsPage = () => {
             setTestimonials(responseData.rows);
             setShowForm(false);
             setShowThanks(true);
+
+            await fetch(process.env.FORMSPREE_ENDPOINT!, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ...requestBody,
+                    status: 'AGUARDANDO_APROVACAO'
+                })
+            });
         } catch (error: any) {
             console.error('Error:', error.message);
         }
