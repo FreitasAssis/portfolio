@@ -8,6 +8,7 @@ import Link from "next/link";
 
 const ContactPage = () => {
     const [hover, setHover] = useState(false);
+    const [showThanks, setShowThanks] = useState(false);
 
     const handleMouseEnter = () => {
         setHover(true);
@@ -16,6 +17,36 @@ const ContactPage = () => {
     const handleMouseLeave = () => {
         setHover(false);
     };
+
+    const onSubmit = async (event: any) => {
+        event.preventDefault();
+        const form = event.target.closest('form');
+        const formData = new FormData(form);
+        const requestBody = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            comment: formData.get('comment'),
+            relation: formData.get('relation')
+        }
+        try {
+            const response = await fetch(process.env.FORMSPREE_ENDPOINT!, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+    
+            if (!response.ok) {
+                throw new Error('Failed to submit the form');
+            }
+    
+            const responseData = await response.json();
+            setShowThanks(true);
+        } catch (error: any) {
+            console.error('Error:', error.message);
+        }
+    }
 
     return (
         <main className="flex min-h-screen flex-col items-center justify-between p-10">
@@ -35,11 +66,12 @@ const ContactPage = () => {
                         <Icon icon="/icons/social/github.svg" />
                     </a>
                 </div>
-                <form
-                    action={process.env.FORMSPREE_ENDPOINT}
-                    method="POST"
-                    className="w-full lg:w-1/2"
-                >
+                <div className={`${showThanks ? 'flex' : 'hidden'} mt-10 text-2xl flex-col items-center`}>
+                    <p className="mb-5 text-3xl">Obrigado!</p>
+                    <p>Seu email foi enviado com sucesso!</p>
+                    <p>Prometo responder em breve, no máximo 24h.</p>
+                </div>
+                <form className={`${!showThanks ? 'block' : 'hidden'} w-full lg:w-1/2`}>
                     <div className="space-y-12">
                         <div className="border-b border-gray-900/10">
                             <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -83,7 +115,7 @@ const ContactPage = () => {
                             className="w-full flex justify-center rounded-md border border-gray-300 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-300 hover:text-gray-900"
                             onMouseEnter={handleMouseEnter}
                             onMouseLeave={handleMouseLeave}
-                            onSubmit={(e) => e.preventDefault()}
+                            onClick={onSubmit}
                         >
                             <span className="mr-5">Enviar</span>
                             <Icon icon={`${hover ? '/icons/social/email_black.svg' : '/icons/social/email.svg'}`} animation="bounce" width={20} height={20} />
