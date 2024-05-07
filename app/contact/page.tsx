@@ -25,8 +25,7 @@ const ContactPage = () => {
         const requestBody = {
             name: formData.get('name'),
             email: formData.get('email'),
-            comment: formData.get('comment'),
-            relation: formData.get('relation')
+            about: formData.get('about'),
         }
         try {
             const response = await fetch(process.env.FORMSPREE_ENDPOINT!, {
@@ -75,6 +74,22 @@ const ContactPage = () => {
                     <div className="space-y-12">
                         <div className="border-b border-gray-900/10">
                             <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                                <div className="col-span-full">
+                                    <label htmlFor="name" className="block text-sm font-medium leading-6">
+                                        Nome
+                                    </label>
+                                    <div className="mt-2">
+                                        <input
+                                            id="name"
+                                            name="name"
+                                            type="name"
+                                            autoComplete="username"
+                                            className="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-900 placeholder:text-gray-900 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6 text-gray-900"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="col-span-full">
                                     <label htmlFor="email" className="block text-sm font-medium leading-6">
                                         Endereço de email
