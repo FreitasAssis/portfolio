@@ -19,7 +19,7 @@ const AboutPage = () => {
                     Santista (nascido em Santos e torcedor do Peixe) e nordestino, moro em Natal/RN, casado e músico nas horas vagas.<br />
                     Apaixonado por desenvolvimento, especializado na criação de experiências digitais de alto desempenho.<br /><br />
                     Minha expertise abrange desde sites dinâmicos até robustos sistemas, passando por web apps e aplicativos nativos.<br />
-                    Fluente em uma variedade de tecnologias essenciais, incluindo <span className="underline">HTML5, CSS3, JavaScript (React, React Native, VueJS), Typescript, Node.js, Ruby on Rails, Django</span>, e domino bancos de dados como <span className="underline">MySql, PostgreSQL, MogoDB e Firebase</span>.<br />
+                    Fluente em uma variedade de tecnologias essenciais, incluindo <span className="underline">HTML5, CSS3, JavaScript (React, React Native, VueJS), Typescript, Node.js, Ruby on Rails, Django</span>, e domino bancos de dados como <span className="underline">MySql, PostgreSQL, MongoDB e Firebase</span>.<br />
                     Uma grande característica minha é a constante busca por inovação e aprimoramento.<br />
                     Também tenho boa experiência com <span className="underline">Git, Docker e CI/CD</span>, garantindo práticas de desenvolvimento eficientes e colaborativas.<br />
                     <span className="underline">Microserviços, integração com APIs externas, AWS, GCP e Scrum</span> também fazem parte das minhas ferramentas.<br /><br />
