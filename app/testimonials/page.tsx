@@ -29,6 +29,7 @@ const TestimonialsPage = () => {
             relation: formData.get('relation')
         }
         try {
+            setTestimonials([]);
             const response = await fetch(process.env.ADD_TESTIMONIAL_URL!, {
                 method: 'POST',
                 headers: {
@@ -52,10 +53,13 @@ const TestimonialsPage = () => {
 
     const getTestimonials = async () => {
         try {
+            setTestimonials([]);
             const response = await fetch(process.env.GET_TESTIMONIALS_URL!, {
+                cache: 'no-store',
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
+
                 },
             });
     
@@ -64,7 +68,6 @@ const TestimonialsPage = () => {
             }
     
             const responseData = await response.json();
-            console.log("🚀 ~ getTestimonials ~ responseData:", responseData)
             setTestimonials(responseData.rows);
         } catch (error: any) {
             console.error('Error:', error.message);
@@ -72,7 +75,6 @@ const TestimonialsPage = () => {
     }
 
     useEffect(() => {
-        setTestimonials([]);
         getTestimonials();
     }, []);
 
@@ -87,7 +89,7 @@ const TestimonialsPage = () => {
             <div className={`${styles.container} w-full max-w-5xl flex flex-col items-center`}>
                 <h1 className="mb-5 text-2xl font-bold underline">Comentários</h1>
                 <div className={`${styles.overflow} w-full flex flex-col items-center`}>
-                    <form className={`${showForm ? 'block' : 'hidden'} w-full lg:w-1/2`}>
+                    <form className={`${showForm ? 'block' : 'hidden'} w-full lg:w-1/2 mb-5`}>
                         <div className="space-y-12">
                             <div className="border-b border-gray-900/10">
                                 <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -164,9 +166,11 @@ const TestimonialsPage = () => {
                             </button>
                         </div>
                     </form>
-                    <div className={`${showThanks && !showForm ? 'flex' : 'hidden'}`}>Obrigado! Seu comentário está aguardando aprovação e muito em breve estará por aqui</div>
+                    <div className={`${showThanks && !showForm ? 'flex' : 'hidden'} mb-5`}>
+                        Obrigado! Seu comentário está aguardando aprovação e muito em breve estará por aqui
+                    </div>
                     {testimonials && testimonials.length ? testimonials.map((testimonial: Testimonial, index) => (
-                        <section className="bg-white dark:bg-gray-900 w-full my-5"  key={index}>
+                        <section className="bg-white dark:bg-gray-700 w-full mb-3"  key={index}>
                             <div className="text-center mx-auto px-4 py-4 lg:py-6 lg:px-6">
                                 <figure className="max-w-screen-md mx-auto">
                                     <svg className="h-8 mx-auto mb-3 text-gray-400 dark:text-gray-600" viewBox="0 0 24 27" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -188,7 +192,7 @@ const TestimonialsPage = () => {
                     <div className={`${showForm ? 'hidden' : 'block'} w-full lg:w-1/2 mt-10 flex items-center justify-end gap-x-6`}>
                         <button
                             type="button"
-                            className="w-full flex justify-center rounded-md border border-gray-300 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-300 hover:text-gray-900"
+                            className="w-full flex justify-center rounded-md border border-gray-600 py-2 text-sm font-semibold shadow-sm hover:bg-gray-800 hover:border-gray-800"
                             onClick={() => setShowForm(!showForm)}
                         >
                             <span className="px-5 py-2">Deixar comentário</span>

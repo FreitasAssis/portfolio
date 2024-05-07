@@ -19,9 +19,9 @@ export async function POST(request: Request) {
     }
 
     const comments =
-      await sql`SELECT Name, Relation, Comment, Approved FROM Testimonials WHERE Approved = true;`;
+      await sql`SELECT Name, Relation, Comment FROM Testimonials WHERE Approved = true;`;
 
-    return NextResponse.json({ comments }, { status: 200 });
+    return NextResponse.json({ ...comments }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
