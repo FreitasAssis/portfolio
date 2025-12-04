@@ -1,4 +1,4 @@
-This is my portfolio and it can be found in [luizfreitas.com.br](luizfreitas.com.br).
+This is my portfolio and it can be found in [luizfreitas.com.br](https://luizfreitas.com.br).
 
 ## If you want run the project locally:
 
