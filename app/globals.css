@@ -1,1 +1,105 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme {
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-newsreader), ui-serif, Georgia, serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  /* escala 1.250 — major third, corpo em 18px (§6.3) */
+  --text-xs: 0.72rem;
+  --text-sm: 0.9rem;
+  --text-base: 1.125rem;
+  --text-lg: 1.406rem;
+  --text-xl: 1.758rem;
+  --text-2xl: 2.197rem;
+  --text-3xl: 2.746rem;
+  --text-4xl: 3.433rem;
+}
+
+/* Tokens do §6.2 expostos como utilitários: text-ink, bg-paper, border-rule,
+   text-accent-text, bg-accent, text-accent-ink.
+   `inline` é obrigatório aqui: sem ele o Tailwind emite
+   `--color-accent-text: var(--accent-text)` dentro do :root, a substituição
+   acontece no :root e o valor já resolvido é herdado — um `[data-accent]` mais
+   abaixo na árvore não trocaria mais nada e a mecânica da Task 2 morreria.
+   Com `inline`, o utilitário vira `color: var(--accent-text)` e resolve no
+   elemento que o usa. */
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-text: var(--accent-text);
+}
+
+:root {
+  /* base — cinzas frios, ligeiramente azulados. NÃO é creme. */
+  --ink: #14161a;
+  --ink-2: #5a616b;
+  --paper: #fafafa;
+  --paper-2: #f1f2f4;
+  --rule: #e2e4e8;
+
+  /* acento — sem valor próprio. O projeto injeta. */
+  --accent: var(--ink);
+  --accent-ink: var(--paper);
+  --accent-text: var(--ink);
+}
+
+:root[data-theme='dark'] {
+  --ink: #edeef0;
+  --ink-2: #9aa1ac;
+  --paper: #0e1013;
+  --paper-2: #191c21;
+  --rule: #2a2e35;
+}
+
+/* injetado pelo case — hex reais das duas marcas.
+   --accent      = capa do case, borda ativa e estado de foco.
+   --accent-text = único usado em texto e link; é o que passa AA
+                   (travado em tests/unit/contrast.test.ts). */
+[data-accent='asafe'] {
+  --accent: #2f3a5e;
+  --accent-text: #2f3a5e;
+}
+[data-accent='eaifez'] {
+  --accent: #c8506a;
+  --accent-text: #a83c55;
+}
+:root[data-theme='dark'] [data-accent='asafe'] {
+  --accent-text: #8e9ac4;
+}
+:root[data-theme='dark'] [data-accent='eaifez'] {
+  --accent-text: #e88ba0;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 18px;
+}
+
+/* §9: foco de teclado visível em todo elemento interativo, usando --accent */
+:where(a, button, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* medida de leitura 65–75 caracteres (§6.3) */
+.prose-measure {
+  max-width: 68ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
