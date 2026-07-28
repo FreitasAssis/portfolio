@@ -91,12 +91,31 @@ test('o foco de teclado é visível nos CTAs (§9)', async ({ page }) => {
 
 test('o que ainda falta está escrito na tela, não escondido (§0)', async ({ page }) => {
   await page.goto('/');
-  // Prints (Task 6), documento de decisões (§4.2.1) e CV em PDF (§7). Se algum
-  // destes sumir sem o conteúdo real ter entrado, o site foi ao ar com lacuna
-  // invisível.
+  // Prints (Task 6) e CV em PDF (Task 8). Se algum destes sumir sem o conteúdo
+  // real ter entrado, o site foi ao ar com lacuna invisível.
   await expect(page.getByText(/\{\{ print:/)).toHaveCount(2);
-  await expect(page.getByText('{{ URL do documento de decisões do Asafe }}')).toBeVisible();
   await expect(page.getByText('{{ CV em PDF }}')).toBeVisible();
+  // E nada de placeholder onde o dado já chegou.
+  await expect(page.getByText(/URL do documento de decisões/)).toHaveCount(0);
+});
+
+test('o documento de decisões do Asafe é linkável (§4.2.1)', async ({ page }) => {
+  await page.goto('/');
+  // É o link que substitui qualquer declaração sobre método — sem ele, a
+  // afirmação do §4.2 fica sem o convite de auditoria que a sustenta.
+  await expect(page.getByRole('link', { name: /DESIGN\.md do Asafe/ })).toHaveAttribute(
+    'href',
+    'https://github.com/FreitasAssis/Asafe/blob/main/docs/DESIGN.md',
+  );
+});
+
+test('a trajetória é um índice de cinco linhas, não conteúdo (§3.1)', async ({ page }) => {
+  await page.goto('/');
+  const traj = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'Trajetória' }) });
+  await expect(traj.getByRole('listitem')).toHaveCount(5);
+  await expect(traj).not.toContainText('em paralelo');
 });
 
 test('não há formulário de contato (§11)', async ({ page }) => {

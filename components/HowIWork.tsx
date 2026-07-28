@@ -16,28 +16,32 @@ const BLOCKS = [
   {
     title: 'Decido com justificativa.',
     body: 'Todo projeto meu começa por um documento de decisões — o que vai ser construído, o que fica de fora, e por quê. O código vem depois, e pra chegar lá uso as ferramentas mais rápidas disponíveis, IA inclusive. O desenho e as escolhas são meus, estão escritos, e você pode ler:',
-    /* §0: onde o dado ainda não existe, o placeholder fica visível e ninguém
-       inventa a URL. Aqui há dois motivos para ele:
-       - o §4.2.1 exige curar os documentos do repo do Asafe ANTES de linká-los
-         ("no momento em que o PLANNING.md vira link do portfólio, ele deixa de
-         ser nota interna e passa a ser peça de vitrine");
-       - e o arquivo com esse nome não existe no repo. O que existe é
-         docs/DESIGN.md, docs/identidade-visual.md, docs/DIREITOS-AUTORAIS.md,
-         docs/REVISAO.md e os docs de slice em docs/plans/.
-       Por isso o rótulo do §4.2 ("PLANNING.md do Asafe") não vai à tela como
-       afirmação: nomear um arquivo inexistente seria pior que a lacuna. Quem
-       resolver a pendência escolhe o documento e o nome de uma vez. */
-    pending: '{{ URL do documento de decisões do Asafe }}',
+    /* O §4.2 escreve o rótulo como "`PLANNING.md` do Asafe", mas esse arquivo não
+       existe no repo — o documento de decisões é o `docs/DESIGN.md`, que abre
+       com "referência viva de arquitetura e do porquê das decisões do Asafe...
+       este documento explica as razões e o que não é óbvio a partir do código".
+       Ou seja: o nome do §4.2 estava errado, a alegação estava certa. O rótulo
+       segue a forma do brief com o nome real.
+
+       PENDÊNCIA DO LUIZ (§4.2.1): o documento ainda está escrito para
+       contribuidor ("Leia antes de contribuir"), não para recrutador. O brief
+       avisa que "no momento em que vira link do portfólio, ele deixa de ser nota
+       interna e passa a ser peça de vitrine". Ele lê bem e não bloqueia o link,
+       mas a curadoria continua pendente. */
+    link: {
+      label: 'DESIGN.md do Asafe',
+      href: 'https://github.com/FreitasAssis/Asafe/blob/main/docs/DESIGN.md',
+    },
   },
   {
     title: 'Escopo é uma decisão, não um acidente.',
     body: 'Sei o que fica de fora da primeira versão e por quê. Entregar é melhor que planejar pra sempre.',
-    pending: null,
+    link: null,
   },
   {
     title: 'Faço com cuidado o que envolve outras pessoas.',
     body: 'Direito autoral, privacidade, consentimento. Software mexe com gente; isso não é detalhe de rodapé.',
-    pending: null,
+    link: null,
   },
 ] as const;
 
@@ -47,13 +51,20 @@ export function HowIWork() {
       <h2 className="font-display text-xl font-bold tracking-tight">Como eu trabalho</h2>
 
       <div className="mt-8 space-y-9">
-        {BLOCKS.map(({ title, body, pending }) => (
+        {BLOCKS.map(({ title, body, link }) => (
           <div key={title}>
             <h3 className="font-medium text-ink">{title}</h3>
             <p className="prose-measure mt-2 text-ink-2">{body}</p>
-            {pending ? (
-              <p className="mt-3 border border-dashed border-rule px-3 py-2 font-mono text-xs text-ink-2">
-                {pending}
+            {link ? (
+              <p className="mt-3">
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-xs text-accent-text underline underline-offset-4"
+                >
+                  {link.label} →
+                </a>
               </p>
             ) : null}
           </div>

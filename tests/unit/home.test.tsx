@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import Page from '@/app/page';
+import { formatPeriod } from '@/components/TimelineCondensed';
 import { experience } from '@/content/experience';
 
 /** A home é uma árvore estática; renderizá-la inteira é o teste de comportamento
@@ -30,7 +31,12 @@ describe('Home — hero (§4.1)', () => {
 
   it('põe os 400 mil no subhead — é o dado mais forte do currículo', () => {
     renderHome();
-    expect(screen.getByText(/cerca de 400 mil alunos e professores/i)).toBeInTheDocument();
+    // "alunos, professores e gestores": o §4.1 dizia só "alunos e professores",
+    // mas §4.3, §4.5 e o CV dizem os três — e o §4.5 manda site e CV usarem as
+    // mesmas palavras.
+    expect(
+      screen.getByText(/cerca de 400 mil alunos, professores e gestores/i),
+    ).toBeInTheDocument();
   });
 
   it('oferece os dois CTAs do §4.1', () => {
@@ -119,28 +125,68 @@ describe('Home — trajetória condensada (§3.1)', () => {
     });
   });
 
-  it('escreve na interface que Boomer e ez.devs correram em paralelo (§4.5)', () => {
+  it('cabe em uma linha por posição — é índice, não conteúdo (§3.1)', () => {
+    // O §3.1 é literal: "TRAJETÓRIA (condensada, 5 linhas)". Este bloco fica
+    // entre os cards de projeto e o "Como eu trabalho", e o papel dele na página
+    // é ser respiro entre dois blocos densos. Cada <li> carrega período,
+    // empresa e cargo — e nada além disso.
     renderHome();
     const traj = section(/trajetória/i);
-    const paralelas = within(traj).getAllByText(/em paralelo/i);
-    expect(paralelas).toHaveLength(2);
+
+    for (const li of within(traj).getAllByRole('listitem')) {
+      expect(li.querySelectorAll('p')).toHaveLength(2);
+    }
+
+    // O conteúdo rico do §4.5 é do /projetos (§3.2). Se vazar para cá, o bloco
+    // deixa de ser índice — foi o que aconteceu antes, com três linhas e uma
+    // régua vertical por posição.
+    const texto = traj.textContent ?? '';
+    expect(texto).not.toMatch(/em paralelo/i);
+    expect(texto).not.toMatch(/\bRemoto\b/);
+    for (const item of experience) {
+      expect(texto).not.toContain(item.built.slice(0, 40));
+      expect(texto).not.toContain(item.impact.slice(0, 40));
+      expect(texto).not.toContain(item.stack.join(', '));
+    }
   });
 
-  it('mostra o fio contínuo ligando Opah e Analytica (§4.5)', () => {
+  it('não tem uma palavra sobre a experiência que não venha do dado (§4.5)', () => {
+    // O texto da seção é remontado a partir de `experience` e comparado inteiro.
+    // Qualquer frase escrita à mão sobre a carreira — por mais bem-intencionada
+    // que seja — quebra aqui.
+    //
+    // Não é purismo: foi assim que a imprecisão entrou. Uma nota inventada para
+    // sinalizar o fio contínuo ("a plataforma da Analytica nasceu na Opah IT")
+    // lia como se a Opah tivesse sido só a Analytica, quando foram três projetos
+    // em times distintos. O §4.5 já traz o texto certo; o site não reescreve.
     renderHome();
-    const traj = section(/trajetória/i);
-    expect(within(traj).getAllByText(/mesma plataforma, desde a concepção/i)).toHaveLength(2);
+    const esperado = [
+      'Trajetória',
+      ...experience.map((e) => `${formatPeriod(e)}${e.company} · ${e.role}`),
+      'Ver detalhe de cada posição',
+    ].join('');
+    expect(section(/trajetória/i).textContent).toBe(esperado);
   });
 
   it('põe as datas em mono (§6.3)', () => {
     renderHome();
     const traj = section(/trajetória/i);
-    // A linha de metadado carrega período e modalidade juntos; o que o §6.3
-    // exige é que ela esteja na família mono.
-    const data = within(traj).getByText(/^mar\/2023 — atual\b/);
+    const data = within(traj).getByText(/^mar\/2023 — atual$/);
     expect(data.className).toContain('font-mono');
-    expect(within(traj).getByText(/^set\/2021 — mar\/2023\b/)).toBeInTheDocument();
+    expect(within(traj).getByText(/^set\/2021 — mar\/2023$/)).toBeInTheDocument();
   });
+
+  /* ----------------------------------------------------------------------- *
+   * Herdado pela Task 7 (/projetos). Estas asserções eram feitas contra a home
+   * e saíram daqui porque o §3.1 quer a trajetória condensada como índice — o
+   * conteúdo por posição é do §3.2/§4.5, na outra página. A exigência NÃO foi
+   * revogada: ela mudou de endereço, e some do radar se não ficar escrita.
+   * O dado que as sustenta continua travado em tests/unit/experience.test.ts.
+   * ----------------------------------------------------------------------- */
+  it.todo('/projetos rotula "em paralelo" toda posição sobreposta (§4.5)');
+  it.todo('/projetos marca o fio contínuo SINALIZANDO o impact, sem frase nova (§4.5)');
+  it.todo('/projetos distingue sobreposição de fio contínuo sem depender de cor (§4.5, §9)');
+  it.todo('/projetos mostra built, impact e stack por posição (§3.2, §4.5)');
 
   it('leva ao detalhe em /projetos', () => {
     renderHome();
@@ -165,17 +211,21 @@ describe('Home — como eu trabalho (§4.2)', () => {
     expect(section(/como eu trabalho/i).querySelectorAll('svg')).toHaveLength(0);
   });
 
-  it('deixa o placeholder do documento de decisões visível, sem inventar URL (§0)', () => {
+  it('linka o documento de decisões real do Asafe (§4.2, §4.2.1)', () => {
+    // §4.2.1: é o link que substitui qualquer declaração sobre método — "documento
+    // de decisão é o trabalho que a IA não faz no seu lugar". Precisa existir e
+    // abrir, senão a alegação fica sem o convite de auditoria que a sustenta.
     renderHome();
-    const bloco = section(/como eu trabalho/i);
     expect(
-      within(bloco).getByText('{{ URL do documento de decisões do Asafe }}'),
-    ).toBeInTheDocument();
-    // Nenhum link para um caminho de documento que ninguém conferiu.
-    const hrefs = within(bloco)
-      .queryAllByRole('link')
-      .map((a) => a.getAttribute('href'));
-    expect(hrefs.filter((h) => /PLANNING|DECIS/i.test(h ?? ''))).toEqual([]);
+      within(section(/como eu trabalho/i)).getByRole('link', { name: /DESIGN\.md do Asafe/i }),
+    ).toHaveAttribute('href', 'https://github.com/FreitasAssis/Asafe/blob/main/docs/DESIGN.md');
+  });
+
+  it('não sobrou placeholder onde o documento já existe (§0)', () => {
+    const { container } = renderHome();
+    expect(container.textContent).not.toMatch(/URL do documento de decisões/i);
+    // E não nomeia arquivo que não está no repo.
+    expect(container.textContent).not.toMatch(/PLANNING\.md/i);
   });
 });
 

@@ -29,10 +29,14 @@ export function Hero() {
         vivo.
       </h1>
 
+      {/* "alunos, professores e gestores" — o §4.1 escrevia só "alunos e
+          professores", mas o §4.3, o §4.5 e o CV listam os três. O §4.5 manda o
+          site e o CV contarem a mesma história com as mesmas palavras, e quem
+          abrir os dois compara justamente esta frase. */}
       <p className="prose-measure mt-7 text-ink-2">
         Hoje construo, na Analytica Ensino, uma plataforma educacional usada por cerca de 400 mil
-        alunos e professores da rede pública do Paraná. Fora do expediente sou músico, e foi daí que
-        saiu o Asafe. Os dois apps abaixo estão no ar; pode abrir e usar.
+        alunos, professores e gestores da rede pública do Paraná. Fora do expediente sou músico, e
+        foi daí que saiu o Asafe. Os dois apps abaixo estão no ar; pode abrir e usar.
       </p>
 
       {/* Os dois CTAs do §4.1. O primário é sólido no acento — que na home, antes

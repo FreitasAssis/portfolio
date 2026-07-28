@@ -24,12 +24,43 @@ export type Experience = {
   /** `null` = atual. */
   end: string | null;
   mode: string;
-  /** Etiqueta "em paralelo" do §4.5: sem ela, a sobreposição parece erro de data. */
+  /**
+   * Etiqueta "em paralelo" do §4.5: sem ela, a sobreposição parece erro de data.
+   *
+   * Presente em **toda** posição que se sobrepõe a outra no tempo — o conjunto é
+   * derivado de `start`/`end` em tests/unit/experience.test.ts, não mantido à
+   * mão. Continua `string` e não `string[]` mesmo com a Boomer correndo junto de
+   * duas: o valor carrega o recorte de datas de cada sobreposição
+   * ("de mar a dez/2021"), que uma lista de nomes jogaria fora. O teste exige
+   * que o texto **nomeie** cada contraparte, então a liberdade da prosa não
+   * abre espaço para o rótulo apontar para a empresa errada.
+   */
   parallel?: string;
   built: string;
   impact: string;
   stack: string[];
-  /** liga Opah → Analytica: o fio contínuo do §4.5 */
+  /**
+   * Liga Opah → Analytica: o fio contínuo do §4.5.
+   *
+   * **O marcador sinaliza; quem narra é o `impact`.** A narrativa do fio já está
+   * curada no §4.5 e não precisa de frase nova: o `impact` da Opah diz "o
+   * terceiro projeto é o mesmo em que sigo até hoje, já no time próprio do
+   * cliente", e o da Analytica diz "acompanho o produto desde a concepção —
+   * comecei nele ainda pela consultoria". Juntos dão as duas pontas e a
+   * continuidade.
+   *
+   * Quem for renderizar isto (Task 7, `/projetos`): use ênfase, âncora ou
+   * marcador visual **sobre esse texto**, nunca uma frase paralela. Uma frase
+   * escrita à mão ao lado do texto curado foi exatamente por onde a imprecisão
+   * entrou na primeira tentativa — "a plataforma da Analytica nasceu na Opah IT"
+   * lê como se a Opah tivesse sido só a Analytica, quando foram **três projetos
+   * em times distintos** e a plataforma foi o terceiro. Achatar isso apaga um
+   * argumento de senioridade que o §4.5 faz questão de registrar.
+   *
+   * Por isso o fio não aparece na trajetória condensada da home: lá não há
+   * `built`/`impact` para sinalizar, e sem texto curado embaixo, marcador vira
+   * prosa inventada.
+   */
   thread?: 'plataforma-analytica';
 };
 
@@ -63,6 +94,7 @@ export const experience: readonly Experience[] = [
     start: '2021-09',
     end: '2023-03',
     mode: 'Remoto',
+    parallel: 'Boomer, até dez/2021',
     built:
       'Consultoria em três projetos, cada um em um time distinto: sistema de gestão de condomínios em Node.js com integração à API de pagamentos do StarkBank; aplicativo bancário em React Native, com reconstrução da interface sobre o app existente e novas funcionalidades; e a concepção e o desenvolvimento da plataforma educacional da Analytica Ensino, em microsserviços.',
     impact:
@@ -95,7 +127,9 @@ export const experience: readonly Experience[] = [
     start: '2019-09',
     end: '2021-12',
     mode: 'Natal, RN',
-    parallel: 'ez.devs (a partir de mar/2021)',
+    // A Boomer é a única que corre junto de duas: a ez.devs (mar–set/2021) e,
+    // logo em seguida, a Opah IT (set–dez/2021). O §4.5 só previa a primeira.
+    parallel: 'ez.devs e Opah IT, de mar a dez/2021',
     built:
       'Startup de cashback em compras de supermercado, com três sócios e um único desenvolvedor antes da minha entrada. Internalizei o aplicativo em React Native, até então mantido por fornecedor terceirizado, e assumi sua evolução. Atuei também na API em Ruby on Rails, na área administrativa e nas integrações com serviços de terceiros.',
     // §4.5: não citar número de usuários da Boomer. Base pequena; o número

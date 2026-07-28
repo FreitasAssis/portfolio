@@ -26,65 +26,63 @@ function formatMonth(iso: string): string {
   return `${MONTHS[Number(month) - 1]}/${year}`;
 }
 
-function formatPeriod(item: Experience): string {
+/** Exportado porque o `/projetos` (Task 7) formata os mesmos períodos, e duas
+ *  implementações do mesmo formato divergem na primeira edição. */
+export function formatPeriod(item: Experience): string {
   return `${formatMonth(item.start)} — ${item.end ? formatMonth(item.end) : 'atual'}`;
 }
 
 /**
- * §4.5: "o fio contínuo é o ativo mais forte da timeline... se a timeline
- * mostrar Opah e Analytica como blocos sem relação, o melhor argumento do
- * currículo desaparece." Uma linha em cada posição, e o texto nomeia a outra
- * ponta — sem isso o leitor precisa deduzir a ligação.
- */
-function threadNote(item: Experience): string | null {
-  if (!item.thread) return null;
-  const others = experience
-    .filter((e) => e.thread === item.thread && e.company !== item.company)
-    .map((e) => e.company)
-    .join(' e ');
-  const verb = item.end === null ? 'nasceu na' : 'continua na';
-  return `Mesma plataforma, desde a concepção — ${verb} ${others}.`;
-}
-
-/**
- * Trajetória condensada da home (§3.1): cinco linhas, datas em mono (§6.3), e o
- * detalhe com `built` / `impact` em /projetos (§3.2). Aqui só o suficiente para
- * quem lê só a home saber que a progressão existe (§2).
+ * Trajetória condensada da home (§3.1): **uma linha por posição**, datas em mono
+ * (§6.3), e o link para o detalhe.
  *
- * A régua vertical contínua marca visualmente o fio da plataforma: as duas
- * posições são vizinhas na lista, então as bordas se encostam e viram uma linha
- * só. As demais recebem a mesma borda em `transparent` para não deslocar o
- * texto — sem isso, as linhas com fio nasceriam indentadas em relação às outras.
+ * O esboço do §3.1 é literal — "TRAJETÓRIA (condensada, 5 linhas)", com
+ * `2021—2023 Opah IT · Full Stack Pl` e um `[ver detalhe]` no canto. Este bloco
+ * é **índice**, não conteúdo: fica entre os cards de projeto e o "Como eu
+ * trabalho", que são dois blocos densos, e o trabalho dele na página é ser
+ * respiro entre os dois.
+ *
+ * Por isso `built`, `impact`, `stack`, modalidade, a etiqueta `em paralelo` e o
+ * fio contínuo **não entram aqui** — são do `/projetos` (§3.2 → §4.5). Uma
+ * versão anterior mostrava três linhas e uma régua vertical por posição: quinze
+ * linhas onde o brief pede cinco, e o aparato ficou tão fora de escala para um
+ * índice que um leitor real achou que a régua era bug. O dado continua completo
+ * em `content/experience.ts`, com os invariantes travados em
+ * tests/unit/experience.test.ts; o que saiu foi só a exibição.
+ *
+ * O fio contínuo em especial saiu por um motivo mais duro que o de espaço. Ele
+ * só pode ser **sinalizado sobre o texto curado do §4.5**, nunca narrado por
+ * uma frase nova: o `impact` da Opah já diz "o terceiro projeto é o mesmo em
+ * que sigo até hoje", que carrega o fio inteiro e preserva que na Opah houve
+ * **três** projetos em times distintos. Num índice sem `built`/`impact` não há
+ * texto curado para sinalizar, então qualquer marcador aqui seria prosa
+ * inventada — e a primeira tentativa ("a plataforma da Analytica nasceu na Opah
+ * IT") já achatava a Opah a um projeto só, apagando um argumento de senioridade.
+ * O fio vive no `/projetos`, onde o texto que o sustenta existe.
+ *
+ * Nenhuma palavra sobre experiência profissional nasce neste componente: o
+ * bloco renderiza `company`, `role` e as datas, e nada mais. Travado em
+ * tests/unit/home.test.tsx, que remonta o texto da seção a partir do dado.
  */
 export function TimelineCondensed() {
   return (
     <Container as="section" className="py-16">
       <h2 className="font-display text-xl font-bold tracking-tight">Trajetória</h2>
 
-      <ul className="mt-8">
-        {experience.map((item) => {
-          const thread = threadNote(item);
-          return (
-            <li
-              key={item.company}
-              className={`border-l-2 py-5 pl-4 ${thread ? 'border-ink-2' : 'border-transparent'}`}
-            >
-              <p className="font-mono text-xs text-ink-2">
-                {formatPeriod(item)} · {item.mode}
-              </p>
-              <p className="mt-1.5">
-                <span className="font-medium text-ink">{item.company}</span>
-                <span className="text-ink-2"> · {item.role}</span>
-              </p>
-              {item.parallel ? (
-                <p className="mt-1.5 font-mono text-xs text-ink-2">
-                  em paralelo com {item.parallel}
-                </p>
-              ) : null}
-              {thread ? <p className="mt-1.5 text-sm text-ink-2 italic">{thread}</p> : null}
-            </li>
-          );
-        })}
+      <ul className="mt-8 space-y-4">
+        {experience.map((item) => (
+          // Duas colunas a partir de sm; em 360px a data sobe e a empresa desce,
+          // que ainda é uma entrada, não duas.
+          <li key={item.company} className="sm:flex sm:gap-5">
+            <p className="font-mono text-xs text-ink-2 sm:w-[10.5rem] sm:shrink-0 sm:pt-1.5">
+              {formatPeriod(item)}
+            </p>
+            <p>
+              <span className="font-medium text-ink">{item.company}</span>
+              <span className="text-ink-2"> · {item.role}</span>
+            </p>
+          </li>
+        ))}
       </ul>
 
       <p className="mt-8 font-mono text-xs">
