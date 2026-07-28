@@ -14,16 +14,18 @@
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build"
   },
   "dependencies": {
+    "gray-matter": "^4.0.3",
     "next": "^16.2.12",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
     "next-mdx-remote": "^6.0.0",
-    "gray-matter": "^4.0.3"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.50.0",
-    "@testing-library/react": "^16.1.0",
+    "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^6.6.0",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -32,7 +34,6 @@
     "eslint-config-next": "^16.2.12",
     "jsdom": "^25.0.0",
     "tailwindcss": "^4.3.3",
-    "@tailwindcss/postcss": "^4.3.3",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0"
   }

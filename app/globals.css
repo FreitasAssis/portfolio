@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+/* O tema é dirigido por `data-theme` no <html> — escrito antes da primeira
+   pintura pelo script do layout e trocado pelo ThemeToggle. O `dark:` que o
+   Tailwind traz de fábrica olha para `prefers-color-scheme`, ou seja,
+   discordaria do toggle manual exigido pelo §9 exatamente para quem escolheu o
+   contrário do sistema. Redefinido aqui para ler a MESMA fonte de verdade.
+   A primeira forma casa com o próprio <html>, a segunda com os descendentes. */
+@custom-variant dark (&:where(:root[data-theme='dark'], :root[data-theme='dark'] *));
+
 @theme {
   --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-newsreader), ui-serif, Georgia, serif;

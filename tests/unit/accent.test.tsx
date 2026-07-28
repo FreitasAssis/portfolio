@@ -3,6 +3,9 @@ import { StrictMode } from 'react';
 import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+const route = vi.hoisted(() => ({ current: '/' }));
+vi.mock('next/navigation', () => ({ usePathname: () => route.current }));
+
 import { AccentTracker, coverage, pickWinner } from '@/components/AccentTracker';
 import { AccentZone } from '@/components/AccentZone';
 
@@ -209,6 +212,7 @@ describe('AccentTracker', () => {
     FakeIntersectionObserver.instances = [];
     vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver);
     root.removeAttribute('data-accent');
+    route.current = '/';
   });
 
   afterEach(() => {
@@ -267,6 +271,37 @@ describe('AccentTracker', () => {
     render(<AccentTracker />);
     expect(root.hasAttribute('data-accent')).toBe(false);
     expect(FakeIntersectionObserver.instances).toHaveLength(0);
+  });
+
+  it('re-escaneia ao navegar — o layout raiz não remonta entre páginas', () => {
+    // O tracker é montado uma vez no app/layout.tsx e o App Router mantém o
+    // layout raiz vivo em toda navegação de cliente. Se o efeito só rodasse no
+    // mount, a partir da segunda página ele estaria observando zonas que já
+    // saíram do DOM e a mecânica de acento morreria em silêncio.
+    const { rerender } = render(
+      <>
+        <AccentZone accent="asafe">
+          <p>home</p>
+        </AccentZone>
+        <AccentTracker />
+      </>,
+    );
+    const primeiro = lastObserver();
+    expect(primeiro.observed.map((el) => el.getAttribute('data-accent'))).toEqual(['asafe']);
+
+    route.current = '/projetos/eaifez';
+    rerender(
+      <>
+        <AccentZone accent="eaifez">
+          <p>case</p>
+        </AccentZone>
+        <AccentTracker />
+      </>,
+    );
+
+    expect(primeiro.disconnected).toBe(true);
+    expect(lastObserver()).not.toBe(primeiro);
+    expect(lastObserver().observed.map((el) => el.getAttribute('data-accent'))).toEqual(['eaifez']);
   });
 
   it('sobrevive ao mount duplo do StrictMode com um observer vivo', () => {

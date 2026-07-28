@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 
+import { usePathname } from 'next/navigation';
+
 /** Fatia da viewport que uma zona precisa cobrir para dominar a página. */
 const MIN_COVERAGE = 0.35;
 
@@ -69,6 +71,14 @@ export function pickWinner(
  * É o único momento orquestrado de movimento do site (§6.4).
  */
 export function AccentTracker() {
+  // O tracker é montado uma vez no layout raiz, e o App Router mantém o layout
+  // raiz vivo em toda navegação de cliente — o efeito NÃO roda de novo sozinho.
+  // Sem a rota na lista de dependências, da segunda página em diante o observer
+  // ficaria apontando para zonas já removidas do DOM e a mecânica de acento
+  // morreria em silêncio, sem erro no console. Travado em tests/unit/accent.test.tsx
+  // ("re-escaneia ao navegar").
+  const pathname = usePathname();
+
   useEffect(() => {
     const root = document.documentElement;
 
@@ -112,7 +122,7 @@ export function AccentTracker() {
       // Sem isto o acento da página que está saindo fica grudado no <html>.
       root.removeAttribute('data-accent');
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }
