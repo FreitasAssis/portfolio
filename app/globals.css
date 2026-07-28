@@ -64,7 +64,9 @@
 }
 
 /* injetado pelo case — hex reais das duas marcas.
-   --accent      = capa do case, borda ativa e estado de foco.
+   --accent      = capa do case e borda ativa. O §6.2 também manda o estado de
+                   foco usar este token; não usamos — ver o comentário da regra
+                   de :focus-visible lá embaixo.
    --accent-text = único usado em texto e link; é o que passa AA
                    (travado em tests/unit/contrast.test.ts).
    --accent-ink  = texto sobre o preenchimento do acento. Fixado por acento, e
@@ -105,11 +107,34 @@ html {
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 18px;
+
+  /* §6.1: a troca de acento no scroll é o ÚNICO movimento orquestrado do site
+     (§6.4). Curta, 200ms. O AccentTracker escreve data-accent aqui no <html>,
+     então é aqui que a cor vira. O bloco de prefers-reduced-motion lá embaixo
+     desliga isto: `transition-duration` é longhand com !important e ganha das
+     longhands que este atalho expande, independente da ordem. */
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
 }
 
-/* §9: foco de teclado visível em todo elemento interativo, usando --accent */
+/* §9: foco de teclado visível em todo elemento interativo.
+   DESVIO DELIBERADO DO §6.2, que atribui o estado de foco a --accent. Não
+   troque de volta. --accent é o hex cru da marca e não se adapta ao tema: com
+   o acento do Asafe no tema escuro o anel fica #2f3a5e sobre #0e1013, 1.713:1,
+   invisível na prática. O §9 exige foco de teclado visível e a WCAG 1.4.11 pede
+   3:1 para componente de interface não textual; onde a atribuição do §6.2 colide
+   com o piso do §9, o piso vence.
+   --accent-text é, por definição, o acento ajustado para continuar legível sobre
+   o papel do tema atual — exatamente o requisito de um anel de foco. Medido:
+   10.66 / 5.84 / 6.87 / 7.83 nos quatro pares acento × tema, todos bem acima de
+   3:1, e travado em tests/unit/contrast.test.ts, que lê o token daqui deste
+   arquivo (reverter para --accent quebra o teste, não passa despercebido).
+   A regra do §6.2 de que --accent-text é "só para texto e link" existe para
+   manter o hex cru fora do corpo do texto; um anel de foco não fere essa
+   intenção. */
 :where(a, button, [tabindex]):focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-text);
   outline-offset: 3px;
   border-radius: 2px;
 }

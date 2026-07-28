@@ -133,6 +133,31 @@ describe('CSS real: --accent-ink sobre o preenchimento --accent passa AA Large',
   });
 });
 
+/**
+ * Token que a regra de `:focus-visible` usa na cor do outline, lido do CSS —
+ * `bodiesFor` não serve aqui porque ele quebra a lista de seletores na vírgula
+ * e o seletor do foco tem vírgulas dentro de um `:where()`.
+ */
+function focusOutlineToken(): string {
+  const rule = /:focus-visible\s*\{([^{}]*)\}/.exec(CSS);
+  if (rule === null) throw new Error('regra de :focus-visible não encontrada');
+  const outline = /outline:[^;]*var\((--[\w-]+)\)/.exec(rule[1]);
+  if (outline === null) throw new Error('o outline do foco não sai de um token var()');
+  return outline[1];
+}
+
+describe('CSS real: o anel de foco é visível sobre o papel (§9, WCAG 1.4.11)', () => {
+  // Desvio deliberado do §6.2, que atribui o foco a --accent: o hex cru da marca
+  // não vira com o tema e daria 1.713:1 no par asafe/escuro. O piso do §9 vence.
+  // O teste lê qual token o CSS realmente usa, então reverter para --accent
+  // reprova aqui em vez de sair invisível no ar.
+  it.each(COMBOS)('$accent / $theme', ({ theme, accent }) => {
+    const tokens = resolve(theme, accent);
+    const ratio = contrastRatio(token(tokens, focusOutlineToken()), token(tokens, '--paper'));
+    expect(ratio).toBeGreaterThanOrEqual(3);
+  });
+});
+
 describe('CSS real: sem acento injetado, --accent-ink continua legível', () => {
   // Aqui --accent é var(--ink) e --accent-ink é var(--paper): o par vira junto
   // com o tema, então dá pra exigir AA cheio.
