@@ -43,7 +43,13 @@
   --paper-2: #f1f2f4;
   --rule: #e2e4e8;
 
-  /* acento — sem valor próprio. O projeto injeta. */
+  /* acento — sem valor próprio. O projeto injeta.
+     Invariante: no caso SEM acento, --accent e --accent-ink são um par que vira
+     junto com o tema (--ink sobre --paper e vice-versa), então continua legível
+     nos dois. Isso só vale enquanto --accent não tem cor própria; assim que um
+     [data-accent] injeta um hex fixo de marca, --accent-ink precisa ser fixado
+     junto (ver abaixo) — senão o tema escuro joga um quase-preto em cima da
+     cor da marca. */
   --accent: var(--ink);
   --accent-ink: var(--paper);
   --accent-text: var(--ink);
@@ -60,18 +66,36 @@
 /* injetado pelo case — hex reais das duas marcas.
    --accent      = capa do case, borda ativa e estado de foco.
    --accent-text = único usado em texto e link; é o que passa AA
-                   (travado em tests/unit/contrast.test.ts). */
+                   (travado em tests/unit/contrast.test.ts).
+   --accent-ink  = texto sobre o preenchimento do acento. Fixado por acento, e
+                   NÃO derivado de --paper: o preenchimento é a cor da marca e
+                   não vira com o tema, então o texto em cima dele também não
+                   pode virar. */
 [data-accent='asafe'] {
   --accent: #2f3a5e;
   --accent-text: #2f3a5e;
+  --accent-ink: #fafafa;
 }
 [data-accent='eaifez'] {
   --accent: #c8506a;
   --accent-text: #a83c55;
+  --accent-ink: #fafafa;
 }
+
+/* O seletor duplo é obrigatório, NÃO é redundância — não "simplifique".
+   O AccentTracker (Task 2) faz
+   `document.documentElement.setAttribute('data-accent', ...)`, ou seja, o
+   data-accent cai no PRÓPRIO <html>. Um elemento não é descendente de si mesmo,
+   então só o combinador descendente jamais casaria, o override escuro nunca
+   dispararia e --accent-text ficaria silenciosamente no valor do tema claro:
+   1.71:1 (asafe) e 3.12:1 (eaifez) sobre o papel escuro — reprova AA sem
+   nenhum sintoma visível no código. A primeira forma cobre o data-accent no
+   <html>; a segunda cobre o data-accent numa seção lá embaixo. */
+:root[data-theme='dark'][data-accent='asafe'],
 :root[data-theme='dark'] [data-accent='asafe'] {
   --accent-text: #8e9ac4;
 }
+:root[data-theme='dark'][data-accent='eaifez'],
 :root[data-theme='dark'] [data-accent='eaifez'] {
   --accent-text: #e88ba0;
 }

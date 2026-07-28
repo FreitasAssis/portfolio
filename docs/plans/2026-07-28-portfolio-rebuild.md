@@ -449,6 +449,20 @@ npm run test -- accent
 
 Esperado: PASS.
 
+> **Achado da Task 1 — leia antes de mexer nos seletores.** O `AccentTracker` abaixo põe
+> `data-accent` no **`<html>`**, e o CSS do §6.2 do brief escreve os overrides de tema escuro
+> com combinador descendente (`:root[data-theme='dark'] [data-accent='asafe']`). Um elemento
+> não é descendente de si mesmo, então esse seletor **nunca casaria** com o `<html>`: o acento
+> escuro não entraria e `--accent-text` cairia silenciosamente para o valor claro — 1.713:1
+> (asafe) e 3.123:1 (eaifez) sobre papel escuro, falha dura de AA e invisível a olho nu.
+> A Task 1 corrigiu duplicando o seletor na forma auto-casante
+> (`:root[data-theme='dark'][data-accent='X']`), com teste estático sobre o CSS impedindo que
+> alguém "simplifique" de volta para o bug. **Não remova a duplicação.**
+>
+> Na mesma passada: `--accent-ink` deixou de ser `var(--paper)`. O preenchimento de acento tem
+> a mesma cor nos dois temas (é a cor da marca do projeto), então o texto sobre ele não pode
+> depender do tema — no escuro dava preto sobre índigo, 1.713:1.
+
 **Step 5: A transição no scroll da home**
 
 `components/AccentTracker.tsx` — client component. Observa as `AccentZone` visíveis e propaga o acento da que está dominando a viewport para o `<html>`, o que faz header, footer e fundo acompanharem. É o único momento orquestrado de movimento do site (§6.4).
