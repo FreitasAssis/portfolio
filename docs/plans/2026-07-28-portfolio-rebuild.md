@@ -456,8 +456,12 @@ Esperado: PASS.
 > escuro não entraria e `--accent-text` cairia silenciosamente para o valor claro — 1.713:1
 > (asafe) e 3.123:1 (eaifez) sobre papel escuro, falha dura de AA e invisível a olho nu.
 > A Task 1 corrigiu duplicando o seletor na forma auto-casante
-> (`:root[data-theme='dark'][data-accent='X']`), com teste estático sobre o CSS impedindo que
-> alguém "simplifique" de volta para o bug. **Não remova a duplicação.**
+> (`:root[data-theme='dark'][data-accent='X']`). **Não remova a duplicação.** O guarda não é
+> uma asserção de texto sobre o CSS: `tests/unit/contrast.test.ts` lê o `globals.css`, resolve
+> a cascata modelando `data-accent` no `<html>` e segue as cadeias de `var()` até o hex, então
+> ele trava o **efeito**, não a grafia do seletor — qualquer outra forma de quebrar o acento
+> escuro também cai. Verificado por mutação: removendo a correção, o teste reproduz exatamente
+> 1.713 e 3.123.
 >
 > Na mesma passada: `--accent-ink` deixou de ser `var(--paper)`. O preenchimento de acento tem
 > a mesma cor nos dois temas (é a cor da marca do projeto), então o texto sobre ele não pode
