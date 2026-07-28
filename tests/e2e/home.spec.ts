@@ -72,6 +72,42 @@ test('a base volta a ser neutra fora dos projetos (§6.1)', async ({ page }) => 
   await expect(page.locator('html')).not.toHaveAttribute('data-accent', /.*/);
 });
 
+test('a prosa fica na faixa de 65–75 caracteres (§6.3)', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  // Mede o subhead do hero e os blocos do "Como eu trabalho" — o texto corrido
+  // da home. A coluna de leitura já esteve em 36rem, o que dava 56,5 caracteres:
+  // abaixo do piso do §6.3, e ninguém percebia porque só o teto era verificado.
+  const medidas = await page.locator('section p.prose-measure').evaluateAll((els) =>
+    els.map((el) => {
+      const sonda = document.createElement('div');
+      sonda.style.cssText = 'position:absolute;visibility:hidden;width:1ch';
+      el.appendChild(sonda);
+      const umCh = sonda.getBoundingClientRect().width;
+      sonda.remove();
+      return el.getBoundingClientRect().width / umCh;
+    }),
+  );
+  expect(medidas.length).toBeGreaterThan(0);
+  for (const m of medidas) {
+    expect(m).toBeGreaterThanOrEqual(65);
+    expect(m).toBeLessThanOrEqual(75);
+  }
+});
+
+test('a trajetória cabe em uma linha por posição em tela larga (§3.1)', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  // O "Sênior" da Analytica caía sozinho na segunda linha quando a coluna de
+  // leitura era estreita demais. Uma posição = uma linha visual.
+  const alturas = await page
+    .locator('section', { has: page.getByRole('heading', { name: 'Trajetória' }) })
+    .locator('li')
+    .evaluateAll((els) => els.map((el) => el.getBoundingClientRect().height));
+  expect(alturas).toHaveLength(5);
+  expect(Math.max(...alturas)).toBe(Math.min(...alturas));
+});
+
 test('cabe em 360px sem rolagem horizontal (§9)', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto('/');

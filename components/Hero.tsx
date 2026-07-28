@@ -16,12 +16,17 @@ import { Container } from '@/components/Container';
  */
 export function Hero() {
   return (
-    <Container as="section" className="pt-16 pb-20 sm:pt-24">
+    // `pb-28` (126px) não é gosto: é o valor que faz o respiro daqui até o
+    // "Projetos próprios" bater com os outros três da página. Cada intervalo
+    // entre blocos é a SOMA dos paddings vizinhos, e a seção de projetos usa
+    // `py-4` porque os cards já trazem `py-12` por dentro — então 126 + 18 = 144,
+    // o mesmo 144px que separa os demais. Com `pb-20` este era o único de 108px.
+    <Container as="section" className="pt-16 pb-28 sm:pt-24">
       <p className="font-mono text-xs tracking-wide text-ink-2">
         Natal, RN · Desenvolvedor full stack sênior
       </p>
 
-      {/* Sem `text-balance`: em 648px de coluna ele encurta as linhas do meio e
+      {/* Sem `text-balance`: na coluna de leitura ele encurta as linhas do meio e
           a tese sai com serrilha. Sem escalonar por viewport a display de 39px
           cabe nove caracteres por linha em 360px, e a frase vira uma coluna. */}
       <h1 className="mt-6 font-display text-xl leading-[1.12] font-extrabold tracking-tight sm:text-2xl lg:text-3xl">

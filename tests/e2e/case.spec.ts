@@ -57,15 +57,26 @@ test('o case empresta a cor ao site inteiro (§6.1)', async ({ page }) => {
   expect(await accentVar(page)).toBe('#c8506a');
 });
 
-test('a linha do corpo não estica em tela larga (§6.3)', async ({ page }) => {
+test('a linha do corpo fica na faixa de 65–75 caracteres (§6.3)', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/projetos/asafe');
   const medida = await page.locator('article p').first().evaluate((el) => {
-    const { fontSize } = getComputedStyle(el);
-    // Aproximação usual de 1ch ≈ 0,5em para caixa baixa; o §6.3 pede 65–75
-    // caracteres, e o que interessa é que a linha não passe disso.
-    return el.getBoundingClientRect().width / (parseFloat(fontSize) * 0.5);
+    // 1ch medido PELO MOTOR, não estimado. A versão anterior usava a
+    // aproximação "1ch ≈ 0,5em", que vale para uma grotesca mas não para a
+    // Newsreader: o "0" dela mede 0,566em, ou 10,19px em 18px. A estimativa
+    // inflava a medida em 13% (693px viravam 77 caracteres em vez de 68) e
+    // teria reprovado uma página que está exatamente no valor pedido.
+    const sonda = document.createElement('div');
+    sonda.style.cssText = 'position:absolute;visibility:hidden;width:1ch';
+    el.appendChild(sonda);
+    const umCh = sonda.getBoundingClientRect().width;
+    sonda.remove();
+    return el.getBoundingClientRect().width / umCh;
   });
+  // O §6.3 é uma FAIXA, e o piso importa tanto quanto o teto. Sem o piso, este
+  // teste passava com o corpo em 59,2 caracteres — que foi o que aconteceu
+  // enquanto `prose-measure` estava no contêiner e o padding comia a medida.
+  expect(medida).toBeGreaterThanOrEqual(65);
   expect(medida).toBeLessThanOrEqual(75);
 });
 

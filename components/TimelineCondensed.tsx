@@ -73,8 +73,11 @@ export function TimelineCondensed() {
         {experience.map((item) => (
           // Duas colunas a partir de sm; em 360px a data sobe e a empresa desce,
           // que ainda é uma entrada, não duas.
-          <li key={item.company} className="sm:flex sm:gap-5">
-            <p className="font-mono text-xs text-ink-2 sm:w-[10.5rem] sm:shrink-0 sm:pt-1.5">
+          // A coluna de data é fixa em 9,5rem (171px): a data mais longa
+          // ("set/2021 — mar/2023") mede 148px na JetBrains Mono em 12,96px, e a
+          // sobra evita que uma data futura mais larga empurre o cargo.
+          <li key={item.company} className="sm:flex sm:gap-6">
+            <p className="font-mono text-xs text-ink-2 sm:w-[9.5rem] sm:shrink-0 sm:pt-1.5">
               {formatPeriod(item)}
             </p>
             <p>

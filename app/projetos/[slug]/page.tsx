@@ -127,18 +127,28 @@ export default async function CasePage({ params }: { params: Promise<{ slug: str
       <Actions project={project} />
 
       {/* `reading` é a coluna estreita do §6.4; `prose-measure` trava a medida
-          de 65–75 caracteres do §6.3 mesmo se a coluna crescer um dia. */}
-      <Container as="article" width="reading" className="prose-measure pb-6">
-        <MDXRemote
-          source={project.body}
-          components={{
-            ...mdxComponents,
-            // Os dois pontos em que o corpo dá lugar ao dado estruturado do
-            // frontmatter: o MDX escolhe o lugar, o template escolhe a forma.
-            Decisoes: () => <Decisoes items={project.decisions} />,
-            Stack: () => <Stack items={project.stack} />,
-          }}
-        />
+          de 65–75 caracteres do §6.3 mesmo se a coluna crescer um dia.
+
+          O `prose-measure` fica no wrapper interno, e não no `Container`: ele é
+          `max-width`, então no contêiner o teto de 68ch valeria para a caixa
+          COM padding, e os 45px de cada lado sairiam do texto. Medido no
+          Chromium: com a classe no contêiner o corpo do case renderizava a
+          59,2 caracteres — abaixo do piso de 65 justamente na página que o
+          §6.3 cita por nome ("medida de leitura em 65–75 caracteres nos
+          cases"). Por dentro do padding, dá os 68ch exatos. */}
+      <Container as="article" width="reading" className="pb-6">
+        <div className="prose-measure">
+          <MDXRemote
+            source={project.body}
+            components={{
+              ...mdxComponents,
+              // Os dois pontos em que o corpo dá lugar ao dado estruturado do
+              // frontmatter: o MDX escolhe o lugar, o template escolhe a forma.
+              Decisoes: () => <Decisoes items={project.decisions} />,
+              Stack: () => <Stack items={project.stack} />,
+            }}
+          />
+        </div>
       </Container>
 
       <Gallery project={project} />
