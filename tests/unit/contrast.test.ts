@@ -1,9 +1,13 @@
-import { readFileSync } from 'node:fs';
-import { resolve as resolvePath } from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
 import { contrastRatio } from '@/lib/contrast';
+import {
+  accentSlugsInCss,
+  focusOutlineToken,
+  resolveTokens,
+  type Theme,
+  token,
+} from '../helpers/globals-css';
 
 const LIGHT_PAPER = '#FAFAFA';
 const DARK_PAPER = '#0E1013';
@@ -43,72 +47,28 @@ describe('texto de corpo passa AA nos dois temas', () => {
  * data-accent cai no <html>, que é o que o AccentTracker da Task 2 faz.
  * ------------------------------------------------------------------------- */
 
-// jsdom reescreve import.meta.url para uma URL http, então o caminho sai da
-// raiz do projeto (o vitest roda com o cwd na raiz).
-const CSS = readFileSync(resolvePath(process.cwd(), 'app/globals.css'), 'utf8').replace(
-  /\/\*[\s\S]*?\*\//g,
-  '',
-);
-
-/** Corpos de todas as regras cuja lista de seletores contém `selector`. */
-function bodiesFor(selector: string): string[] {
-  const bodies: string[] = [];
-  const rule = /([^{}]+)\{([^{}]*)\}/g;
-  let match: RegExpExecArray | null;
-  while ((match = rule.exec(CSS)) !== null) {
-    const selectors = match[1].split(',').map((s) => s.trim().replace(/\s+/g, ' '));
-    if (selectors.includes(selector)) bodies.push(match[2]);
-  }
-  return bodies;
-}
-
-type Theme = 'claro' | 'escuro';
-type Accent = 'nenhum' | 'asafe' | 'eaifez';
+const THEMES: Theme[] = ['claro', 'escuro'];
 
 /**
- * Resolve os tokens como o browser resolveria, modelando o data-accent no
- * PRÓPRIO <html> — a colocação que o AccentTracker usa. Se alguém apagar a
- * forma auto-casante `:root[data-theme='dark'][data-accent='X']`, nada aqui
- * casa, --accent-text fica no valor do tema claro e os testes de AA no escuro
- * quebram. É esse o guarda: o efeito, não a grafia do seletor.
+ * A lista de acentos NÃO é escrita à mão aqui: sai dos seletores do próprio
+ * CSS. Assim, um acento novo entra em todos os testes de contraste abaixo no
+ * instante em que o bloco `[data-accent='…']` é criado — não dá para acrescentar
+ * uma cor de marca e esquecer de medi-la. Quem garante que essa lista é a mesma
+ * dos slugs do conteúdo e da união `Accent` é `projects.test.ts`.
  */
-function resolve(theme: Theme, accent: Accent): Map<string, string> {
-  const tokens = new Map<string, string>();
-  const apply = (selector: string) => {
-    for (const body of bodiesFor(selector)) {
-      for (const [, name, value] of body.matchAll(/(--[\w-]+)\s*:\s*([^;]+)/g)) {
-        tokens.set(name, value.trim());
-      }
-    }
-  };
-
-  apply(':root');
-  if (theme === 'escuro') apply(":root[data-theme='dark']");
-  if (accent !== 'nenhum') {
-    apply(`[data-accent='${accent}']`);
-    if (theme === 'escuro') apply(`:root[data-theme='dark'][data-accent='${accent}']`);
-  }
-  return tokens;
-}
-
-/** Segue `var(--x)` até chegar num hex. */
-function token(tokens: Map<string, string>, name: string, seen = new Set<string>()): string {
-  const raw = tokens.get(name);
-  if (raw === undefined) throw new Error(`token ${name} não declarado`);
-  if (seen.has(name)) throw new Error(`referência circular em ${name}`);
-  const alias = raw.match(/^var\((--[\w-]+)\)$/);
-  if (alias) return token(tokens, alias[1], new Set(seen).add(name));
-  if (!/^#[0-9a-f]{6}$/i.test(raw)) throw new Error(`token ${name} não é hex: ${raw}`);
-  return raw;
-}
-
-const THEMES: Theme[] = ['claro', 'escuro'];
-const ACCENTS: Accent[] = ['asafe', 'eaifez'];
+const ACCENTS = accentSlugsInCss();
 const COMBOS = THEMES.flatMap((theme) => ACCENTS.map((accent) => ({ theme, accent })));
+
+/** O par do §6.2 esperado para o acento, ou um erro que diz o que falta. */
+function pairFor(accent: string, theme: Theme) {
+  const pair = PAIRS.find((p) => p.name === `${accent} / ${theme}`);
+  if (!pair) throw new Error(`o acento '${accent}' existe no CSS mas não tem par travado no §6.2`);
+  return pair;
+}
 
 describe('CSS real: --accent-text sobre --paper passa AA (data-accent no <html>)', () => {
   it.each(COMBOS)('$accent / $theme', ({ theme, accent }) => {
-    const tokens = resolve(theme, accent);
+    const tokens = resolveTokens(theme, accent);
     const ratio = contrastRatio(token(tokens, '--accent-text'), token(tokens, '--paper'));
     expect(ratio).toBeGreaterThanOrEqual(4.5);
   });
@@ -116,8 +76,8 @@ describe('CSS real: --accent-text sobre --paper passa AA (data-accent no <html>)
 
 describe('CSS real: --accent-text bate com os hex travados no §6.2', () => {
   it.each(COMBOS)('$accent / $theme', ({ theme, accent }) => {
-    const esperado = PAIRS.find((p) => p.name === `${accent} / ${theme}`)!.fg;
-    expect(token(resolve(theme, accent), '--accent-text').toLowerCase()).toBe(
+    const esperado = pairFor(accent, theme).fg;
+    expect(token(resolveTokens(theme, accent), '--accent-text').toLowerCase()).toBe(
       esperado.toLowerCase(),
     );
   });
@@ -127,24 +87,11 @@ describe('CSS real: --accent-ink sobre o preenchimento --accent passa AA Large',
   // §6.2 restringe --accent a capa de case, borda ativa e foco — texto em
   // tamanho de display. O piso é 3:1. O caso escuro é o que estava quebrado.
   it.each(COMBOS)('$accent / $theme', ({ theme, accent }) => {
-    const tokens = resolve(theme, accent);
+    const tokens = resolveTokens(theme, accent);
     const ratio = contrastRatio(token(tokens, '--accent-ink'), token(tokens, '--accent'));
     expect(ratio).toBeGreaterThanOrEqual(3);
   });
 });
-
-/**
- * Token que a regra de `:focus-visible` usa na cor do outline, lido do CSS —
- * `bodiesFor` não serve aqui porque ele quebra a lista de seletores na vírgula
- * e o seletor do foco tem vírgulas dentro de um `:where()`.
- */
-function focusOutlineToken(): string {
-  const rule = /:focus-visible\s*\{([^{}]*)\}/.exec(CSS);
-  if (rule === null) throw new Error('regra de :focus-visible não encontrada');
-  const outline = /outline:[^;]*var\((--[\w-]+)\)/.exec(rule[1]);
-  if (outline === null) throw new Error('o outline do foco não sai de um token var()');
-  return outline[1];
-}
 
 describe('CSS real: o anel de foco é visível sobre o papel (§9, WCAG 1.4.11)', () => {
   // Desvio deliberado do §6.2, que atribui o foco a --accent: o hex cru da marca
@@ -152,7 +99,7 @@ describe('CSS real: o anel de foco é visível sobre o papel (§9, WCAG 1.4.11)'
   // O teste lê qual token o CSS realmente usa, então reverter para --accent
   // reprova aqui em vez de sair invisível no ar.
   it.each(COMBOS)('$accent / $theme', ({ theme, accent }) => {
-    const tokens = resolve(theme, accent);
+    const tokens = resolveTokens(theme, accent);
     const ratio = contrastRatio(token(tokens, focusOutlineToken()), token(tokens, '--paper'));
     expect(ratio).toBeGreaterThanOrEqual(3);
   });
@@ -162,7 +109,7 @@ describe('CSS real: sem acento injetado, --accent-ink continua legível', () => 
   // Aqui --accent é var(--ink) e --accent-ink é var(--paper): o par vira junto
   // com o tema, então dá pra exigir AA cheio.
   it.each(THEMES)('tema %s', (theme) => {
-    const tokens = resolve(theme, 'nenhum');
+    const tokens = resolveTokens(theme, null);
     const ratio = contrastRatio(token(tokens, '--accent-ink'), token(tokens, '--accent'));
     expect(ratio).toBeGreaterThanOrEqual(4.5);
   });

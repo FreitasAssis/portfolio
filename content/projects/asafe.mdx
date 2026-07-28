@@ -1,0 +1,65 @@
+---
+slug: asafe
+name: Asafe
+tagline: Organizar a música da Missa sem planilha e caderno.
+kind: own
+status: live
+liveUrl: https://asafe.mus.br
+repoUrl: https://github.com/FreitasAssis/Asafe
+accent: '#2F3A5E'
+accentDark: '#8E9AC4'
+order: 1
+stack:
+  - Next.js
+  - name: Expo
+    why: '{{ por que o app nativo, e não só a web }}'
+  - TypeScript
+  - name: Supabase
+    why: '{{ por que Supabase }}'
+  - name: Drizzle ORM
+    why: '{{ por que Drizzle }}'
+  - name: Cloudflare Workers
+    why: '{{ por que Workers }}'
+cover:
+  src: '{{ }}'
+  alt: repertório do Asafe montado na ordem do rito, com um bloco de músicas para cada momento da celebração
+shots:
+  - src: '{{ }}'
+    alt: tela de liturgia do dia do Asafe, com as leituras, o salmo e as músicas sugeridas
+  - src: '{{ }}'
+    alt: modo ao vivo do Asafe, com a cifra em ChordPro transposta e a projeção sincronizada
+  - src: '{{ }}'
+    alt: catálogo comunitário do Asafe, com as cifras enviadas aguardando curadoria
+decisions:
+  - chose: busca por dois eixos — posição na celebração e perícope
+    insteadOf: um eixo de busca só
+    because: '{{ o porquê — Task 6 }}'
+  - chose: AGPL-3.0
+    insteadOf: MIT
+    because: '{{ o porquê — Task 6 }}'
+  - chose: licença de uso com consentimento explícito e registro probatório
+    insteadOf: cessão dos direitos das cifras enviadas pela comunidade
+    because: '{{ o porquê — Task 6 }}'
+  - chose: snapshot litúrgico congelado
+    insteadOf: '{{ a alternativa }}'
+    because: '{{ o porquê — Task 6 }}'
+  - chose: RLS no Supabase
+    insteadOf: '{{ a alternativa }}'
+    because: '{{ o porquê — Task 6 }}'
+---
+
+## O problema
+
+`{{ por que isso existe, na vida real — Task 6, com a landing de asafe.mus.br como fonte }}`
+
+## O que é
+
+`{{ o produto em 3 ou 4 frases — Task 6 }}`
+
+<Decisoes />
+
+<Stack />
+
+## Estado
+
+`{{ no ar desde X; o que vem depois — Task 6 }}`

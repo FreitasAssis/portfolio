@@ -19,8 +19,15 @@ type Project = {
 };
 
 /**
- * Dado local da home, curto de propósito. O modelo de conteúdo em MDX é da
- * Task 5 (§5); quando existir, isto sai daqui e vem do frontmatter.
+ * Dado local da home, curto de propósito.
+ *
+ * TODO(Task 7): trocar por `getAllProjects()`. O carregador já existe (Task 5)
+ * e traz tudo o que está aqui — `content/projects/*.mdx` é a fonte de verdade
+ * desde então, e esta lista é cópia. Não migrou junto porque ler conteúdo torna
+ * a home um componente assíncrono, e `tests/unit/home.test.tsx` a renderiza de
+ * forma síncrona (o Testing Library não monta Server Component assíncrono):
+ * é mudança de teste, não de dado, e cabe na Task 7, que já vai montar o card
+ * de projeto de verdade a partir do carregador.
  *
  * Ordem: **o Asafe abre a seção** (§4.6). Não é gosto — é o case que costura
  * com o /sobre (o músico que construiu a ferramenta do próprio ministério), e o
