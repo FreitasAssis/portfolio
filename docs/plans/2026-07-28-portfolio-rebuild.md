@@ -2,7 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Reconstruir o portfólio do zero conforme o contrato em `PORTFOLIO-BRIEF.md`, mantendo apenas o domínio, e publicar na Cloudflare Pages com os redirects das rotas antigas.
+**Goal:** Reconstruir o portfólio do zero conforme o contrato em `docs/private/PORTFOLIO-BRIEF.md`, mantendo apenas o domínio, e publicar na Cloudflare Pages com os redirects das rotas antigas.
+
+> **Nota sobre `docs/`.** O repo é público. `docs/private/` (o brief e o PDF do CV) é ignorado pelo git — é nota interna, e o §4.2.1 do próprio brief avisa que documento interno vira peça de vitrine no instante em que fica público, então publicar é decisão deliberada e curada, não efeito colateral. `docs/cv/luiz-freitas.html` é versionado por ser a **fonte** do CV; verificado como livre de RG, CPF, data de nascimento, endereço e telefone (§4.3). O PDF publicado vai separado em `public/cv/` na Task 8 — esse precisa ser versionado, senão a Cloudflare não tem o que servir.
 
 **Architecture:** Next.js App Router em **export estático puro** (`output: 'export'`) — sem servidor, sem banco, sem CMS, saída em `out/` servida pela Cloudflare Pages. Conteúdo dos projetos em arquivos MDX lidos do filesystem em build time. Identidade visual construída sobre CSS custom properties: a base é neutra e o acento é injetado por `data-accent` na seção/página, conforme §6.1 do brief.
 
