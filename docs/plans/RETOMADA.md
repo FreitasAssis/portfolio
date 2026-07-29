@@ -31,16 +31,16 @@ Contrato: `docs/private/PORTFOLIO-BRIEF.md` (fora do git — repo é público).
 | 3 | Layout base: header, footer, container, toggle | ✅ |
 | 4 | Home + correção da medida de leitura | ✅ |
 | 5 | Pipeline MDX e template de case | ✅ |
-| 6a | Escrever os dois cases | ⬜ próxima |
-| 6b | Semear Asafe local, grupo demo no eaifez, capturar 8 prints | ⬜ |
-| 7 | `/projetos` — cards + timeline | ⬜ |
-| 8 | `/sobre`, `/contato`, CV | ⬜ |
+| 6a | Escrever os dois cases | ✅ |
+| 6b | Semear Asafe local, grupo demo no eaifez, capturar 8 prints | ✅ |
+| 7 | `/projetos` — cards + timeline | ✅ |
+| 8 | `/sobre`, `/contato`, CV | ⬜ próxima |
 | 9 | SEO e metadados por rota | ⬜ |
 | 10 | OG images (começa por spike de viabilidade) | ⬜ |
 | 11 | Piso de qualidade — a11y, 360px, Lighthouse | ⬜ |
 | 12 | Deploy na Cloudflare + redirects 301 | ⬜ |
 
-Gates ao fim da sessão: `npm run verify` exit 0 · unit **138 passed | 4 todo** · e2e **21 passed**.
+Gates ao fim da sessão: `npm run verify` exit 0 · unit **175 passed | 0 todo** · e2e **35 passed**.
 
 ---
 
@@ -83,7 +83,17 @@ usado por nenhum grupo real — o lançamento com amigos estava marcado para o f
 2026-08-01. **Se a Task 6b acontecer depois disso, a premissa mudou: perguntar de novo.**
 A limpeza do que for criado é parte da tarefa.
 
-### 4. Contraste de `--accent-ink` em texto pequeno
+### 4. A stack do "E aí, fez?" diverge do CV
+
+`content/projects/eaifez.mdx` diz **Cloudflare Workers**; `docs/cv/luiz-freitas.html` diz
+**Cloudflare Pages**. O §4.5 manda site e CV usarem as mesmas palavras, e o card do
+`/projetos` e da home agora mostram a lista do frontmatter — a divergência ficou visível.
+O case foi escrito com "Workers" a partir do material do Luiz (é lá que roda o cron horário),
+então o candidato a corrigir é o CV. **Decisão do Luiz.** A do Asafe está resolvida: as duas
+pontas dizem `Next.js, Expo, TypeScript, Supabase, Drizzle ORM, Cloudflare Workers`, e há
+teste travando (o exemplo do §5 do brief é ilustração de schema, não a lista de verdade).
+
+### 5. Contraste de `--accent-ink` em texto pequeno
 
 `#FAFAFA` sobre `#C8506A` mede **4.18:1** — passa AA Large, reprova AA normal. Afeta o botão
 "Abrir o E aí, fez?" na home e o CTA primário do case. A correção é no token para os dois
@@ -112,19 +122,27 @@ mudarem juntos; pertence à Task 11.
 
 ---
 
-## A Task 7 herda quatro `it.todo` por nome
+## Os quatro `it.todo` da Task 7 viraram teste
 
-Em `tests/unit/home.test.tsx`, movidos da home quando ela foi condensada para cinco linhas:
+Estão em `tests/unit/projetos.test.tsx`, com o mesmo nome. Não sobrou `it.todo` no repo.
 
-- `/projetos` rotula "em paralelo" toda posição sobreposta (§4.5)
-- `/projetos` marca o fio contínuo **sinalizando** o `impact`, sem frase nova (§4.5)
-- `/projetos` distingue sobreposição de fio contínuo sem depender de cor (§4.5, §9)
-- `/projetos` mostra `built`, `impact` e `stack` por posição (§3.2, §4.5)
+As duas marcas da timeline do `/projetos` divergem em quatro eixos, nenhum deles cor (§9) nem
+movimento (§6.4) — a decisão inteira está documentada em `components/Timeline.tsx`:
 
-O terceiro existe porque o Luiz olhou a home e **confundiu o marcador do fio com a
-sobreposição**. As duas ideias são opostas (continuidade × simultaneidade) e vão conviver no
-mesmo bloco da Opah IT. Se usarem linguagem visual parecida, os dois melhores argumentos da
-timeline se anulam.
+| | sobreposição (`em paralelo`) | fio contínuo |
+|---|---|---|
+| forma | caixa fechada nos quatro lados | régua aberta, só à esquerda |
+| eixo | horizontal, uma linha | vertical, ao lado de um parágrafo |
+| lugar | no cabeçalho, junto das datas | no corpo, colado ao `impact` |
+| direção | nenhuma — ela se fecha | seta para a outra ponta (`↓` em cima, `↑` embaixo) |
+
+O fio **sinaliza** o `impact` curado do §4.5 e não escreve frase nenhuma sobre a carreira: o
+teste que remonta a seção inteira a partir de `content/experience.ts` agora vale para o
+`/projetos`, e a lista completa das palavras inventadas na seção cabe em três (`em paralelo`,
+`fio contínuo`, o separador ` · `).
+
+**São três posições rotuladas `em paralelo`, não duas** — a Boomer corre junto da ez.devs e,
+logo em seguida, da Opah IT. O trecho da Task 7 no plano dizia duas; o dado manda.
 
 ---
 

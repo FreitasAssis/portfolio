@@ -331,6 +331,74 @@ describe('prints (§9)', () => {
     expect(p.cover.alt.length).toBeGreaterThan(20);
   });
 
+  /* ----------------------------------------------------------------------- *
+   * `cardShot` — o print do card, que não é necessariamente a capa.
+   *
+   * As duas capas têm orientações diferentes, e de propósito: a do Asafe é
+   * retrato (uma tela de repertório) e a do "E aí, fez?" é a imagem OG do app,
+   * 1200×630, "o único elemento projetado para ser visto fora do app" (§4.7).
+   * Nas páginas de case isso é certo e fica. No card, não: ali os dois são
+   * vistos no mesmo instante oferecendo a mesma coisa, e um celular alto ao
+   * lado de um cartão largo faz o olho ler duas CATEGORIAS de coisa em vez de
+   * duas ofertas paralelas.
+   * ----------------------------------------------------------------------- */
+
+  it('o card do Asafe usa a capa; o do "E aí, fez?" usa o print retrato', async () => {
+    const asafe = await getProject('asafe');
+    expect(asafe.cardShot).toBe(asafe.cover);
+
+    const eaifez = await getProject('eaifez');
+    expect(eaifez.cover.src).toBe('/projects/eaifez/cover.webp');
+    expect(eaifez.cardShot.src).toBe('/projects/eaifez/02.webp');
+    // `alt` próprio: no card a imagem aparece sozinha, sem a galeria em volta,
+    // então o texto da galeria não serve tal e qual.
+    expect(eaifez.cardShot.alt).not.toBe(
+      eaifez.shots.find((s) => s.src === '/projects/eaifez/02.webp')!.alt,
+    );
+  });
+
+  it('todo cardShot é retrato — é o que faz os dois cards lerem como pares', async () => {
+    for (const p of await getAllProjects()) {
+      const shot = p.cardShot;
+      if (isShotPending(shot)) continue;
+      expect(shot.height, `${p.slug}: ${shot.src}`).toBeGreaterThan(shot.width);
+    }
+  });
+
+  it('recusa cardShot paisagem, citando o arquivo e o campo', () => {
+    // A regressão que este teste segura é a de um projeto novo apontar o card
+    // para a própria capa OG sem reparar na orientação.
+    const paisagem = VALIDO.replace(
+      "cover:\n  src: '{{ }}'",
+      `cover:
+  src: /projects/eaifez/cover.webp
+  width: 1200
+  height: 630`,
+    );
+    expect(() => parseProject(paisagem, 'asafe.mdx')).toThrow(/asafe\.mdx.*cardShot.*retrato/);
+  });
+
+  it('o cardShot declarado passa pelas mesmas regras de print (§9)', () => {
+    const comCard = (campos: string) =>
+      VALIDO.replace('shots:', `cardShot:\n${campos}\nshots:`);
+    // alt preguiçoso
+    expect(() =>
+      parseProject(
+        comCard('  src: /projects/asafe/01.webp\n  width: 1290\n  height: 2796\n  alt: print do app'),
+        'asafe.mdx',
+      ),
+    ).toThrow(/cardShot.*alt/);
+    // sem dimensão
+    expect(() =>
+      parseProject(
+        comCard(
+          '  src: /projects/asafe/01.webp\n  alt: repertório do Asafe montado na ordem do rito',
+        ),
+        'asafe.mdx',
+      ),
+    ).toThrow(/cardShot.*width/);
+  });
+
   it('no máximo 3 prints além da capa (§4.7)', async () => {
     for (const p of await getAllProjects()) {
       expect(p.shots.length).toBeGreaterThanOrEqual(1);
@@ -378,11 +446,23 @@ function webpSize(file: string): { width: number; height: number } {
   throw new Error(`${file}: contêiner WebP desconhecido (${formato})`);
 }
 
+/**
+ * Toda DECLARAÇÃO de print do projeto — capa, print do card e a galeria.
+ *
+ * Repetição é de propósito: o que se confere aqui é a declaração, não o
+ * arquivo. O `cardShot` do "E aí, fez?" aponta para o mesmo `02.webp` da
+ * galeria e o do Asafe é a própria capa; se um dos dois lados declarasse outra
+ * medida, é exatamente esse par que precisa reprovar.
+ */
+function todosOsPrints(p: Awaited<ReturnType<typeof getProject>>) {
+  return [p.cover, p.cardShot, ...p.shots];
+}
+
 describe('dimensão dos prints (§9)', () => {
   it('a medida declarada é a medida do arquivo', async () => {
     let conferidos = 0;
     for (const p of await getAllProjects()) {
-      for (const shot of [p.cover, ...p.shots]) {
+      for (const shot of todosOsPrints(p)) {
         if (isShotPending(shot)) continue;
         const file = join(process.cwd(), 'public', shot.src);
         expect(existsSync(file), `${p.slug}: ${shot.src} não existe em public/`).toBe(true);
@@ -394,8 +474,8 @@ describe('dimensão dos prints (§9)', () => {
       }
     }
     // Se um dia todo mundo virar `{{ }}` de novo, o laço acima passa vazio e o
-    // teste vira decoração. Dois cases × (capa + 3) é o piso.
-    expect(conferidos).toBe(8);
+    // teste vira decoração. Dois cases × (capa + card + 3 prints) é o piso.
+    expect(conferidos).toBe(10);
   });
 
   it('nenhum print pendente sobrou (§0)', async () => {
@@ -403,7 +483,7 @@ describe('dimensão dos prints (§9)', () => {
     // afirmava a convivência dos dois estados; agora afirma o fim dela. A regra
     // por print continua sendo a mesma, e é ela que segura um projeto novo.
     for (const p of await getAllProjects()) {
-      for (const shot of [p.cover, ...p.shots]) {
+      for (const shot of todosOsPrints(p)) {
         expect(isShotPending(shot), `${p.slug}: ${shot.alt} ainda é {{ }}`).toBe(false);
         expect(shot.width, `${p.slug}: ${shot.src}`).toBeGreaterThan(0);
         expect(shot.height).toBeGreaterThan(0);

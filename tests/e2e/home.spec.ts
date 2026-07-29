@@ -127,9 +127,11 @@ test('o foco de teclado é visível nos CTAs (§9)', async ({ page }) => {
 
 test('o que ainda falta está escrito na tela, não escondido (§0)', async ({ page }) => {
   await page.goto('/');
-  // Prints (Task 6) e CV em PDF (Task 8). Se algum destes sumir sem o conteúdo
-  // real ter entrado, o site foi ao ar com lacuna invisível.
-  await expect(page.getByText(/\{\{ print:/)).toHaveCount(2);
+  // Os prints chegaram (Task 6b) e os cards saem do conteúdo desde a Task 7 —
+  // não sobrou buraco de print na home. O CV em PDF (Task 8) ainda é lacuna, e
+  // continua escrita na tela em vez de escondida.
+  await expect(page.getByText(/\{\{ print:/)).toHaveCount(0);
+  await expect(page.locator('article img')).toHaveCount(2);
   await expect(page.getByText('{{ CV em PDF }}')).toBeVisible();
   // E nada de placeholder onde o dado já chegou.
   await expect(page.getByText(/URL do documento de decisões/)).toHaveCount(0);

@@ -67,6 +67,27 @@ export type Project = {
   accentDark: string;
   stack: StackItem[];
   cover: Shot;
+  /**
+   * O print que representa o projeto no CARD (home e `/projetos`), que não é
+   * necessariamente a capa.
+   *
+   * A capa é o artefato honesto de cada case e cada uma tem a orientação que
+   * lhe cabe: a do Asafe é retrato (uma tela de repertório), a do "E aí, fez?"
+   * é a imagem OG do app, 1200×630, porque é "o único elemento projetado para
+   * ser visto fora do app" (§4.7). Lidas em sequência, nas páginas de case,
+   * essa diferença é correta e fica.
+   *
+   * No card, não: ali os dois são vistos no MESMO instante oferecendo a mesma
+   * coisa, e um celular alto ao lado de um cartão largo faz o olho ler duas
+   * *categorias* de coisa em vez de duas ofertas paralelas — some o paralelismo,
+   * que é o que faz o bloco funcionar. Por isso o card exige retrato, e a
+   * exigência é validada aqui: um `cardShot` paisagem derruba o build.
+   *
+   * Omitir o campo é dizer "a capa serve" — e serve mesmo, desde que seja
+   * retrato. Não é opcional no tipo de propósito: quem renderiza o card nunca
+   * precisa saber de onde veio a imagem.
+   */
+  cardShot: Shot;
   shots: Shot[];
   decisions: Decision[];
   order: number;
@@ -361,6 +382,18 @@ export function parseProject(source: string, file: string): Project {
 
   checkBody(file, content);
 
+  const cover = shot(file, frontmatter.cover, 'cover');
+  const cardShot =
+    frontmatter.cardShot === undefined ? cover : shot(file, frontmatter.cardShot, 'cardShot');
+  if (!isShotPending(cardShot) && cardShot.width >= cardShot.height) {
+    // O erro nomeia a saída, porque o caso real é justamente este: a capa do
+    // "E aí, fez?" é paisagem, e sem `cardShot` o arquivo cairia aqui.
+    fail(
+      file,
+      `\`cardShot\` precisa ser retrato (veio ${cardShot.width}×${cardShot.height}) — no card os dois projetos são vistos lado a lado e uma paisagem ao lado de um retrato lê como outra categoria de coisa. Declare \`cardShot\` com um print retrato quando a capa for paisagem.`,
+    );
+  }
+
   return {
     slug: slug as Accent,
     name: str(file, frontmatter, 'name'),
@@ -372,7 +405,8 @@ export function parseProject(source: string, file: string): Project {
     accent: hex(file, frontmatter, 'accent'),
     accentDark: hex(file, frontmatter, 'accentDark'),
     stack: list(file, frontmatter, 'stack').map((raw, i) => stackItem(file, raw, i)),
-    cover: shot(file, frontmatter.cover, 'cover'),
+    cover,
+    cardShot,
     shots,
     decisions,
     order: num(file, frontmatter, 'order'),
