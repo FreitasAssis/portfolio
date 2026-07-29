@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 
@@ -5,7 +6,9 @@ import { AccentZone } from '@/components/AccentZone';
 import { Container } from '@/components/Container';
 import { AssetPlaceholder } from '@/components/AssetPlaceholder';
 import { Decisoes, mdxComponents, Stack } from '@/components/mdx-components';
+import { caseTitle } from '@/content/site';
 import { getAllProjects, getProject, isShotPending, type Project } from '@/lib/projects';
+import { pageMetadata } from '@/lib/seo';
 
 /**
  * Obrigatório sob `output: 'export'` (§7): é esta lista que decide quais HTML
@@ -14,6 +17,31 @@ import { getAllProjects, getProject, isShotPending, type Project } from '@/lib/p
  */
 export async function generateStaticParams() {
   return (await getAllProjects()).map((project) => ({ slug: project.slug }));
+}
+
+/**
+ * O título e a descrição do case (§8), inteiramente derivados do conteúdo.
+ *
+ * É aqui que a promessa do §2 encosta no §8: o título sai do `name` do
+ * frontmatter pela fórmula do §8 (`Asafe — projeto de Luiz Freitas`) e a
+ * descrição sai do campo `description` do próprio `.mdx`. Um case novo entra
+ * com metadado correto **sem uma linha de código** — e sem descrição ele nem
+ * builda, porque `parseProject` exige o campo. As duas coisas juntas são o que
+ * impede o bug do §8 de voltar pela porta dos cases, que é por onde o site vai
+ * crescer.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const project = await getProject(slug);
+
+  return pageMetadata({
+    meta: { title: caseTitle(project.name), description: project.description },
+    path: `/projetos/${project.slug}`,
+  });
 }
 
 /**

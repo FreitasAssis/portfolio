@@ -58,6 +58,23 @@ export type Project = {
   slug: Accent;
   name: string;
   tagline: string;
+  /**
+   * A `<meta name="description">` do case (§8), escrita à mão e factual.
+   *
+   * Mora no frontmatter, e não num dicionário de metadados, porque o §8 quer
+   * descrição "escrita à mão" e o §2 quer "adicionar projeto novo = criar um
+   * arquivo". Um dicionário com uma chave por slug satisfaria o primeiro e
+   * quebraria o segundo, no lugar mais silencioso possível: o case novo
+   * nasceria publicado e sem descrição.
+   *
+   * Não é a `tagline`. A tagline é uma frase de capa, feita para ser lida
+   * **dentro** da página, ao lado do nome do projeto e sobre a cor dele
+   * ("Organizar a música da Missa sem planilha e caderno"); a descrição é lida
+   * **fora**, sozinha, num resultado de busca ou num card do LinkedIn, onde
+   * nada do contexto da página está presente. Derivar uma da outra faria o
+   * snippet do Google depender de um contexto que ele não tem.
+   */
+  description: string;
   kind: 'own' | 'work';
   status: 'live' | 'wip' | 'archived';
   liveUrl: string;
@@ -144,6 +161,30 @@ function httpsUrl(file: string, data: Data, key: string): string {
   const value = str(file, data, key);
   if (!value.startsWith('https://')) {
     fail(file, `campo \`${key}\` precisa ser uma URL https, veio "${value}"`);
+  }
+  return value;
+}
+
+/**
+ * Limites da `description` (§8).
+ *
+ * Não são o número mágico de nenhum buscador — o Google corta o snippet por
+ * pixel, não por caractere, e o corte varia com o dispositivo. São o piso e o
+ * teto do que uma frase precisa ter para funcionar sozinha: abaixo de 60 ela
+ * não diz o que o projeto é, e acima de 200 quem a escreveu está contando com
+ * um fim de frase que ninguém vai ler. É a mesma trava do dicionário do §8 em
+ * `content/site.ts`; existe aqui de novo porque o frontmatter não passa por lá.
+ */
+const DESCRIPTION_MIN = 60;
+const DESCRIPTION_MAX = 200;
+
+function description(file: string, data: Data): string {
+  const value = str(file, data, 'description').trim();
+  if (value.length < DESCRIPTION_MIN || value.length > DESCRIPTION_MAX) {
+    fail(
+      file,
+      `campo \`description\` tem ${value.length} caracteres — precisa ficar entre ${DESCRIPTION_MIN} e ${DESCRIPTION_MAX} (§8: é a meta description do case, lida fora da página)`,
+    );
   }
   return value;
 }
@@ -398,6 +439,7 @@ export function parseProject(source: string, file: string): Project {
     slug: slug as Accent,
     name: str(file, frontmatter, 'name'),
     tagline: str(file, frontmatter, 'tagline'),
+    description: description(file, frontmatter),
     kind: oneOf(file, frontmatter, 'kind', ['own', 'work'] as const),
     status: oneOf(file, frontmatter, 'status', ['live', 'wip', 'archived'] as const),
     liveUrl: httpsUrl(file, frontmatter, 'liveUrl'),

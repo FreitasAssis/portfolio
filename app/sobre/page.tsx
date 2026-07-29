@@ -1,7 +1,13 @@
+import type { Metadata } from 'next';
+
 import { Container } from '@/components/Container';
 import { Portrait } from '@/components/Portrait';
 import { TechLayers } from '@/components/TechLayers';
 import { ABOUT_PARAGRAPHS, ABOUT_SEEKING, EDUCATION } from '@/content/about';
+import { META } from '@/content/site';
+import { pageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = pageMetadata({ meta: META.sobre, path: '/sobre' });
 
 /**
  * `/sobre` (§3.4): **curto. Pessoa primeiro, tecnologia depois**, na voz do

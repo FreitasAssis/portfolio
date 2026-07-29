@@ -1,10 +1,17 @@
+import type { Metadata } from 'next';
+
 import { ContactBlock } from '@/components/ContactBlock';
 import { Container } from '@/components/Container';
 import { Hero } from '@/components/Hero';
 import { HowIWork } from '@/components/HowIWork';
+import { PersonJsonLd } from '@/components/JsonLd';
 import { ProjectCard } from '@/components/ProjectCard';
 import { TimelineCondensed } from '@/components/TimelineCondensed';
+import { META } from '@/content/site';
 import { getAllProjects } from '@/lib/projects';
+import { pageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = pageMetadata({ meta: META.home, path: '/' });
 
 /**
  * Home (§3.1), na ordem: hero, projetos próprios, trajetória condensada, como
@@ -29,6 +36,10 @@ export default async function Page() {
 
   return (
     <>
+      {/* §8: o `Person` só na home. Fica antes de tudo porque não pinta nada —
+          é um `<script type="application/ld+json">`, invisível na página. */}
+      <PersonJsonLd />
+
       <Hero />
 
       <Container as="section" width="wide" className="py-4">

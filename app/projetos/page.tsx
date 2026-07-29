@@ -1,7 +1,13 @@
+import type { Metadata } from 'next';
+
 import { Container } from '@/components/Container';
 import { ProjectCard } from '@/components/ProjectCard';
 import { Timeline } from '@/components/Timeline';
+import { META } from '@/content/site';
 import { getAllProjects } from '@/lib/projects';
+import { pageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = pageMetadata({ meta: META.projetos, path: '/projetos' });
 
 /**
  * `/projetos` (§3.2): **duas seções explicitamente rotuladas, nunca

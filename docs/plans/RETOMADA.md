@@ -35,12 +35,20 @@ Contrato: `docs/private/PORTFOLIO-BRIEF.md` (fora do git — repo é público).
 | 6b | Semear Asafe local, grupo demo no eaifez, capturar 8 prints | ✅ |
 | 7 | `/projetos` — cards + timeline | ✅ |
 | 8 | `/sobre`, `/contato`, CV | ✅ |
-| 9 | SEO e metadados por rota | ⬜ próxima |
-| 10 | OG images (começa por spike de viabilidade) | ⬜ |
+| 9 | SEO e metadados por rota | ✅ |
+| 10 | OG images (começa por spike de viabilidade) | ⬜ próxima |
 | 11 | Piso de qualidade — a11y, 360px, Lighthouse | ⬜ |
 | 12 | Deploy na Cloudflare + redirects 301 | ⬜ |
 
-Gates ao fim da sessão: `npm run verify` exit 0 · unit **201 passed | 0 todo** · e2e **49 passed**.
+Gates ao fim da sessão: `npm run verify` exit 0 · unit **230 passed | 0 todo** · e2e **65 passed**.
+
+**O que a Task 10 tem que preencher.** A estrutura de OG está pronta e falta só a imagem.
+O ponto de entrada é **um**: o parâmetro `image` de `pageMetadata` em `lib/seo.ts`. As seis
+rotas já emitem `og:title`, `og:description`, `og:url`, `og:site_name`, `og:locale` e
+`twitter:card`. Nenhuma `page.tsx` precisa mudar se o caminho vencedor for
+`opengraph-image.tsx` por rota (o Next preenche sozinho); se o caminho for o pré-build em
+`public/og/`, cada chamada passa o caminho e o case tira o dele do frontmatter. Há teste em
+`tests/unit/site.test.ts` que **falha quando a imagem entrar** — é o lembrete de atualizá-lo.
 
 ---
 
@@ -133,6 +141,18 @@ mudarem juntos; pertence à Task 11.
 6. **Medida de leitura**: os testes medem `1ch` na fonte real e têm **piso**, não só teto.
    A coluna já esteve em 56.5ch achando que estava em 68.
 7. **MDX come `{`** — placeholders `{{ }}` precisam estar entre crases.
+8. **`export const dynamic = 'force-static'` em `app/sitemap.ts` e `app/robots.ts`.** Sem a
+   linha o `next build` **falha** sob `output: 'export'` ("not configured on route
+   '/robots.txt'"): o Next trata rota de metadado como handler, e handler sem essa declaração
+   não vira arquivo. Vale para qualquer rota de metadado que nascer depois — inclusive
+   `opengraph-image.tsx`, na Task 10.
+9. **`metadataBase` é obrigatório no export.** Não existe requisição de onde inferir o host,
+   então sem `new URL(SITE_URL)` em `app/layout.tsx` o Next resolve canonical e OG contra
+   `http://localhost:3000` e o site publica links para a máquina de quem buildou. Há teste
+   em `tests/e2e/seo.spec.ts` procurando `localhost:3000` no `out/`.
+10. **O canonical da home não tem barra final.** O Next normaliza (`trailingSlash` é falso) e
+    emite `https://luizfreitas.com.br`. O `sitemap.ts` foi alinhado a isso de propósito — um
+    `<loc>` com `/` no fim apontaria para a URL que o próprio site declara não-canônica.
 
 ---
 

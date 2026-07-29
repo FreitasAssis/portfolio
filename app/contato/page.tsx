@@ -1,7 +1,13 @@
+import type { Metadata } from 'next';
+
 import { ContactPaths } from '@/components/ContactPaths';
 import { Container } from '@/components/Container';
 import { Portrait } from '@/components/Portrait';
 import { EMAIL, GITHUB, LINKEDIN } from '@/content/contact';
+import { META } from '@/content/site';
+import { pageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = pageMetadata({ meta: META.contato, path: '/contato' });
 
 /**
  * `/contato` (§3.4): os dois caminhos do §3.4 em tamanho de página, mais o

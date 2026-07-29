@@ -62,6 +62,7 @@ const FRONTMATTER = `---
 slug: asafe
 name: Asafe
 tagline: Organizar a música da Missa sem planilha e caderno.
+description: Um app para montar repertório litúrgico, com busca por posição na celebração e por perícope.
 kind: own
 status: live
 liveUrl: https://asafe.mus.br
@@ -124,14 +125,32 @@ describe('validação do frontmatter (§5)', () => {
     expect(p.order).toBe(1);
   });
 
-  it.each(['name', 'tagline', 'kind', 'status', 'liveUrl', 'accent', 'accentDark', 'order'])(
-    'sem %s, o erro cita o arquivo e o campo',
-    (campo) => {
-      expect(() => parseProject(sem(campo), 'asafe.mdx')).toThrow(
-        new RegExp(`asafe\\.mdx.*${campo}`),
-      );
-    },
-  );
+  it.each([
+    'name',
+    'tagline',
+    'description',
+    'kind',
+    'status',
+    'liveUrl',
+    'accent',
+    'accentDark',
+    'order',
+  ])('sem %s, o erro cita o arquivo e o campo', (campo) => {
+    expect(() => parseProject(sem(campo), 'asafe.mdx')).toThrow(
+      new RegExp(`asafe\\.mdx.*${campo}`),
+    );
+  });
+
+  // §8: a descrição do case é o que o Google e o LinkedIn mostram sozinho, sem
+  // nada da página em volta. Curta demais não diz o que o projeto é; longa
+  // demais aposta num fim de frase que ninguém lê.
+  it('rejeita description fora da faixa de 60 a 200 caracteres (§8)', () => {
+    const curta = VALIDO.replace(/^description:.*$/m, 'description: Um app.');
+    expect(() => parseProject(curta, 'asafe.mdx')).toThrow(/description.*7 caracteres/);
+
+    const longa = VALIDO.replace(/^description:.*$/m, `description: ${'a'.repeat(201)}`);
+    expect(() => parseProject(longa, 'asafe.mdx')).toThrow(/description.*201 caracteres/);
+  });
 
   it('repoUrl ausente não é o mesmo que repoUrl nulo — a ausência é erro', () => {
     // `repoUrl: null` é uma afirmação ("o repo é privado"); a ausência é
