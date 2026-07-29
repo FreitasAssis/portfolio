@@ -45,10 +45,14 @@ export default function ContatoPage() {
         {/* Uma linha, factual, sem urgência (§1): diz que os canais chegam, e
             não pede nada de quem está lendo. Não há CTA nesta página — ela é o
             destino, e um botão aqui só empurraria de volta para onde a pessoa
-            já está. */}
-        <p className="prose-measure mt-6 text-ink">
-          Qualquer um destes canais chega em mim. O currículo em PDF está na mesma lista.
-        </p>
+            já está.
+
+            Havia uma segunda frase — "O currículo em PDF está na mesma lista" —
+            e ela saiu: narrava o que está visível quatro linhas abaixo. Nasceu
+            de uma preocupação certa (o CV vivia dentro da caixa "Tenho uma
+            vaga" e corria risco de sumir com ela), mas a garantia de que o CV
+            apareça é ele estar na lista, não um aviso de que está. */}
+        <p className="prose-measure mt-6 text-ink">Qualquer um destes canais chega em mim.</p>
       </Container>
 
       <Container className="pt-10">
