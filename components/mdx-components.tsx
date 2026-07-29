@@ -1,4 +1,5 @@
 import type { MDXComponents } from 'mdx/types';
+import { MDXRemote } from 'next-mdx-remote/rsc';
 
 import type { Decision, StackItem } from '@/lib/projects';
 
@@ -28,13 +29,74 @@ export const mdxComponents: MDXComponents = {
   ),
   strong: (props) => <strong className="font-semibold" {...props} />,
   code: (props) => (
-    <code className="bg-paper-2 px-1.5 py-0.5 font-mono text-sm text-ink" {...props} />
+    <code
+      className="bg-paper-2 px-1.5 py-0.5 font-mono text-sm text-ink [overflow-wrap:anywhere]"
+      {...props}
+    />
   ),
   blockquote: (props) => (
     <blockquote className="mt-6 border-l-2 border-accent pl-4 text-ink-2 italic" {...props} />
   ),
   hr: () => <hr className="mt-12 border-rule" />,
 };
+
+/**
+ * O mapa restrito para a prosa que mora no FRONTMATTER — o `because` de cada
+ * decisão e o `why` de cada item da stack.
+ *
+ * Por que existe um segundo mapa: o `because` é o texto mais importante do
+ * site e ele estava saindo como texto puro, num `<p>` só. Isso custava duas
+ * coisas concretas. Sem parágrafo, a decisão dos dois eixos do Asafe virou um
+ * bloco de 171 palavras — o item que mais precisa ser lido é o que mais
+ * convida a desistir no meio. E sem `code`, `song_content` e
+ * `rounds.loser_unit_ids` saíam em serifada no meio da frase, justamente nos
+ * dois cases cujo argumento é modelagem de dados.
+ *
+ * Por que restrito e não o `mdxComponents` inteiro: o `because` não é um
+ * documento, é um parágrafo (ou três). Um `##` aqui dentro entraria na lista
+ * de `<h2>` da página e quebraria o índice do §3.3; uma lista ou uma imagem
+ * quebrariam o ritmo da seção. Quem fecha essa porta de verdade é o
+ * `parseProject`, que recusa construção de bloco no campo — este mapa só
+ * estiliza o que sobrou.
+ */
+const prosaComponents: MDXComponents = {
+  p: (props) => <p className="leading-relaxed" {...props} />,
+  // `text-ink` sobre a prosa em `text-ink-2`: o identificador ganha o mesmo
+  // degrau de contraste que tem no corpo do case.
+  //
+  // `overflow-wrap:anywhere` e não `break-words`: os dois deixam a palavra
+  // quebrar, mas só `anywhere` conta a quebra no cálculo de min-content — e é
+  // o min-content que dimensiona a trilha `1fr` da grade de cada decisão. Com
+  // `break-word`, `repertoire.liturgical_snapshot` (30 caracteres em mono, sem
+  // ponto de quebra natural) estourava a trilha e a página inteira ganhava
+  // 26px de rolagem horizontal a 360px, contra o §9.
+  code: (props) => (
+    <code
+      className="bg-paper-2 px-1.5 py-0.5 font-mono text-sm text-ink [overflow-wrap:anywhere]"
+      {...props}
+    />
+  ),
+  strong: (props) => <strong className="font-semibold text-ink" {...props} />,
+  em: (props) => <em className="italic" {...props} />,
+  a: (props) => (
+    <a className="text-accent-text underline underline-offset-4" {...props} />
+  ),
+};
+
+/**
+ * Um campo de prosa do frontmatter, compilado como MDX em tempo de build.
+ *
+ * O `space-y-4` mora aqui e não no mapa porque é o espaço ENTRE parágrafos: no
+ * mapa ele viraria margem do primeiro também, e o campo deixaria de encostar
+ * no que vem acima dele.
+ */
+function Prosa({ source, className = '' }: Readonly<{ source: string; className?: string }>) {
+  return (
+    <div className={`space-y-4 ${className}`}>
+      <MDXRemote source={source} components={prosaComponents} />
+    </div>
+  );
+}
 
 /**
  * A seção que carrega o site (§2). Ela é a única coisa que prova senioridade
@@ -64,7 +126,7 @@ export function Decisoes({ items }: { items: readonly Decision[] }) {
                 Escolhi <span className="text-accent-text">{decision.chose}</span> em vez de{' '}
                 {decision.insteadOf}.
               </p>
-              <p className="mt-3 leading-relaxed text-ink-2">{decision.because}</p>
+              <Prosa source={decision.because} className="mt-3 text-ink-2" />
             </div>
           </li>
         ))}
@@ -77,6 +139,16 @@ export function Decisoes({ items }: { items: readonly Decision[] }) {
  * §3.3: a stack vem "com o porquê de cada escolha não-óbvia" — e o §2 manda a
  * tecnologia aparecer sempre grudada num projeto, nunca flutuando sozinha.
  * Nome em mono (metadado, §6.3), porquê no corpo serifado.
+ *
+ * CUIDADO AO EDITAR — escolha óbvia não ganha um traço no lugar do porquê. A
+ * versão anterior punha `—` na segunda coluna quando `why` era `null`, e as
+ * duas primeiras linhas do Asafe (Next.js, TypeScript) liam como campo que
+ * ficou por preencher, e não como "não há o que explicar aqui". Sem porquê, o
+ * item é só o nome, e a grade de duas colunas nem chega a existir naquela
+ * linha — o que some é a coluna vazia, não a tecnologia.
+ *
+ * É `ul` e não `dl` por causa disso: um `dt` sem `dd` é `dl` inválido, e
+ * inventar um `dd` vazio só para satisfazer a marcação traz o buraco de volta.
  */
 export function Stack({ items }: { items: readonly StackItem[] }) {
   return (
@@ -84,14 +156,17 @@ export function Stack({ items }: { items: readonly StackItem[] }) {
       <h2 id="stack" className="font-display text-xl font-bold tracking-tight text-ink">
         Stack
       </h2>
-      <dl className="mt-6 space-y-4">
+      <ul className="mt-6 space-y-4">
         {items.map((item) => (
-          <div key={item.name} className="sm:grid sm:grid-cols-[11rem_1fr] sm:gap-x-4">
-            <dt className="font-mono text-sm text-ink">{item.name}</dt>
-            <dd className="leading-relaxed text-ink-2">{item.why ?? '—'}</dd>
-          </div>
+          <li
+            key={item.name}
+            className={item.why ? 'sm:grid sm:grid-cols-[11rem_1fr] sm:gap-x-4' : undefined}
+          >
+            <span className="font-mono text-sm text-ink">{item.name}</span>
+            {item.why && <Prosa source={item.why} className="text-ink-2" />}
+          </li>
         ))}
-      </dl>
+      </ul>
     </section>
   );
 }

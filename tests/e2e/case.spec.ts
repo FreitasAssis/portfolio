@@ -80,13 +80,37 @@ test('a linha do corpo fica na faixa de 65–75 caracteres (§6.3)', async ({ pa
   expect(medida).toBeLessThanOrEqual(75);
 });
 
-test('o case cabe em 360px sem rolagem horizontal (§9)', async ({ page }) => {
-  await page.setViewportSize({ width: 360, height: 740 });
-  await page.goto('/projetos/eaifez');
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
-  expect(overflow).toBeLessThanOrEqual(0);
+// Os dois, e não só um: o `because` compila `code` inline, e identificador
+// longo (`repertoire.liturgical_snapshot`) é palavra que não quebra. Quem
+// estoura a viewport de 360px é o case do Asafe, que é justamente o que a
+// versão anterior deste teste não abria.
+for (const slug of ['asafe', 'eaifez']) {
+  test(`o case do ${slug} cabe em 360px sem rolagem horizontal (§9)`, async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto(`/projetos/${slug}`);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
+}
+
+test('o `code` do frontmatter chega compilado, e não como crase literal', async ({ page }) => {
+  await page.goto('/projetos/asafe');
+  const decisoes = page.locator('section', { has: page.getByRole('heading', { name: 'Decisões' }) });
+  // O exemplo que sustenta a decisão dos dois eixos: interseção de intervalos
+  // e não igualdade de string. Se sair em serifada, com crase em volta, a
+  // parte mais técnica do site virou prosa solta.
+  await expect(decisoes.locator('code', { hasText: 'Lc 15,1-3.11-32' })).toBeVisible();
+  await expect(decisoes.getByText('`')).toHaveCount(0);
+});
+
+test('a decisão longa respira em parágrafos (§2)', async ({ page }) => {
+  await page.goto('/projetos/asafe');
+  const primeira = page.locator('#decisoes').locator('..').locator('ol > li').first();
+  // A decisão dos dois eixos carrega quatro ideias; num `<p>` só ela media 171
+  // palavras. O `+1` é a frase "Escolhi X em vez de Y", que não é prosa.
+  expect(await primeira.locator('p').count()).toBeGreaterThan(1 + 1);
 });
 
 test('o que falta está escrito na tela, não escondido (§0)', async ({ page }) => {

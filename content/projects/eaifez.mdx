@@ -13,7 +13,7 @@ stack:
   - Next.js
   - TypeScript
   - name: Supabase
-    why: Postgres, Auth (link mágico e Google) e Storage num serviço só. O RLS é a barreira de autorização; o service role só aparece no cron de fechamento e no seed.
+    why: Postgres, Auth (link mágico e Google) e Storage num serviço só. O RLS é a barreira de autorização; o `service role` só aparece no cron de fechamento e no seed.
   - name: Cloudflare Workers
     why: hospedagem e o cron horário que fecha as rodadas no mesmo lugar, num plano gratuito que permite uso comercial. O porquê inteiro está nas Decisões.
 cover:
@@ -29,51 +29,74 @@ shots:
 decisions:
   - chose: a unidade de 1 a N membros como quem compete
     insteadOf: pontuar no nível da pessoa
-    because: >-
-      Quem dá check-in é a pessoa (checkins.user_id); quem ganha ou perde é a
-      unidade — a rodada pontua, vence e cai no nível dela
-      (rounds.loser_unit_ids, o placar da temporada, o troféu). UNIT_SIZE = 2
-      é só o teto do pack de casais, não uma trava do schema: como a abstração é
-      1..N, o mesmo motor de rodada, veredito e prenda serve pack solo (unidade
-      de um), casais (dois) e um futuro pack de time, sem um único
-      if (é_casais). O pack define o tamanho da unidade; o motor é agnóstico.
-      E uma regra social veio de graça: o dia só conta para a unidade se todos
-      os membros atuais marcarem "fiz" — se um marca "fiz" e o outro "não
-      fiz", o estado vira "divergente", que é socialmente significativo: alguém
-      está devendo para o outro. Como a apuração usa os membros atuais, a turma
-      aguenta trocar de elenco no meio da temporada.
+    because: |-
+      No schema, a entidade que compete numa rodada não é a pessoa: é a `unit`
+      — dupla, trio ou indivíduo. Quem dá check-in é a pessoa
+      (`checkins.user_id`), mas quem ganha ou perde é a unidade
+      (`rounds.loser_unit_ids`, o placar da temporada, o troféu).
+
+      **Um motor, N formatos.** `UNIT_SIZE = 2` é só o teto do pack de casais,
+      não uma trava do schema. Como a abstração é 1..N, o mesmo motor de rodada,
+      veredito e prenda serve pack solo (unidade de um), casais (dois) e futuros
+      packs de time, sem um único `if (é_casais)`. O pack define o tamanho da
+      unidade; o motor é agnóstico. É o que torna "arquitetado para mais packs"
+      barato de verdade — a unidade é a costura.
+
+      **Check-in individual, resultado coletivo.** Desacoplar "quem marca" de
+      "quem vence" transforma um checkbox solitário num ritual de
+      responsabilidade compartilhada: o dia só conta para a unidade se **todos
+      os membros atuais** marcarem "fiz". Se um marca "fiz" e o outro "não fiz",
+      o estado vira `diverged` — que é socialmente significativo, alguém está
+      devendo para o outro. A confirmação mútua não foi um requisito, ela
+      emergiu de graça da abstração.
+
+      **Robusto a mudança de elenco.** A pontuação usa os membros atuais: marca
+      de ex-membro é ignorada, e perdedor que saiu da turma some da nomeação. A
+      abstração aguenta a turma mudar no meio da temporada.
   - chose: separar, no schema, o desafio privado do desafio de mostrar
     insteadOf: exigir prova em todo desafio
-    because: >-
-      Todo desafio carrega um modo, no enum challenge_mode. O privado é "só
-      entre vocês": marca que fez, sem plateia e sem prova. O de mostrar é
-      feito para ser exibido — habilita prova (link ou foto) e alimenta o card
-      compartilhável. Num app de casais isso é crítico, porque forçar
-      "mostre/prove" em tudo mataria justamente os desafios que reaproximam (um
-      abraço de trinta segundos, sem pressa). O default é confiar: marcou, tá
-      valendo, sem vigilância; a prova só entra onde o ponto é mostrar, e o app
-      não trata o usuário como suspeito. O que segura a mentira fácil é social,
-      não técnico — a confirmação mútua da unidade. E o mesmo enum é, ao mesmo
-      tempo, controle de privacidade e alavanca de aquisição: os de mostrar são
-      os que geram o card que traz gente nova, e os privados protegem a
-      intimidade que sustenta a retenção.
+    because: |-
+      Todo desafio carrega um modo, no enum `challenge_mode`. O privado ("só
+      entre vocês, ninguém mais vê") é íntimo, na base da confiança: você marca
+      que fez, sem plateia e sem prova. O de mostrar ("rende post") é feito para
+      ser exibido — habilita prova, link ou foto, e alimenta o card
+      compartilhável.
+
+      **Nem todo desafio quer plateia.** Num app de casais isso é crítico:
+      forçar "mostre/prove" em tudo mataria justamente os desafios que
+      reaproximam — um abraço de trinta segundos, sem pressa. O eixo
+      privado/mostrar deixa um só produto abrigar o íntimo e o exibível sem que
+      um contamine o outro.
+
+      **O modelo de confiança é explícito.** O default é confiar: marcou, tá
+      valendo, sem vigilância. A prova só entra onde o ponto é mostrar. É uma
+      postura de produto — o app não trata o usuário como suspeito — virada
+      design de dados. O que segura a mentira fácil é social, não técnico: a
+      confirmação mútua da unidade.
+
+      E o mesmo enum é, ao mesmo tempo, controle de privacidade e alavanca de
+      crescimento. Os desafios de mostrar são exatamente os que geram artefato
+      compartilhável, que puxa aquisição; os privados protegem a intimidade que
+      sustenta a retenção.
   - chose: Cloudflare Workers
     insteadOf: Vercel
-    because: >-
-      O plano Hobby da Vercel proíbe uso comercial, e o grátis da Cloudflare não
-      — hospedar na Vercel amarraria o projeto a um plano pago antes de existir
-      qualquer receita. Junto vem o Cron Trigger que fecha as rodadas de hora em
-      hora, no mesmo Worker, sem serviço à parte. O caminho é o
-      @opennextjs/cloudflare (o next-on-pages, de Cloudflare Pages, foi
-      descontinuado pela própria Cloudflare). O custo é sair do caminho feliz do
-      Next: o adapter anda atrás do framework, então convenção nova demora — o
-      proxy.ts do Next 16 ainda não roda ali, e o app fica no middleware.ts.
+    because: |-
+      O plano Hobby da Vercel proíbe uso comercial, e o grátis da Cloudflare
+      não. Hospedar na Vercel amarraria o projeto a um plano pago antes de
+      existir qualquer receita. Junto vem o Cron Trigger que fecha as rodadas de
+      hora em hora, no mesmo Worker, sem serviço à parte.
+
+      O caminho é o `@opennextjs/cloudflare` — o `next-on-pages`, de Cloudflare
+      Pages, foi descontinuado pela própria Cloudflare. O custo é sair do
+      caminho feliz do Next: o adapter anda atrás do framework, então convenção
+      nova demora a chegar. O `proxy.ts` do Next 16 ainda não roda ali, e o app
+      fica no `middleware.ts`.
   - chose: card de sentença como template do next/og
     insteadOf: gerar o card com IA
-    because: >-
+    because: |-
       O card é o clímax do produto e é também a imagem OG das páginas públicas
       da rodada: quando o link cai no WhatsApp, o preview é o card. Ele é
-      montado com next/og a partir dos dados da rodada e da skin do pack —
+      montado com `next/og` a partir dos dados da rodada e da skin do pack —
       renderiza no edge, cacheia e custa zero. Gerar por IA acrescentaria custo
       por card e variação, justamente onde o que se quer é uma peça reconhecível
       toda semana, com a voz do pack.

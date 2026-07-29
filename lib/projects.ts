@@ -35,7 +35,17 @@ export type StackItem = { name: string; why: string | null };
  * derrete no primeiro case escrito com pressa — some o "em vez de", que é
  * justamente a parte que prova que houve escolha, e o case volta a ser vitrine.
  */
-export type Decision = { chose: string; insteadOf: string; because: string };
+export type Decision = {
+  chose: string;
+  insteadOf: string;
+  /**
+   * Prosa em MDX: parágrafos e marcação inline, compilados em build time.
+   * Use `|-` no YAML, não `>-` — o escalar dobrado transforma linha em branco
+   * em UM `\n`, que markdown lê como quebra leve dentro do mesmo parágrafo, e
+   * o campo volta a ser o bloco único que essa mudança veio desfazer.
+   */
+  because: string;
+};
 
 export type Project = {
   /** Também é o acento: o slug é a chave de `[data-accent='…']` no CSS (§6.1). */
@@ -130,6 +140,42 @@ function field(file: string, item: Data, key: string, where: string): string {
 }
 
 /**
+ * Os campos de prosa do frontmatter (`because` e `why`) são compilados como
+ * MDX, para que a decisão possa respirar em parágrafos e chamar `song_content`
+ * de `song_content`. Isso abre uma porta que precisa ser fechada aqui: MDX
+ * aceita qualquer coisa, e um `##` dentro de um `because` entraria na lista de
+ * `<h2>` da página e quebraria o índice fixo do §3.3 — sem erro nenhum, só uma
+ * página torta em produção.
+ *
+ * Então o campo aceita só o que ele é: parágrafos de marcação inline. Bloco é
+ * recusado por nome, na hora do build, citando o arquivo e o campo. O mapa
+ * restrito de `components/mdx-components.tsx` estiliza; quem garante é isto.
+ */
+const BLOCOS_PROIBIDOS = [
+  { teste: /^\s{0,3}#{1,6}\s/m, nome: 'título' },
+  { teste: /^\s{0,3}([-*+]|\d+[.)])\s/m, nome: 'lista' },
+  { teste: /^\s{0,3}>/m, nome: 'citação' },
+  { teste: /^\s{0,3}(-{3,}|\*{3,}|_{3,})\s*$/m, nome: 'régua' },
+  { teste: /^\s{0,3}(```|~{3,})/m, nome: 'bloco de código' },
+  { teste: /^\s{0,3}\|/m, nome: 'tabela' },
+  { teste: /!\[/, nome: 'imagem' },
+  { teste: /<[A-Za-z/]/, nome: 'HTML ou JSX' },
+] as const;
+
+function prosa(file: string, item: Data, key: string, where: string): string {
+  const value = field(file, item, key, where);
+  for (const { teste, nome } of BLOCOS_PROIBIDOS) {
+    if (teste.test(value)) {
+      fail(
+        file,
+        `${where}: \`${key}\` aceita parágrafos e marcação inline (\`code\`, **forte**, [link]) — veio com ${nome} (§3.3)`,
+      );
+    }
+  }
+  return value;
+}
+
+/**
  * `alt` preguiçoso é a regressão mais fácil do §9 — ninguém revisa alt, e
  * "print da tela" passa em qualquer revisão de PR. Então o piso é mecânico:
  * precisa ser uma frase, e não pode começar pelo nome do suporte ("print de…",
@@ -162,7 +208,7 @@ function stackItem(file: string, raw: unknown, index: number): StackItem {
   }
   const item = raw as Data;
   const name = field(file, item, 'name', where);
-  const why = item.why === undefined || item.why === null ? null : field(file, item, 'why', where);
+  const why = item.why === undefined || item.why === null ? null : prosa(file, item, 'why', where);
   return { name, why };
 }
 
@@ -173,9 +219,12 @@ function decision(file: string, raw: unknown, index: number): Decision {
   }
   const item = raw as Data;
   return {
+    // `chose` e `insteadOf` são a FÓRMULA, não prosa: o componente monta a
+    // frase "Escolhi X em vez de Y" em volta deles. Continuam texto simples,
+    // e é de propósito — parágrafo no meio da fórmula a desmancharia.
     chose: field(file, item, 'chose', where),
     insteadOf: field(file, item, 'insteadOf', where),
-    because: field(file, item, 'because', where),
+    because: prosa(file, item, 'because', where),
   };
 }
 

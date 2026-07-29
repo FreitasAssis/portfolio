@@ -12,12 +12,12 @@ order: 1
 stack:
   - Next.js
   - name: Expo
-    why: o monorepo guarda o app nativo ao lado do web, e o domínio — perícope, tags efetivas, ranqueamento — mora em packages/core, compartilhado em vez de reescrito por plataforma.
+    why: o monorepo guarda o app nativo ao lado do web, e o domínio — perícope, tags efetivas, ranqueamento — mora em `packages/core`, compartilhado em vez de reescrito por plataforma.
   - TypeScript
   - name: Supabase
     why: Postgres, Auth, Storage e Realtime num serviço só. O RLS expressa nativamente o modelo "vejo o global + o meu + o do meu grupo", e o Realtime cobre a navegação sincronizada sem servidor always-on.
   - name: Drizzle ORM
-    why: dono do schema e das migrations, com as políticas de RLS versionadas no mesmo pacote e testadas no CI antes de migrar produção.
+    why: dono do schema e das migrations em `packages/db`, com as políticas de RLS versionadas ao lado delas e testadas no CI antes de migrar produção.
   - name: Cloudflare Workers
     why: o OpenNext roda o Next fora da Vercel, e o grátis da Cloudflare permite uso comercial e serve os links públicos pela CDN. Um app sem fins lucrativos precisa caber no plano gratuito.
 cover:
@@ -33,77 +33,115 @@ shots:
 decisions:
   - chose: busca por dois eixos — posição na celebração e perícope
     insteadOf: um eixo de busca só
-    because: >-
-      Posição diz onde a música entra no rito; perícope diz sobre o quê
-      ela fala. Só a posição devolve um repertório estruturalmente certo e
-      genérico — todo domingo precisa de uma Entrada, mas as leituras mudam. Só
-      a perícope devolve um repertório temático e fora de lugar, com o canto
-      reflexivo do Evangelho sugerido para uma Entrada festiva. O casamento por
-      perícope é por sobreposição normalizada de versículos, não por string
-      igual: Lc 15,11-32 e Lc 15,1-3.11-32 são a mesma parábola do filho
-      pródigo recortada de dois jeitos, e só a interseção de intervalos faz o
-      vínculo atravessar os anos. No ranqueador, o conteúdo lidera e a posição
-      restringe — foi assim que se corrigiu o caso de uma música de Comunhão
-      ligada a uma leitura que vazava para todos os momentos: o fix manteve o
-      sinal de conteúdo e restringiu pelo slot. Um motor só, com os dois eixos,
-      serve a Missa (rígida, guiada por posição) e o grupo de oração ou o
-      casamento, onde quem carrega é o tema.
+    because: |-
+      Posição diz **onde** a música entra no rito; perícope diz **sobre o quê**
+      ela fala. Uma sozinha te dá um repertório ou estruturalmente certo mas
+      genérico, ou temático mas fora de lugar — a escolha boa mora no
+      cruzamento.
+
+      Só a posição não basta porque todo domingo precisa de uma Entrada, mas as
+      leituras mudam: ela devolve "cabe aqui estruturalmente" e ignora se a
+      música conversa com a Palavra daquele dia. Só a perícope não basta porque
+      ela devolve "combina com o tema" sem noção de estrutura — um canto de eco
+      reflexivo do Evangelho sugerido para uma Entrada festiva.
+
+      O casamento por perícope é por sobreposição normalizada de versículos, e
+      não por string igual, porque a mesma passagem é recortada diferente a cada
+      dia e a cada ano. `Lc 15,11-32` e `Lc 15,1-3.11-32` são a mesma parábola
+      do filho pródigo, curta e longa; string igual falharia, interseção de
+      intervalos não. É o que faz o vínculo reaparecer com outro recorte e
+      atravessar anos.
+
+      Os dois eixos não são dois filtros paralelos, eles interagem — e foi o
+      código que mostrou isso. No ranqueador o vínculo com a leitura tem o maior
+      peso (o conteúdo lidera), mas o momento restringe. Corrigimos um caso em
+      que uma música de Comunhão ligada a uma leitura vazava para todos os
+      momentos: o fix manteve o sinal de conteúdo e restringiu pela posição.
+
+      Há ainda um motivo de generalização. A Missa é rígida e muito guiada por
+      posição; grupo de oração e casamento têm estrutura livre, e ali quem
+      carrega é a perícope. Um motor só, com os dois eixos mais tempo litúrgico,
+      hábito e frescor, serve os dois mundos. Tirar qualquer um dos eixos
+      derruba metade da promessa.
   - chose: AGPL-3.0
     insteadOf: MIT
-    because: >-
-      A GPL comum só dispara a obrigação de abrir o código quando o binário é
-      distribuído — e um app web nunca é distribuído, ele é hospedado. A
-      cláusula §13 da AGPL trata interagir com usuários pela rede como
-      distribuição: quem sobe um Asafe modificado é obrigado a publicar as
-      modificações. Podem derivar e forkar; não podem fechar. O trade-off é
-      honesto — a AGPL espanta parte da adoção comercial, porque muitas
-      empresas proíbem dependências AGPL, e se o objetivo fosse maximizar
-      adoção a MIT seria a escolha. Como o Asafe é uma ferramenta comunitária
-      sem fins lucrativos, proteger o trabalho dos voluntários pesou mais.
-      Marca e comunidade são proteções separadas da licença.
+    because: |-
+      A GPL comum só dispara a obrigação de abrir o código quando você distribui
+      o binário — e um app web nunca é distribuído, ele é hospedado. Com MIT (ou
+      até GPL), uma empresa poderia pegar o Asafe, modificar, rodar como serviço
+      fechado e nunca devolver nada. A AGPL trata "interagir com usuários pela
+      rede" como distribuição: quem sobe um Asafe modificado é obrigado a
+      publicar as modificações. Podem derivar e forkar; não podem fechar.
+
+      O trade-off é honesto: a AGPL espanta parte da adoção comercial, porque
+      muitas empresas proíbem dependências AGPL. Se o objetivo fosse maximizar
+      adoção, MIT seria a escolha. Como o Asafe é uma ferramenta comunitária sem
+      fins lucrativos, proteger o bem comum — ninguém privatiza o trabalho dos
+      voluntários — pesou mais que adoção máxima. Marca e comunidade são
+      proteções separadas da licença: a AGPL cobre o código, não a marca nem as
+      cifras que a comunidade contribui.
   - chose: licença de uso com consentimento explícito e registro probatório
     insteadOf: cessão dos direitos das cifras enviadas pela comunidade
-    because: >-
+    because: |-
       A regra de ouro do modelo é "estrutura é livre, conteúdo é restrito": a
-      referência da música (título, compositor, tags) mora em song, a cifra
-      mora à parte em song_content, com RLS própria — expor o metadado nunca
-      expõe a cifra. Antes de ir ao catálogo global, o proponente declara a
-      autoria. Obra própria abre um consentimento versionado (licença
-      escolhida, quem, quando): o autor não transfere titularidade, concede uma
-      licença de uso, e a atribuição acompanha a obra em toda superfície
-      pública. Obra de terceiro entra só como referência, salvo permissão com
-      evidência guardada em copyright_evidence e revisada por um moderador.
-      Não é um checkbox solto: é trilha auditável, que sustenta a decisão caso
-      surja questionamento.
+      referência de uma música (título, compositor, tags) mora em `song`, a
+      cifra mora à parte em `song_content`, com RLS própria. Expor o metadado
+      nunca expõe a cifra.
+
+      Antes de ir ao catálogo global, o proponente declara a autoria — obra
+      própria, domínio público, de outro autor, não sei. Obra própria abre um
+      consentimento: o autor escolhe a licença e **não transfere a titularidade
+      para o Asafe**, concede uma licença de uso. Continua sendo o autor, e a
+      atribuição acompanha a obra em toda superfície pública. O app nunca vira
+      dono do conteúdo do usuário. Obra de terceiro entra só como referência,
+      salvo permissão com evidência em `copyright_evidence`, revisada por um
+      moderador.
+
+      O registro probatório é isso: consentimento versionado e guardado como
+      prova — quem consentiu, qual licença, quando. Não é um checkbox solto, é
+      uma trilha auditável que sustenta a decisão caso surja questionamento.
   - chose: snapshot litúrgico congelado na criação do repertório
     insteadOf: apontar para a fonte litúrgica viva
-    because: >-
-      A camada litúrgica resolve, de fontes externas, qual domingo, o ciclo, o
-      tempo, a cor e as referências das leituras. É dado volátil: as APIs de
-      liturgia em português fazem scraping, mudam recorte e saem do ar. Por
-      isso, ao criar o repertório, grava-se uma cópia congelada em
-      repertoire.liturgical_snapshot. Snapshot ≠ cache: o cache
-      (lectionary) é referência regenerável, o snapshot é registro imutável —
-      como a nota fiscal, que copia o preço da compra em vez de apontar para o
-      preço atual. Se a fonte mudar amanhã, o repertório daquela Missa continua
-      mostrando o que foi montado. Só referências entram no snapshot; o texto
-      integral das leituras é da CNBB, é buscado ao vivo e nunca persistido.
+    because: |-
+      A camada litúrgica resolve, de fontes externas, qual domingo, o ciclo
+      A/B/C, o tempo, a cor e as referências das leituras. É dado volátil: as
+      APIs de liturgia em português fazem scraping, mudam recorte e saem do ar.
+      Por isso, na criação do repertório, grava-se uma cópia congelada em
+      `repertoire.liturgical_snapshot`.
+
+      A distinção-chave é **snapshot ≠ cache**: o cache (`lectionary`,
+      `liturgical_day`) é referência regenerável; o snapshot é registro
+      imutável. Como uma nota fiscal, que copia o preço da compra em vez de
+      apontar para o preço atual. Se a fonte externa mudar amanhã, o repertório
+      montado para uma Missa específica continua mostrando exatamente o que foi
+      montado.
+
+      Só referências entram no snapshot: o texto integral das leituras é da
+      CNBB, é buscado ao vivo e nunca persistido. De brinde, a `liturgical_key`
+      fica indexada e casa repertórios entre anos.
   - chose: RLS no Postgres
     insteadOf: autorização espalhada pelos endpoints da aplicação
-    because: >-
-      O modelo de acesso do domínio é "vejo o catálogo global, o meu, e o que
-      foi compartilhado com o meu grupo" — isso é, na essência, uma regra de
-      visibilidade de dado, e o lugar dela é o Row-Level Security. É à prova de
-      esquecimento: a política vale em toda query, por qualquer cliente ou
-      caminho, o que deixa o app usar supabase-js direto onde o RLS já
-      resolve, sem backend próprio. É também o que sustenta a separação
-      referência × conteúdo, porque song_content tem política própria — a
-      regra de direito autoral é garantida pelo banco, não pela esperança de
-      que todo endpoint se lembre dela. Link público é leitura por token via
-      função security definer: o visitante anônimo nunca varre tabela. O
-      trade-off é que RLS é sutil — um vazamento de metadado em song_tag
-      passou e foi fechado, e desde então é disciplina: RLS em toda tabela
-      nova ou alterada, com teste.
+    because: |-
+      O modelo de acesso do domínio é "cada usuário vê o catálogo global, o seu,
+      e o que foi compartilhado com o seu grupo". Isso é, na essência, uma regra
+      de visibilidade de dado — então o lugar certo dela é o Row-Level Security
+      do Postgres.
+
+      É **à prova de esquecimento**: não se depende de lembrar de pôr um `WHERE`
+      em cada rota, porque a política é aplicada pelo banco em toda query, por
+      qualquer cliente ou caminho. É o que deixa o app usar `supabase-js` direto
+      onde o RLS já resolve, sem backend próprio.
+
+      É também o que sustenta a separação referência × conteúdo: `song_content`
+      tem RLS separada de `song`, então a política de direito autoral é
+      garantida pelo banco, e não pela esperança de que todo endpoint se lembre
+      dela. E link público é leitura por token, via função `security definer` —
+      o visitante anônimo acessa só via token, nunca varre as tabelas.
+
+      O trade-off: RLS é poderoso mas sutil, e obriga a pensar cada tabela,
+      inclusive vazamento de metadado — achamos e fechamos um assim em
+      `song_tag`. Por isso virou disciplina: RLS em toda tabela nova ou
+      alterada, com teste.
 ---
 
 ## O problema

@@ -234,6 +234,70 @@ describe('decisões (§3.3)', () => {
 });
 
 /* ------------------------------------------------------------------------- *
+ * `because` e `why` são compilados como MDX, para que a decisão respire em
+ * parágrafos e chame `song_content` de `song_content`. O preço disso é que MDX
+ * aceita qualquer coisa: um `##` aqui dentro entra na lista de `<h2>` da página
+ * e quebra o índice fixo do §3.3, sem erro nenhum. Estes testes são a porta
+ * fechada — o mapa restrito de componentes só estiliza o que passar por aqui.
+ * ------------------------------------------------------------------------- */
+
+describe('prosa do frontmatter', () => {
+  const comBecause = (valor: string) => VALIDO.replace("    because: '{{ }}'", `    because: ${valor}`);
+
+  it('aceita parágrafos e marcação inline', () => {
+    const p = parseProject(comBecause('"Primeiro `code` e **forte**.\\n\\nSegundo."'), 'asafe.mdx');
+    expect(p.decisions[0].because).toBe('Primeiro `code` e **forte**.\n\nSegundo.');
+  });
+
+  it.each([
+    ['título', '"## Título"'],
+    ['lista', '"- um item"'],
+    ['lista', '"1. um item"'],
+    ['citação', '"> citando"'],
+    ['régua', '"---"'],
+    ['bloco de código', '"```js"'],
+    ['tabela', '"| a | b |"'],
+    ['imagem', '"![alt](/x.webp)"'],
+    ['HTML ou JSX', '"<Decisoes />"'],
+  ])('recusa %s no `because`, citando o campo', (nome, valor) => {
+    expect(() => parseProject(comBecause(valor), 'asafe.mdx')).toThrow(
+      new RegExp(`decisions\\[0\\].*because.*${nome}`),
+    );
+  });
+
+  it('vale também para o `why` da stack', () => {
+    const torto = VALIDO.replace(
+      "    why: banco, auth e RLS num serviço só",
+      '    why: "## banco"',
+    );
+    expect(() => parseProject(torto, 'asafe.mdx')).toThrow(/stack\[1\].*why.*título/);
+  });
+
+  it('decisão longa quebra em parágrafos, em vez de virar um bloco só', async () => {
+    // O motivo de a compilação em MDX existir. A decisão dos dois eixos do
+    // Asafe chegou a 171 palavras num `<p>` único: o item que mais precisa ser
+    // lido era o que mais convidava a desistir no meio.
+    //
+    // O teto é por PARÁGRAFO, não pelo campo — o campo pode (e deve) ser longo
+    // quando a decisão é densa; o que não pode é não respirar. 90 palavras já
+    // são ~9 linhas na coluna de 68 caracteres do §6.3.
+    //
+    // Isto também pega o erro de YAML mais fácil de cometer aqui: escrever o
+    // campo com `>-` em vez de `|-`. O escalar dobrado transforma linha em
+    // branco em UM `\n`, que o markdown lê como quebra leve dentro do mesmo
+    // parágrafo — os parágrafos somem e o bloco único volta, sem erro nenhum.
+    for (const p of await getAllProjects()) {
+      for (const d of p.decisions) {
+        for (const paragrafo of d.because.split(/\n\s*\n/)) {
+          const palavras = paragrafo.trim().split(/\s+/).length;
+          expect(palavras, `${p.slug} — "${d.chose}"`).toBeLessThanOrEqual(90);
+        }
+      }
+    }
+  });
+});
+
+/* ------------------------------------------------------------------------- *
  * Prints (§4.7 e §9)
  * ------------------------------------------------------------------------- */
 
