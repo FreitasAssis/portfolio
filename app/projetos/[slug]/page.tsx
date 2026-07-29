@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 
 import { AccentZone } from '@/components/AccentZone';
@@ -77,29 +78,93 @@ function Actions({ project }: { project: Project }) {
 }
 
 /**
+ * Um print, ou o buraco tracejado enquanto ele não existe (§0).
+ *
+ * `next/image` mesmo com `images.unoptimized` (§7 exporta estático): aqui ele
+ * não serve para otimizar, serve para o que o §9 pede — dimensão declarada,
+ * `loading="lazy"` de graça e, principalmente, a reserva de espaço. Sem ela a
+ * galeria fica no fim de uma página longa e empurra o rodapé ao carregar.
+ *
+ * CUIDADO AO EDITAR — a largura precisa ser DEFINIDA em CSS (`w-full` dentro de
+ * uma caixa com `max-w`), com a altura em `auto`. A proporção declarada nos
+ * atributos só reserva espaço se um dos dois eixos for definido: com
+ * `w-auto h-auto`, o navegador não tem de onde partir e a imagem mede 0×0 até
+ * o byte chegar — que é exatamente o pulo de layout que o §9 manda evitar.
+ * Medido no Chromium: com os dois em `auto`, as quatro imagens abriam em 0×0.
+ *
+ * Cantos arredondados e um fio de contorno vêm do §4.7 ("sem moldura de
+ * celular… cantos arredondados, sombra sutil"). O fio é necessário porque o
+ * fundo do próprio print é claro e encostaria no papel do site sem borda
+ * visível — o contorno é o que faz a captura ler como objeto.
+ */
+function Shot({
+  shot,
+  className = '',
+}: {
+  readonly shot: Project['cover'];
+  /** O teto da caixa. É por chamada porque capa e print têm pesos diferentes. */
+  readonly className?: string;
+}) {
+  return (
+    <div className={`w-full ${className}`}>
+      {isShotPending(shot) ? (
+        <ProjectCardPlaceholder label={shot.alt} spec="390–430pt · 2x/3x · WebP (§4.7)" />
+      ) : (
+        <Image
+          src={shot.src}
+          alt={shot.alt}
+          width={shot.width}
+          height={shot.height}
+          className="h-auto w-full rounded-md ring-1 ring-rule"
+        />
+      )}
+    </div>
+  );
+}
+
+/**
  * A galeria do §3.3 — capa e os três prints do §4.7, na quebra de grade, que é
  * onde mora o trabalho (§6.4).
  *
- * Os arquivos chegam na Task 6. Até lá reaproveita o mesmo buraco tracejado dos
- * cards da home: proporção real de celular e `{{ }}` por extenso, para que ir
- * ao ar sem print seja impossível de não notar. O `alt` já está escrito no
- * frontmatter e aparece dentro do buraco — é ele que vai para a imagem.
+ * CUIDADO AO EDITAR — a capa tem linha própria porque **a proporção dela varia
+ * por projeto**. A do "E aí, fez?" é a imagem OG do app, 1200×630, paisagem:
+ * o §4.7 a escolhe justamente por ser "o único elemento projetado para ser
+ * visto fora do app". A do Asafe é um repertório, retrato de celular. Numa
+ * grade de quatro colunas as duas orientações não convivem: a linha ganha a
+ * altura do print mais alto (~520px) e o card paisagem (~126px) flutua no meio
+ * dela como uma estampa. Em linha própria, cada uma é limitada pelo eixo que
+ * lhe cabe — a paisagem pela largura, a retrato pela altura — e as duas saem
+ * do mesmo tamanho aparente.
+ *
+ * Os três prints ficam num strip de três. Em uma coluna no telefone, e não em
+ * duas: são três, e duas colunas deixariam o terceiro órfão numa segunda
+ * linha, encostado à esquerda.
  */
-function Gallery({ project }: { project: Project }) {
-  const shots = [project.cover, ...project.shots];
+function Gallery({ project }: { readonly project: Project }) {
+  // A orientação sai da medida declarada, não de um `if (slug === 'eaifez')`:
+  // é o dado do projeto que decide, e um case novo com capa paisagem acerta
+  // sozinho. Print pendente cai em retrato, que é a forma do placeholder.
+  const capaPaisagem = !isShotPending(project.cover) && project.cover.width > project.cover.height;
+
   return (
     <Container as="section" width="wide" className="py-14">
       <h2 className="sr-only">Prints do {project.name}</h2>
-      <ul className="grid grid-cols-2 justify-items-center gap-8 lg:grid-cols-4">
-        {shots.map((shot) => (
-          <li key={shot.alt}>
-            {isShotPending(shot) ? (
-              <ProjectCardPlaceholder label={shot.alt} spec="390–430pt · 2x/3x · WebP (§4.7)" />
-            ) : (
-              // A Task 6 troca isto por <Image> com dimensões declaradas (§9).
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={shot.src} alt={shot.alt} className="w-full max-w-[15rem]" />
-            )}
+
+      <div className="flex justify-center">
+        <Shot shot={project.cover} className={capaPaisagem ? 'max-w-[34rem]' : 'max-w-[15rem]'} />
+      </div>
+
+      {/* O strip de três só abre em `lg`, e o critério é medido, não estético:
+          empilhado, cada print tem 270px. Numa grade de três, a coluna só
+          alcança esses 270px a partir de ~874px de viewport — em `sm` daria
+          165px e em `md`, 202px. Abrir antes faria a captura ENCOLHER ao
+          ganhar espaço de tela, que é o pior dos dois mundos. De `lg` para
+          cima o teto sai e o print ocupa a coluna inteira: 290px em 1024,
+          306px na largura máxima do contêiner. */}
+      <ul className="mt-10 grid justify-items-center gap-8 lg:grid-cols-3">
+        {project.shots.map((shot) => (
+          <li key={shot.alt} className="w-full max-w-[15rem] lg:max-w-none">
+            <Shot shot={shot} />
           </li>
         ))}
       </ul>

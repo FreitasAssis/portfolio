@@ -16,12 +16,18 @@ import { ACCENTS, type Accent } from '@/components/AccentZone';
 
 const CONTENT_DIR = join(process.cwd(), 'content/projects');
 
+/**
+ * Um print que ainda não existe: o `{{ }}` do §0 no lugar do arquivo.
+ * Sem arquivo não há dimensão, então os dois campos são `null` — e o tipo diz
+ * isso, em vez de deixar `number | null` vazando para quem renderiza.
+ */
+export type PendingShot = { src: string; alt: string; width: null; height: null };
+
+/** Um print de verdade, com a dimensão declarada que o §9 exige. */
+export type ReadyShot = { src: string; alt: string; width: number; height: number };
+
 /** Um print. `alt` é obrigatório e descritivo — §9 não negocia. */
-export type Shot = {
-  /** Caminho do `.webp`, ou o placeholder `{{ }}` enquanto o print não existe. */
-  src: string;
-  alt: string;
-};
+export type Shot = PendingShot | ReadyShot;
 
 /** §3.3: a stack vem "com o porquê de cada escolha não-óbvia". Escolha óbvia
  *  não precisa de porquê, então `why` é opcional — mas é um campo, não um
@@ -68,8 +74,14 @@ export type Project = {
   body: string;
 };
 
-/** Enquanto o arquivo do print não existe (Task 6), o `src` é o `{{ }}` do §0. */
-export function isShotPending(shot: Shot): boolean {
+/**
+ * Enquanto o arquivo do print não existe (Task 6b), o `src` é o `{{ }}` do §0.
+ *
+ * É predicado de tipo: quem passar por aqui recebe `ReadyShot` no ramo de
+ * baixo, com `width` e `height` já garantidos como número. É o que deixa o
+ * `next/image` receber dimensão sem `!` nem `?? 0` na página.
+ */
+export function isShotPending(shot: Shot): shot is PendingShot {
   return shot.src.trim().startsWith('{{');
 }
 
@@ -184,6 +196,33 @@ function prosa(file: string, item: Data, key: string, where: string): string {
  */
 const ALT_PREGUICOSO = /^(print|screenshot|imagem|foto|captura)\b/i;
 
+/**
+ * Dimensão do print, em pixels do arquivo.
+ *
+ * Por que o número vem do frontmatter e não é lido do `.webp` em build time:
+ * `parseProject` é puro de propósito — "separado da leitura em disco para que
+ * o teste possa exercitar arquivo torto sem precisar escrever arquivo torto no
+ * repo". Medir o arquivo aqui dentro amarraria a validação ao disco e mataria
+ * essa separação.
+ *
+ * O risco óbvio do número escrito à mão é ele mentir sobre o arquivo — e aí a
+ * reserva de espaço fica errada, que é justamente o problema de CLS que o §9
+ * manda resolver. Esse buraco é fechado por teste: `tests/unit/projects.test.ts`
+ * lê o cabeçalho de cada `.webp` e compara com o declarado. É o mesmo padrão
+ * que já vale para o hex do acento (frontmatter × globals.css) e para a stack
+ * (frontmatter × CV): a declaração é explícita, e um teste a amarra à realidade.
+ */
+function dimensao(file: string, item: Data, key: string, where: string): number {
+  const value = item[key];
+  if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
+    fail(
+      file,
+      `${where}: \`${key}\` precisa ser a medida do arquivo em pixels, inteira e positiva — o §9 exige dimensão declarada em toda imagem`,
+    );
+  }
+  return value;
+}
+
 function shot(file: string, raw: unknown, where: string): Shot {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
     fail(file, `${where}: precisa ser um objeto { src, alt } (§9 exige alt em todo print)`);
@@ -194,7 +233,30 @@ function shot(file: string, raw: unknown, where: string): Shot {
   if (alt.trim().length <= 20 || ALT_PREGUICOSO.test(alt.trim())) {
     fail(file, `${where}: \`alt\` precisa descrever a tela, não o suporte — veio "${alt}" (§9)`);
   }
-  return { src, alt };
+
+  // Print pendente não tem arquivo, logo não tem medida. Declarar uma seria
+  // inventar número — e número inventado aqui vira reserva de espaço errada no
+  // dia em que o arquivo chegar com outro tamanho.
+  if (src.trim().startsWith('{{')) {
+    if (item.width !== undefined || item.height !== undefined) {
+      fail(file, `${where}: print pendente (\`{{ }}\`) não declara \`width\`/\`height\``);
+    }
+    return { src, alt, width: null, height: null };
+  }
+
+  if (!src.startsWith('/') || !src.endsWith('.webp')) {
+    // §9: "Imagens em .webp". O caminho é absoluto porque é servido de
+    // `public/` — relativo quebraria só nas rotas aninhadas, que é o pior tipo
+    // de quebra: a que não aparece na página que você estava olhando.
+    fail(file, `${where}: \`src\` precisa ser um caminho absoluto \`.webp\` em public/, veio "${src}" (§9)`);
+  }
+
+  return {
+    src,
+    alt,
+    width: dimensao(file, item, 'width', where),
+    height: dimensao(file, item, 'height', where),
+  };
 }
 
 function stackItem(file: string, raw: unknown, index: number): StackItem {

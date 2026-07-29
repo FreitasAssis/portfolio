@@ -115,8 +115,58 @@ test('a decisão longa respira em parágrafos (§2)', async ({ page }) => {
 
 test('o que falta está escrito na tela, não escondido (§0)', async ({ page }) => {
   await page.goto('/projetos/asafe');
-  // Os prints são da Task 6b. Enquanto não chegam, o buraco é visível.
+  // Os prints do Asafe ainda estão sendo capturados. Enquanto não chegam, o
+  // buraco é visível — e quando chegarem, esta contagem cai para 0 e o teste
+  // vira a afirmação de que não falta mais nada.
   await expect(page.getByText(/\{\{ print:/)).toHaveCount(4);
   // A prosa chegou na Task 6a: nenhum `{{ }}` sobra no corpo do case.
   await expect(page.locator('article').getByText(/\{\{/)).toHaveCount(0);
+});
+
+test('o case com print pronto não mostra buraco nenhum (§0)', async ({ page }) => {
+  await page.goto('/projetos/eaifez');
+  await expect(page.getByText(/\{\{/)).toHaveCount(0);
+
+  const galeria = page.locator('section', { has: page.getByRole('heading', { name: /^Prints do/ }) });
+  const imagens = galeria.getByRole('img');
+  await expect(imagens).toHaveCount(4);
+
+  // §9: dimensão declarada em toda imagem. Sem os atributos, o navegador não
+  // reserva espaço e a galeria empurra o rodapé ao carregar — que é o motivo
+  // de o §9 pedir `next/image` em vez de `<img>` solto.
+  for (const img of await imagens.all()) {
+    await expect(img).toHaveAttribute('width', /^\d+$/);
+    await expect(img).toHaveAttribute('height', /^\d+$/);
+    await expect(img).toHaveAttribute('loading', 'lazy');
+  }
+
+  // A capa é paisagem (1200×630, a imagem OG do app) e os três prints são
+  // retrato de celular. As duas orientações convivem na mesma galeria — é o
+  // que a linha separada da capa existe para resolver.
+  const proporcao = async (n: number) => {
+    const box = await imagens.nth(n).boundingBox();
+    return box!.width / box!.height;
+  };
+  expect(await proporcao(0)).toBeGreaterThan(1);
+  for (const n of [1, 2, 3]) expect(await proporcao(n)).toBeLessThan(1);
+});
+
+test('a galeria reserva o espaço antes de a imagem chegar (§9)', async ({ page }) => {
+  // O motivo de o §9 pedir dimensão declarada é este, e não o atributo em si:
+  // a galeria fica no fim de uma página longa, e sem reserva ela empurra o
+  // rodapé quando os quatro arquivos carregam.
+  //
+  // Com a imagem bloqueada, a caixa tem que continuar de pé. A primeira versão
+  // desta galeria media 0×0 aqui: `w-auto h-auto` deixava os dois eixos
+  // indefinidos, e a proporção dos atributos não tinha de onde partir.
+  await page.route('**/projects/**', (route) => route.abort());
+  await page.goto('/projetos/eaifez');
+
+  const imagens = page.locator('section img');
+  await expect(imagens).toHaveCount(4);
+  for (const img of await imagens.all()) {
+    const box = await img.boundingBox();
+    expect(box!.width).toBeGreaterThan(0);
+    expect(box!.height).toBeGreaterThan(0);
+  }
 });

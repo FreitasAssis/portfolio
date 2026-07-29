@@ -1,7 +1,10 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { ACCENTS } from '@/components/AccentZone';
-import { getAllProjects, getProject, parseProject } from '@/lib/projects';
+import { getAllProjects, getProject, isShotPending, parseProject } from '@/lib/projects';
 
 import { accentSlugsInCss, resolveTokens, token } from '../helpers/globals-css';
 
@@ -333,6 +336,125 @@ describe('prints (§9)', () => {
       expect(p.shots.length).toBeGreaterThanOrEqual(1);
       expect(p.shots.length).toBeLessThanOrEqual(3);
     }
+  });
+});
+
+/* ------------------------------------------------------------------------- *
+ * Dimensão declarada (§9: "Imagens em .webp, com next/image e dimensões
+ * declaradas").
+ *
+ * O número mora no frontmatter porque `parseProject` é puro e não lê disco. O
+ * preço disso é que ele pode mentir sobre o arquivo — e dimensão errada é pior
+ * que dimensão ausente: reserva o espaço errado e o layout pula do mesmo jeito,
+ * só que agora com a aparência de resolvido. Este bloco é o que fecha o buraco:
+ * lê o cabeçalho de cada `.webp` e compara com o declarado.
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Largura e altura pelo cabeçalho do arquivo — os primeiros 30 bytes bastam.
+ *
+ * À mão em vez de uma dependência: são três variantes de contêiner (`VP8 `
+ * lossy, `VP8L` lossless, `VP8X` estendido) e vinte linhas, e a alternativa
+ * seria puxar um pacote inteiro para um teste. Mesma conta que o
+ * `tests/e2e/static-server.mjs` já fez.
+ */
+function webpSize(file: string): { width: number; height: number } {
+  const b = readFileSync(file);
+  if (b.toString('ascii', 0, 4) !== 'RIFF' || b.toString('ascii', 8, 12) !== 'WEBP') {
+    throw new Error(`${file}: não é um WebP`);
+  }
+  const formato = b.toString('ascii', 12, 16);
+  if (formato === 'VP8 ') {
+    return { width: b.readUInt16LE(26) & 0x3fff, height: b.readUInt16LE(28) & 0x3fff };
+  }
+  if (formato === 'VP8L') {
+    const bits = b.readUInt32LE(21);
+    return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 };
+  }
+  if (formato === 'VP8X') {
+    const ler24 = (i: number) => b[i] | (b[i + 1] << 8) | (b[i + 2] << 16);
+    return { width: ler24(24) + 1, height: ler24(27) + 1 };
+  }
+  throw new Error(`${file}: contêiner WebP desconhecido (${formato})`);
+}
+
+describe('dimensão dos prints (§9)', () => {
+  it('a medida declarada é a medida do arquivo', async () => {
+    let conferidos = 0;
+    for (const p of await getAllProjects()) {
+      for (const shot of [p.cover, ...p.shots]) {
+        if (isShotPending(shot)) continue;
+        const file = join(process.cwd(), 'public', shot.src);
+        expect(existsSync(file), `${p.slug}: ${shot.src} não existe em public/`).toBe(true);
+        expect(webpSize(file), `${p.slug}: ${shot.src}`).toEqual({
+          width: shot.width,
+          height: shot.height,
+        });
+        conferidos += 1;
+      }
+    }
+    // Se um dia todo mundo virar `{{ }}` de novo, o laço acima passa vazio e o
+    // teste vira decoração. Os quatro do "E aí, fez?" são o piso de hoje.
+    expect(conferidos).toBeGreaterThanOrEqual(4);
+  });
+
+  it('convivem um case com print de verdade e outro ainda pendente (§0)', async () => {
+    // O carregador não pode exigir que os dois cases estejam no mesmo estado —
+    // é exatamente a situação enquanto o Asafe é capturado. Quando os prints
+    // dele entrarem, este teste continua valendo: ele afirma a regra por print,
+    // não o placar entre os projetos.
+    const todos = await getAllProjects();
+    for (const p of todos) {
+      for (const shot of [p.cover, ...p.shots]) {
+        if (isShotPending(shot)) {
+          expect(shot.width, `${p.slug}: pendente não declara medida`).toBeNull();
+          expect(shot.height).toBeNull();
+        } else {
+          expect(shot.width, `${p.slug}: ${shot.src}`).toBeGreaterThan(0);
+          expect(shot.height).toBeGreaterThan(0);
+        }
+      }
+    }
+    // E o estado de hoje, para que a virada do Asafe seja uma mudança visível
+    // aqui, e não um silêncio: um case inteiro pronto, um case inteiro pendente.
+    const pendentesPorCase = todos.map(
+      (p) => [p.cover, ...p.shots].filter(isShotPending).length,
+    );
+    expect(pendentesPorCase.some((n) => n === 0)).toBe(true);
+  });
+
+  it('exige a medida quando o print é de verdade', () => {
+    const real = VALIDO.replace(
+      "cover:\n  src: '{{ }}'",
+      'cover:\n  src: /projects/asafe/cover.webp',
+    );
+    expect(() => parseProject(real, 'asafe.mdx')).toThrow(/cover.*width/);
+  });
+
+  it('recusa medida em print ainda pendente', () => {
+    const comMedida = VALIDO.replace("cover:\n  src: '{{ }}'", "cover:\n  width: 1200\n  src: '{{ }}'");
+    expect(() => parseProject(comMedida, 'asafe.mdx')).toThrow(/cover.*pendente/);
+  });
+
+  it('recusa medida que não é pixel inteiro e positivo', () => {
+    const base = VALIDO.replace(
+      "cover:\n  src: '{{ }}'",
+      'cover:\n  src: /projects/asafe/cover.webp\n  width: 1200\n  height: 630',
+    );
+    expect(() => parseProject(base.replace('height: 630', 'height: 0'), 'asafe.mdx')).toThrow(
+      /cover.*height/,
+    );
+    expect(() => parseProject(base.replace('height: 630', 'height: 630.5'), 'asafe.mdx')).toThrow(
+      /cover.*height/,
+    );
+  });
+
+  it('recusa src que não é .webp em public/ (§9)', () => {
+    const png = VALIDO.replace(
+      "cover:\n  src: '{{ }}'",
+      'cover:\n  src: /projects/asafe/cover.png\n  width: 1200\n  height: 630',
+    );
+    expect(() => parseProject(png, 'asafe.mdx')).toThrow(/cover.*webp/);
   });
 });
 
