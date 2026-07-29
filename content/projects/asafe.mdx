@@ -21,15 +21,23 @@ stack:
   - name: Cloudflare Workers
     why: o OpenNext roda o Next fora da Vercel, e o grátis da Cloudflare permite uso comercial e serve os links públicos pela CDN. Um app sem fins lucrativos precisa caber no plano gratuito.
 cover:
-  src: '{{ }}'
+  src: /projects/asafe/cover.webp
+  width: 1290
+  height: 2796
   alt: repertório do Asafe montado na ordem do rito, com um bloco de músicas para cada momento da celebração
 shots:
-  - src: '{{ }}'
-    alt: tela de liturgia do dia do Asafe, com as leituras, o salmo e as músicas sugeridas
-  - src: '{{ }}'
-    alt: modo ao vivo do Asafe, com a cifra em ChordPro transposta e a projeção sincronizada
-  - src: '{{ }}'
-    alt: catálogo comunitário do Asafe, com as cifras enviadas aguardando curadoria
+  - src: /projects/asafe/01.webp
+    width: 1290
+    height: 2796
+    alt: tela de montagem de repertório do Asafe, com o seletor aberto no momento Comunhão e as músicas sugeridas ranqueadas, cada uma etiquetada com o motivo — combina com a leitura, do momento, do tempo, costuma aparecer aqui — acima da lista com todo o catálogo
+  - src: /projects/asafe/02.webp
+    width: 1290
+    height: 2796
+    alt: modo ao vivo do Asafe, com a cifra em ChordPro transposta e a sessão sincronizada seguindo o mestre da equipe
+  - src: /projects/asafe/03.webp
+    width: 1290
+    height: 2796
+    alt: fila de moderação do Asafe, com uma cifra enviada aguardando aprovação, os vínculos com leituras propostos pela comunidade e o cadastro de fontes autorizadas
 decisions:
   - chose: busca por dois eixos — posição na celebração e perícope
     insteadOf: um eixo de busca só
@@ -142,6 +150,10 @@ decisions:
       inclusive vazamento de metadado — achamos e fechamos um assim em
       `song_tag`. Por isso virou disciplina: RLS em toda tabela nova ou
       alterada, com teste.
+
+      No "E aí, fez?" a mesma escolha guarda outra coisa: a policy trava a
+      janela de check-in, e não dá para marcar retroativo nem depois do apito.
+      Aqui o RLS guarda o **quem**; lá, o **quando**.
 ---
 
 ## O problema

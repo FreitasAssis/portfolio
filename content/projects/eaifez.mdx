@@ -108,6 +108,36 @@ decisions:
       renderiza no edge, cacheia e custa zero. Gerar por IA acrescentaria custo
       por card e variação, justamente onde o que se quer é uma peça reconhecível
       toda semana, com a voz do pack.
+  - chose: sorteio diário determinístico, por hash
+    insteadOf: sortear com random() e gravar o resultado para estabilizar
+    because: |-
+      `order by md5(rid || target_day || c.id) limit 1`: mesmo input, mesmo
+      resultado. Determinismo é idempotência de graça — a página chama o sorteio
+      a cada render e sempre chega no mesmo desafio, sem precisar gravar para
+      estabilizar. Aleatório só seria estável se gravasse, e gravar é justamente
+      o que abre corrida.
+
+      `ON CONFLICT (round_id, day)` cobre a corrida do **mesmo dia**: duas
+      pessoas abrindo o app no mesmo segundo computam o mesmo md5, e se as duas
+      tentarem inserir, o conflito resolve.
+
+      `pg_advisory_xact_lock(hashtext(rid))` cobre a corrida **entre dias**, que
+      é a sutileza fácil de perder: como o md5 inclui o dia, dois dias sorteados
+      em paralelo — o catch-up de ontem na virada da meia-noite — poderiam
+      escolher o mesmo desafio sem se enxergarem, e o `ON CONFLICT (round_id,
+      day)` não pega colisão entre dias. O lock serializa os sorteios do mesmo
+      round. O `unique (round_id, challenge_id)` é o cinto no dado: com o lock
+      ele nunca dispara, e existe para o caso de o lock falhar.
+
+      A exclusão histórica degrada com elegância: exclui o que já saiu em
+      qualquer rodada da turma e, com o pool esgotado, volta para "só não repete
+      nesta rodada" — nunca falha em sortear.
+
+      O trade-off é honesto: md5 não é aleatoriedade uniforme, é pseudo-sorteio
+      determinístico. Para "qual diário sai terça?" isso é irrelevante — não é
+      jogo de azar e não há aposta. Dá para prever amanhã, se souber a fórmula;
+      mas a RPC recusa sortear o futuro (`target_day > today_sp` é erro), então
+      não dá para espiar pelo app.
 ---
 
 ## O problema

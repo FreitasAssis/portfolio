@@ -150,8 +150,14 @@ function Gallery({ project }: { readonly project: Project }) {
     <Container as="section" width="wide" className="py-14">
       <h2 className="sr-only">Prints do {project.name}</h2>
 
+      {/* A capa retrato tem teto MAIOR que o dos prints (20rem contra os 17rem
+          a que a coluna chega em `lg`), e não o mesmo. Com o teto igual, a capa
+          do Asafe — que é retrato, ao contrário da do "E aí, fez?" — sairia
+          menor que os três prints que ela encabeça, porque o strip cresce com a
+          coluna e ela não. Capa menor que a galeria inverte a hierarquia que o
+          §3.3 dá a ela. */}
       <div className="flex justify-center">
-        <Shot shot={project.cover} className={capaPaisagem ? 'max-w-[34rem]' : 'max-w-[15rem]'} />
+        <Shot shot={project.cover} className={capaPaisagem ? 'max-w-[34rem]' : 'max-w-[20rem]'} />
       </div>
 
       {/* O strip de três só abre em `lg`, e o critério é medido, não estético:

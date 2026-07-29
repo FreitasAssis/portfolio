@@ -394,33 +394,32 @@ describe('dimensão dos prints (§9)', () => {
       }
     }
     // Se um dia todo mundo virar `{{ }}` de novo, o laço acima passa vazio e o
-    // teste vira decoração. Os quatro do "E aí, fez?" são o piso de hoje.
-    expect(conferidos).toBeGreaterThanOrEqual(4);
+    // teste vira decoração. Dois cases × (capa + 3) é o piso.
+    expect(conferidos).toBe(8);
   });
 
-  it('convivem um case com print de verdade e outro ainda pendente (§0)', async () => {
-    // O carregador não pode exigir que os dois cases estejam no mesmo estado —
-    // é exatamente a situação enquanto o Asafe é capturado. Quando os prints
-    // dele entrarem, este teste continua valendo: ele afirma a regra por print,
-    // não o placar entre os projetos.
-    const todos = await getAllProjects();
-    for (const p of todos) {
+  it('nenhum print pendente sobrou (§0)', async () => {
+    // Os dois cases estão capturados. Enquanto um deles não estava, este teste
+    // afirmava a convivência dos dois estados; agora afirma o fim dela. A regra
+    // por print continua sendo a mesma, e é ela que segura um projeto novo.
+    for (const p of await getAllProjects()) {
       for (const shot of [p.cover, ...p.shots]) {
-        if (isShotPending(shot)) {
-          expect(shot.width, `${p.slug}: pendente não declara medida`).toBeNull();
-          expect(shot.height).toBeNull();
-        } else {
-          expect(shot.width, `${p.slug}: ${shot.src}`).toBeGreaterThan(0);
-          expect(shot.height).toBeGreaterThan(0);
-        }
+        expect(isShotPending(shot), `${p.slug}: ${shot.alt} ainda é {{ }}`).toBe(false);
+        expect(shot.width, `${p.slug}: ${shot.src}`).toBeGreaterThan(0);
+        expect(shot.height).toBeGreaterThan(0);
       }
     }
-    // E o estado de hoje, para que a virada do Asafe seja uma mudança visível
-    // aqui, e não um silêncio: um case inteiro pronto, um case inteiro pendente.
-    const pendentesPorCase = todos.map(
-      (p) => [p.cover, ...p.shots].filter(isShotPending).length,
-    );
-    expect(pendentesPorCase.some((n) => n === 0)).toBe(true);
+  });
+
+  it('o caminho do print pendente continua de pé para o próximo projeto', () => {
+    // Nenhum conteúdo real exercita mais o `{{ }}`, então quem mantém esse
+    // ramo vivo é este teste sintético. Sem ele, o placeholder do §0 apodrece
+    // sem ninguém notar — e ele é o que segura o próximo case a ir ao ar com
+    // buraco visível em vez de imagem quebrada.
+    const p = parseProject(VALIDO, 'asafe.mdx');
+    expect(isShotPending(p.cover)).toBe(true);
+    expect(p.cover.width).toBeNull();
+    expect(p.cover.height).toBeNull();
   });
 
   it('exige a medida quando o print é de verdade', () => {

@@ -113,42 +113,50 @@ test('a decisão longa respira em parágrafos (§2)', async ({ page }) => {
   expect(await primeira.locator('p').count()).toBeGreaterThan(1 + 1);
 });
 
-test('o que falta está escrito na tela, não escondido (§0)', async ({ page }) => {
-  await page.goto('/projetos/asafe');
-  // Os prints do Asafe ainda estão sendo capturados. Enquanto não chegam, o
-  // buraco é visível — e quando chegarem, esta contagem cai para 0 e o teste
-  // vira a afirmação de que não falta mais nada.
-  await expect(page.getByText(/\{\{ print:/)).toHaveCount(4);
-  // A prosa chegou na Task 6a: nenhum `{{ }}` sobra no corpo do case.
-  await expect(page.locator('article').getByText(/\{\{/)).toHaveCount(0);
-});
+// Os dois cases estão capturados: nenhum dos dois pode mostrar buraco, e os
+// dois precisam ter as quatro imagens com dimensão declarada.
+for (const slug of ['asafe', 'eaifez']) {
+  test(`o case do ${slug} não mostra buraco nenhum (§0)`, async ({ page }) => {
+    await page.goto(`/projetos/${slug}`);
+    await expect(page.getByText(/\{\{/)).toHaveCount(0);
 
-test('o case com print pronto não mostra buraco nenhum (§0)', async ({ page }) => {
-  await page.goto('/projetos/eaifez');
-  await expect(page.getByText(/\{\{/)).toHaveCount(0);
+    const galeria = page.locator('section', {
+      has: page.getByRole('heading', { name: /^Prints do/ }),
+    });
+    const imagens = galeria.getByRole('img');
+    await expect(imagens).toHaveCount(4);
 
-  const galeria = page.locator('section', { has: page.getByRole('heading', { name: /^Prints do/ }) });
-  const imagens = galeria.getByRole('img');
-  await expect(imagens).toHaveCount(4);
+    // §9: dimensão declarada em toda imagem. Sem os atributos, o navegador não
+    // reserva espaço e a galeria empurra o rodapé ao carregar — que é o motivo
+    // de o §9 pedir `next/image` em vez de `<img>` solto.
+    for (const img of await imagens.all()) {
+      await expect(img).toHaveAttribute('width', /^\d+$/);
+      await expect(img).toHaveAttribute('height', /^\d+$/);
+      await expect(img).toHaveAttribute('loading', 'lazy');
+    }
+  });
+}
 
-  // §9: dimensão declarada em toda imagem. Sem os atributos, o navegador não
-  // reserva espaço e a galeria empurra o rodapé ao carregar — que é o motivo
-  // de o §9 pedir `next/image` em vez de `<img>` solto.
-  for (const img of await imagens.all()) {
-    await expect(img).toHaveAttribute('width', /^\d+$/);
-    await expect(img).toHaveAttribute('height', /^\d+$/);
-    await expect(img).toHaveAttribute('loading', 'lazy');
+test('a capa encabeça a galeria em vez de sumir dentro dela (§3.3)', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  // A do "E aí, fez?" é paisagem (1200×630, a imagem OG do app); a do Asafe é
+  // retrato de celular. As duas orientações convivem na mesma galeria, e em
+  // nenhuma das duas a capa pode sair MENOR que os prints que ela encabeça —
+  // que é o que acontecia com a capa retrato antes de ela ganhar teto próprio.
+  for (const slug of ['asafe', 'eaifez']) {
+    await page.goto(`/projetos/${slug}`);
+    const imagens = page
+      .locator('section', { has: page.getByRole('heading', { name: /^Prints do/ }) })
+      .getByRole('img');
+
+    const caixa = async (n: number) => (await imagens.nth(n).boundingBox())!;
+    const capa = await caixa(0);
+    const print = await caixa(1);
+
+    expect(capa.width, `${slug}: capa mais estreita que o print`).toBeGreaterThan(print.width);
+    expect(print.width / print.height, `${slug}: print não é retrato`).toBeLessThan(1);
   }
-
-  // A capa é paisagem (1200×630, a imagem OG do app) e os três prints são
-  // retrato de celular. As duas orientações convivem na mesma galeria — é o
-  // que a linha separada da capa existe para resolver.
-  const proporcao = async (n: number) => {
-    const box = await imagens.nth(n).boundingBox();
-    return box!.width / box!.height;
-  };
-  expect(await proporcao(0)).toBeGreaterThan(1);
-  for (const n of [1, 2, 3]) expect(await proporcao(n)).toBeLessThan(1);
 });
 
 test('a galeria reserva o espaço antes de a imagem chegar (§9)', async ({ page }) => {
