@@ -40,7 +40,7 @@ Contrato: `docs/private/PORTFOLIO-BRIEF.md` (fora do git — repo é público).
 | 11 | Piso de qualidade — a11y, 360px, Lighthouse | ⬜ |
 | 12 | Deploy na Cloudflare + redirects 301 | ⬜ |
 
-Gates ao fim da sessão: `npm run verify` exit 0 · unit **230 passed | 0 todo** · e2e **65 passed**.
+Gates ao fim da sessão: `npm run verify` exit 0 · unit **238 passed | 0 todo** · e2e **68 passed**.
 
 **O que a Task 10 tem que preencher.** A estrutura de OG está pronta e falta só a imagem.
 O ponto de entrada é **um**: o parâmetro `image` de `pageMetadata` em `lib/seo.ts`. As seis
@@ -54,19 +54,19 @@ rotas já emitem `og:title`, `og:description`, `og:url`, `og:site_name`, `og:loc
 
 ## Pendente e sem resolução
 
-### 1. `components/HowIWork.tsx` está com edição não commitada
+### 1. `components/HowIWork.tsx` — resolvido
 
-O Luiz reescreveu dois blocos do §4.2; eu reescrevi por cima num meio-termo, mostrei, e ele
-não chegou a aprovar antes de pararmos. O arquivo está no disco, fora do git.
+A edição não commitada do §4.2 virou decisão do Luiz: **a versão do código vence** no segundo
+bloco (*"Sei o que fica de fora da primeira versão e por quê. Cada etapa é bem planejada, assim
+como as entregas."*), e é o brief que será atualizado — **não reverter** para o "Entregar é
+melhor que planejar pra sempre" do §4.2. O que a cláusula defensiva sobre IA teria custado está
+explicado no §4.2.1 e não voltou.
 
-O que mudou e por quê: ele havia acrescentado *"IA inclusive, **mas sob a minha supervisão em
-todas as etapas**"*, que é literalmente a frase que o §4.2.1 argumenta contra (infalsificável,
-e risco assimétrico). E havia trocado *"Entregar é melhor que planejar pra sempre"* por
-*"Planejo bem todos os detalhes"*, que inverte o sentido e não sustenta mais o título do bloco.
-O meio-termo mantém o que ele quis dizer sem a cláusula defensiva.
+No primeiro bloco saiu um *"e de que forma"* que tinha sido acrescentado na escrita: o §4.2 diz
+*"o que fica de fora, **e por quê**"*, e o item extra troca justificativa por execução no bloco
+que se chama "decido com justificativa". Há teste travando a frase.
 
-**Isso trava** um ajuste de ritmo vertical (`py-16` → `py-20` no mesmo arquivo) que subiria o
-espaçamento global acima de 144px.
+Continua livre o ajuste de ritmo vertical (`py-16` → `py-20`) que esperava por isso.
 
 ### 2. Material dos cases — Asafe completo, eaifez com duas lacunas inferíveis
 
@@ -153,6 +153,14 @@ mudarem juntos; pertence à Task 11.
 10. **O canonical da home não tem barra final.** O Next normaliza (`trailingSlash` é falso) e
     emite `https://luizfreitas.com.br`. O `sitemap.ts` foi alinhado a isso de propósito — um
     `<loc>` com `/` no fim apontaria para a URL que o próprio site declara não-canônica.
+11. **Contagem de anos escrita à mão** ("nove anos"). O §2 proíbe e o §4.1 explica: o número
+    envelhece sozinho e vira mentira sem ninguém perceber — não quebra build, não some da
+    tela, não gera relato. Estava em **três** lugares ao mesmo tempo (h1 da home, description
+    do `/projetos`, resumo do CV), porque é a forma natural de dizer a coisa em português e
+    quem escreve copy volta a escrevê-la. Ancore sempre no ano de início. Travado em
+    `tests/unit/manutencao.test.ts` (texto curado + o CV em HTML) e em `tests/e2e/seo.spec.ts`
+    (varredura do `out/` inteiro, que é o único lugar que pega uma string escrita dentro de
+    um componente).
 
 ---
 
@@ -188,9 +196,9 @@ logo em seguida, da Opah IT. O trecho da Task 7 no plano dizia duas; o dado mand
 | Ícone do Asafe | ✅ `asafe/apps/web/app/icon.svg` |
 | 8 prints | ✅ Task 6b |
 | Retrato do Luiz | ⬜ §6.5 — 4:5, com instrumento ou em Natal, não headshot |
-| CV em PDF para `public/cv/` | ✅ `luiz-freitas-2026-07.pdf` |
-| Últimas frases do `/sobre` | ⬜ **não gerar** (§4.3); o parágrafo está omitido |
-| WhatsApp no `/contato` | ⬜ indeciso |
+| CV em PDF para `public/cv/` | ✅ `luiz-freitas-2026-07.pdf`, regerado pelo Luiz com o "desde 2017" |
+| Últimas frases do `/sobre` | ✅ §4.3 tem cinco parágrafos, os dois últimos escritos pelo Luiz |
+| WhatsApp no `/contato` | ✅ resolvido — a pendência saiu do §12 e o andaime saiu do código |
 
 **Retrato (§6.5).** O buraco está no `/sobre` (`max-w-[16rem]`) e, pequeno, no
 `/contato` (`max-w-[10rem]`), nos dois casos em `4:5` — proporção que é premissa
@@ -201,19 +209,44 @@ arquivo — as duas chamadas passam por ele. Um `<Portrait size="inline" />` no
 `ContactBlock` põe a foto também na home, se o Luiz quiser essa leitura de
 "bloco de contato".
 
-**WhatsApp (§12).** Uma edição: `WHATSAPP` em `content/contact.ts` deixa de ser
-`null` e vira `{ href: 'https://wa.me/55…', label: 'WhatsApp', external: true }`.
-O caminho "Tenho um projeto" já espalha o valor. O teste que trava a pendência
-falha junto, de propósito.
+**WhatsApp (§12) — resolvido, e o andaime saiu.** A pendência "decidir se expõe
+WhatsApp" **não está mais no §12**, e o caminho "Tenho um projeto", que era o
+único lugar onde o número entraria, foi removido pelo §3.4. Então `WHATSAPP` e o
+teste que travava o `null` saíram de `content/contact.ts` e de
+`tests/unit/contato.test.tsx`: constante nula guardando decisão que ninguém está
+tomando é andaime que envelhece parecendo trabalho pendente (§2). A proteção que
+importava continua, na home e no `/contato` — a varredura do DOM por `wa.me`,
+`tel:` e a palavra "WhatsApp". Se um dia o número entrar, é link novo em
+`CONTACT_LINKS` e os dois testes falham.
 
-**Último parágrafo do `/sobre` (§4.3).** `ABOUT_SEEKING` em `content/about.ts`
-segue `null`, e a página **omite** o parágrafo, como o brief manda — sem
-placeholder na tela, ao contrário do retrato. A assimetria é deliberada e está
-explicada em `app/sobre/page.tsx`. Quando ele mandar as frases, é uma edição lá;
-o teste "os três parágrafos do §4.3, verbatim — e nada além" vai falhar, e falhar
-é o pedágio que prova que o texto veio dele e não de geração.
+**Últimos parágrafos do `/sobre` (§4.3) — escritos.** São **cinco** agora, os
+dois últimos verbatim do brief, e `ABOUT_SEEKING` deixou de existir. O tipo em
+`content/about.ts` é tupla de cinco: um sexto elemento não compila. A trava do
+"não gerar" virou trava de "não reescrever", que é o que o §12 pede ao declarar
+o texto do site terminado. **O último parágrafo tem calibragem anotada no §4.3**
+("porta encostada, não trancada nem escancarada") e há teste que falha se alguém
+o esquentar ("disponível para", "aberto a propostas") ou esfriar ("não pretendo
+sair").
 
-**CV.** `public/cv/luiz-freitas-2026-07.pdf`, cópia byte a byte do
+**CV — as duas pontas voltaram a bater.** `docs/cv/luiz-freitas.html` deixou de
+dizer *"Desenvolvedor full stack há nove anos"* e passou a dizer *"desde 2017"*
+(§2 proíbe contagem à mão; §4.5 manda site e CV usarem as mesmas palavras). O
+`wkhtmltopdf` **não está instalado na máquina de build**, então o PDF não é
+regerado por quem mexe no repo — quem regerou foi o Luiz, na mesma sessão, e o
+binário em `public/cv/` já carrega o texto novo. `tests/unit/manutencao.test.ts`
+trava o HTML; o PDF não tem teste de conteúdo, então **editar o HTML continua
+sendo meia edição**. O comando, para a próxima vez:
+
+```bash
+wkhtmltopdf --page-size A4 docs/cv/luiz-freitas.html public/cv/luiz-freitas-AAAA-MM.pdf
+```
+
+Se a data mudar, muda também o nome do arquivo e a constante `CV` em
+`content/contact.ts` (há teste conferindo que o nome carrega a data e que o
+arquivo existe no disco).
+
+**CV (verificação de privacidade, feita sobre o PDF de julho/2026).**
+`public/cv/luiz-freitas-2026-07.pdf`, cópia byte a byte do
 `docs/private/CV-Luiz-Freitas.pdf` (sha256 conferido). Verificado antes de
 publicar, extraindo o texto renderizado do PDF: uma página, `/XObject` vazio —
 nenhuma imagem embutida, portanto nenhuma foto de documento —, zero glifos não
@@ -229,6 +262,9 @@ perícopes, 23 dias litúrgicos, 6 repertórios, 20 fontes autorizadas. Mas `son
 o print nº 1, porque é o vínculo que faz a Liturgia do dia sugerir músicas. Antes de semear,
 **ler o código da tela** para confirmar de onde vem a sugestão.
 
-**Curadoria pendente (§4.2.1):** a home linka `github.com/FreitasAssis/Asafe/blob/main/docs/DESIGN.md`.
-O documento hoje diz "Leia antes de contribuir" — está escrito para contribuidor, não para
-recrutador. Lê bem e não bloqueia, mas virou peça de vitrine.
+**Curadoria pendente (§4.2.1):** a home e o case do Asafe linkam **dois** documentos —
+`docs/DESIGN.md` e `docs/identidade-visual.md`, que são os que o repo público de fato
+versiona (o §4.2.1 nomeia `PLANNING.md`, `IDENTIDADE-VISUAL.md` e `REVISAO.md`; nenhum
+existe). O `DESIGN.md` hoje diz "Leia antes de contribuir" — está escrito para contribuidor,
+não para recrutador. Lê bem e não bloqueia, mas virou peça de vitrine, e agora a mesma
+ressalva vale para o segundo arquivo.

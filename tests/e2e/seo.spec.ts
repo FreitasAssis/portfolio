@@ -156,6 +156,52 @@ test.describe('metadados por rota (§8)', () => {
   });
 });
 
+test.describe('§2 — baixa manutenção, no artefato publicado', () => {
+  /**
+   * A contagem de anos escrita à mão, varrida do HTML que vai ao ar.
+   *
+   * `tests/unit/manutencao.test.ts` já cobre o texto curado na origem. Este
+   * teste existe porque a origem não é o único caminho até o `out/`: o corpo
+   * dos cases passa por MDX, o metadado passa pelo Next, e uma string escrita
+   * dentro de um componente não aparece em `content/` nenhum — que é
+   * exatamente onde o "Nove anos construindo software" morava, na h1 de
+   * `components/Hero.tsx`.
+   *
+   * Varre o HTML cru, e não o texto visível, de propósito: o payload do RSC
+   * embutido em `<script>` carrega as mesmas strings, e uma frase que sobreviva
+   * lá sobrevive na hidratação.
+   */
+  const CONTAGEM_DE_ANOS =
+    /\b(\d+|um|uma|dois|duas|tr[êe]s|quatro|cinco|seis|sete|oito|nove|dez|onze|doze|treze|quinze|vinte)\s+anos?\b/i;
+
+  test('nenhuma rota publica uma contagem de anos', () => {
+    for (const { path, file } of ROTAS) {
+      const achado = CONTAGEM_DE_ANOS.exec(html(file));
+      expect(
+        achado?.[0],
+        `${path} publica "${achado?.[0]}" — o §2 proíbe contagem de anos à mão, ` +
+          'porque ela erra sozinha e ninguém percebe. Ancore no ano ("desde 2017").',
+      ).toBeUndefined();
+    }
+  });
+
+  test('"nove anos" não sobreviveu em canto nenhum do export', () => {
+    // O caso concreto que originou a regra, nomeado no §2 e no §4.1. Vale para
+    // o sitemap e o robots também: eles saem do mesmo dicionário.
+    for (const file of [...ROTAS.map((r) => r.file), 'sitemap.xml', 'robots.txt']) {
+      expect(html(file).toLowerCase(), `em ${file}`).not.toContain('nove anos');
+    }
+  });
+
+  test('a âncora do §4.1 chegou à home e ao /projetos', () => {
+    // A proibição não pode ser cumprida apagando o dado. "Desde 2017" é o que
+    // fica no lugar da contagem, e o §1 põe a description entre as coisas mais
+    // importantes do site.
+    expect(html('index.html')).toContain('Construo software desde 2017');
+    expect(metaContent(html('projetos.html'), 'description')).toContain('desde 2017');
+  });
+});
+
 test.describe('sitemap e robots (§8)', () => {
   test('o export estático emite os dois arquivos', () => {
     expect(() => html('sitemap.xml')).not.toThrow();

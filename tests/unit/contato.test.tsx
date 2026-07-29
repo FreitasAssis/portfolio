@@ -1,63 +1,59 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import ContatoPage from '@/app/contato/page';
-import { CV, EMAIL, WHATSAPP } from '@/content/contact';
+import { CONTACT_LINKS, CV, EMAIL } from '@/content/contact';
 
 /**
- * `/contato` (§3.4): dois caminhos lado a lado com a **mesma dignidade visual**,
- * e-mail em texto copiável, GitHub, LinkedIn, CV — e **sem formulário**.
+ * `/contato` (§3.4): "**simples, porque o objetivo é ser alcançável, não
+ * converter**: e-mail em texto copiável, LinkedIn, GitHub e o CV em PDF. Sem os
+ * dois caminhos ('tenho uma vaga' / 'tenho um projeto'), que pressupunham venda
+ * ativa."
+ *
+ * Este arquivo trocou de eixo junto com a página. Ele media a **igualdade** das
+ * duas caixas — classe por classe, para que nenhuma ganhasse peso da outra. Sem
+ * caixas, o que resta a medir é o oposto: que a triagem não volte, e que o CV
+ * não tenha sumido com ela. O CV é o ponto: ele vivia **dentro** da caixa
+ * "Tenho uma vaga", e tirar a bifurcação sem cuidado o levaria junto, embora o
+ * §3.4 sempre tenha pedido o CV no `/contato` sem qualificar para quem.
  */
 const renderPagina = () => render(<ContatoPage />);
 
-const caminho = (titulo: string) =>
-  screen.getByRole('heading', { level: 2, name: titulo }).closest('div')!;
-
-describe('/contato — a bifurcação do §3.4', () => {
-  it('tem um h1 só, e os dois caminhos no mesmo nível abaixo dele', () => {
+describe('/contato — os canais do §3.4', () => {
+  it('tem um h1 só, e nenhum título de triagem abaixo dele', () => {
     renderPagina();
     const h1 = screen.getAllByRole('heading', { level: 1 });
     expect(h1).toHaveLength(1);
     expect(h1[0]).toHaveTextContent('Contato');
 
-    const h2 = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-    expect(h2).toEqual(['Tenho uma vaga', 'Tenho um projeto', 'De qualquer forma']);
+    // A página encolheu (§1: "o /contato encolhe"). Não há mais seção nenhuma:
+    // a lista de canais É a página, e "De qualquer forma" só fazia sentido como
+    // escape de uma triagem que não existe mais.
+    expect(screen.queryAllByRole('heading', { level: 2 })).toEqual([]);
   });
 
-  it('dá aos dois caminhos a mesma dignidade visual', () => {
+  it('lista os quatro canais na ordem do §3.4', () => {
     renderPagina();
-    const vaga = caminho('Tenho uma vaga');
-    const projeto = caminho('Tenho um projeto');
-
-    // A igualdade é medida na classe renderizada, não prometida em comentário:
-    // mesma caixa, mesma tipografia, mesmo nível de título. Os dois saem do
-    // mesmo `map` em ContactPaths, então divergir exigiria trabalho — mas o §3.4
-    // chama a igualdade de requisito, e requisito se trava.
-    expect(vaga.className).toBe(projeto.className);
-    expect(vaga.querySelector('h2')!.className).toBe(projeto.querySelector('h2')!.className);
-    expect(vaga.querySelector('p')!.className).toBe(projeto.querySelector('p')!.className);
-    expect(vaga.querySelector('ul')!.className).toBe(projeto.querySelector('ul')!.className);
-    // E são irmãos no mesmo grid — "lado a lado".
-    expect(vaga.parentElement).toBe(projeto.parentElement);
+    const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
+    expect(hrefs).toEqual([
+      `mailto:${EMAIL}`,
+      'https://www.linkedin.com/in/luiz-dev',
+      'https://github.com/FreitasAssis',
+      CV.href,
+    ]);
+    // E a página mostra exatamente o dado, sem link escrito à mão por cima.
+    expect(hrefs).toEqual(CONTACT_LINKS.map((l) => l.href));
   });
 
-  it('"tenho uma vaga" leva a e-mail, LinkedIn e download do CV', () => {
-    renderPagina();
-    const hrefs = within(caminho('Tenho uma vaga'))
-      .getAllByRole('link')
-      .map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual([`mailto:${EMAIL}`, 'https://www.linkedin.com/in/luiz-dev', CV.href]);
-  });
-
-  it('"tenho um projeto" leva a e-mail e GitHub', () => {
-    renderPagina();
-    const hrefs = within(caminho('Tenho um projeto'))
-      .getAllByRole('link')
-      .map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual([`mailto:${EMAIL}`, 'https://github.com/FreitasAssis']);
+  it('não bifurca mais em "tenho uma vaga" / "tenho um projeto" (§3.4)', () => {
+    const { container } = renderPagina();
+    // "Sem os dois caminhos, que pressupunham venda ativa." Se voltarem, é
+    // regressão de propósito declarado — não de gosto.
+    expect(container.textContent).not.toMatch(/tenho uma vaga|tenho um projeto/i);
+    expect(container.textContent).not.toMatch(/escolha o caminho/i);
   });
 
   it('o e-mail é texto copiável, não a palavra "e-mail" (§3.4)', () => {
@@ -65,31 +61,25 @@ describe('/contato — a bifurcação do §3.4', () => {
     // "E-mail em texto copiável": o requisito é que o endereço esteja escrito,
     // e não escondido atrás de um rótulo. Sem botão de copiar — a justificativa
     // (JS, estado, aria-live e caminho de erro para substituir um gesto que o
-    // sistema já faz) está em components/ContactPaths.tsx.
-    const links = screen.getAllByRole('link', { name: EMAIL });
-    expect(links.length).toBeGreaterThanOrEqual(2);
-    for (const link of links) {
-      expect(link).toHaveAttribute('href', `mailto:${EMAIL}`);
-      expect(link.textContent).toBe(EMAIL);
-    }
-  });
-
-  it('oferece GitHub e LinkedIn a quem não se reconhece em nenhum caminho (§3.4)', () => {
-    renderPagina();
-    const geral = screen.getByRole('heading', { level: 2, name: /de qualquer forma/i })
-      .closest('section')!;
-    const hrefs = within(geral)
-      .getAllByRole('link')
-      .map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual([
-      `mailto:${EMAIL}`,
-      'https://github.com/FreitasAssis',
-      'https://www.linkedin.com/in/luiz-dev',
-    ]);
+    // sistema já faz) está em components/ContactLinks.tsx.
+    const link = screen.getByRole('link', { name: EMAIL });
+    expect(link).toHaveAttribute('href', `mailto:${EMAIL}`);
+    expect(link.textContent).toBe(EMAIL);
   });
 });
 
 describe('/contato — o CV (§7)', () => {
+  it('o CV está na página, e não sumiu com a caixa que o hospedava (§3.4)', () => {
+    // O §3.4 nomeia o CV entre os quatro canais do `/contato`, sem qualificar
+    // para quem. Até esta revisão o link existia **só** dentro de "Tenho uma
+    // vaga": quem se lesse como cliente nunca via o currículo, e apagar a caixa
+    // sem olhar teria apagado o link junto.
+    renderPagina();
+    const link = screen.getByRole('link', { name: CV.label });
+    expect(link).toHaveAttribute('href', CV.href);
+    expect(link).toHaveAttribute('download');
+  });
+
   it('o nome do arquivo carrega a data, e o arquivo existe no repo', () => {
     // §7: "com data no nome do arquivo ou no rodapé do PDF". A data está no
     // nome porque é o único dos dois que o visitante vê antes de abrir — e
@@ -103,36 +93,49 @@ describe('/contato — o CV (§7)', () => {
     const arquivo = join(process.cwd(), 'public', CV.href);
     expect(existsSync(arquivo)).toBe(true);
   });
-
-  it('o link do CV baixa em vez de abrir no leitor embutido', () => {
-    renderPagina();
-    const link = screen.getByRole('link', { name: CV.label });
-    expect(link).toHaveAttribute('href', CV.href);
-    expect(link).toHaveAttribute('download');
-  });
 });
 
 describe('/contato — guardrails do brief', () => {
   it('não tem formulário (§3.4, §11)', () => {
     const { container } = renderPagina();
-    // "Formulário some no spam e não dá confirmação; mailto: e link direto
-    // convertem melhor e não precisam de backend." E o site é export estático.
+    // "Some no spam, não dá confirmação, e precisa de backend; mailto: e link
+    // direto resolvem melhor." E o site é export estático.
     expect(container.querySelector('form')).toBeNull();
     expect(container.querySelector('input')).toBeNull();
     expect(container.querySelector('textarea')).toBeNull();
     expect(container.querySelector('button')).toBeNull();
   });
 
-  it('não expõe WhatsApp — a decisão ainda é do Luiz (§12)', () => {
+  it('não escreve linguagem de venda nem de urgência (§1)', () => {
     const { container } = renderPagina();
-    // Expor telefone é irreversível: sai de indexador, de print, de
-    // encaminhamento. Quando ele decidir, é uma edição em content/contact.ts
-    // (WHATSAPP deixa de ser null) — e este teste falha junto, de propósito,
-    // para que ligar o número seja uma decisão registrada.
-    expect(WHATSAPP).toBeNull();
+    const texto = container.textContent ?? '';
+    // §1: "nada de linguagem de venda ou de urgência. Sem 'disponível para
+    // oportunidades', sem CTA agressivo, sem funil." O §4 já proibia o
+    // vocabulário; o §1 subiu isso a regra de finalidade, e o /contato é onde
+    // ela é mais fácil de violar sem perceber.
+    for (const proibido of [
+      /dispon[íi]vel para/i,
+      /or[çc]amento/i,
+      /vamos conversar/i,
+      /entre em contato agora/i,
+      /soluç(ão|ões)/i,
+      /impulsionar/i,
+    ]) {
+      expect(texto, String(proibido)).not.toMatch(proibido);
+    }
+  });
+
+  it('não publica telefone nem WhatsApp', () => {
+    const { container } = renderPagina();
+    // O §12 não lista mais "decidir se expõe WhatsApp" como pendência, e a
+    // constante `WHATSAPP` saiu de content/contact.ts junto com o caminho
+    // "Tenho um projeto", que era o único lugar onde o número entraria. A trava
+    // que sobrou é a que sempre importou — `expect(WHATSAPP).toBeNull()` era
+    // tautologia sobre uma constante, esta olha o que a página publica —, e ela
+    // continua valendo sem pendência aberta: número exposto é irreversível.
     expect(container.textContent).not.toMatch(/whats\s?app/i);
     const hrefs = Array.from(container.querySelectorAll('a')).map((a) => a.getAttribute('href'));
-    expect(hrefs.filter((h) => /wa\.me|whatsapp/i.test(h ?? ''))).toEqual([]);
+    expect(hrefs.filter((h) => /wa\.me|whatsapp|^tel:/i.test(h ?? ''))).toEqual([]);
   });
 
   it('põe o retrato em versão pequena, ainda como buraco (§6.5)', () => {

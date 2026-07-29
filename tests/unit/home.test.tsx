@@ -22,7 +22,7 @@ describe('Home — hero (§4.1)', () => {
     const h1 = screen.getAllByRole('heading', { level: 1 });
     expect(h1).toHaveLength(1);
     expect(h1[0]).toHaveTextContent(
-      'Nove anos construindo software — e dois dos produtos aqui nasceram de problemas que eu mesmo vivo.',
+      'Construo software desde 2017 — e dois dos produtos aqui nasceram de problemas que eu mesmo vivo.',
     );
   });
 
@@ -239,39 +239,93 @@ describe('Home — como eu trabalho (§4.2)', () => {
     expect(section(/como eu trabalho/i).querySelectorAll('svg')).toHaveLength(0);
   });
 
-  it('linka o documento de decisões real do Asafe (§4.2, §4.2.1)', async () => {
+  it('linka os dois documentos de decisão do Asafe (§4.2, §4.2.1)', async () => {
     // §4.2.1: é o link que substitui qualquer declaração sobre método — "documento
     // de decisão é o trabalho que a IA não faz no seu lugar". Precisa existir e
     // abrir, senão a alegação fica sem o convite de auditoria que a sustenta.
+    //
+    // São dois porque dois é o que o repo público versiona, e porque um
+    // documento pode ser acidente enquanto dois, em eixos diferentes do mesmo
+    // projeto, são hábito — que é justamente o que o §4.2.1 quer provar.
     await renderHome();
-    expect(
-      within(section(/como eu trabalho/i)).getByRole('link', { name: /DESIGN\.md do Asafe/i }),
-    ).toHaveAttribute('href', 'https://github.com/FreitasAssis/Asafe/blob/main/docs/DESIGN.md');
+    const bloco = within(section(/como eu trabalho/i));
+    expect(bloco.getByRole('link', { name: 'DESIGN.md' })).toHaveAttribute(
+      'href',
+      'https://github.com/FreitasAssis/Asafe/blob/main/docs/DESIGN.md',
+    );
+    expect(bloco.getByRole('link', { name: 'identidade-visual.md' })).toHaveAttribute(
+      'href',
+      'https://github.com/FreitasAssis/Asafe/blob/main/docs/identidade-visual.md',
+    );
+  });
+
+  it('apresenta os documentos como convite, e não como fileira de links (§4.2.1)', async () => {
+    await renderHome();
+    const bloco = section(/como eu trabalho/i);
+    // Os dois links moram na MESMA frase — "no repo público do Asafe: X e Y" —,
+    // que é o que faz deles um lugar onde o trabalho está escrito em vez de dois
+    // botões. Se alguém os separar em parágrafos ou numa lista, quebra aqui.
+    const links = Array.from(bloco.querySelectorAll('a'));
+    expect(links).toHaveLength(2);
+    expect(links[0].closest('p')).toBe(links[1].closest('p'));
+    expect(links[0].closest('p')!.textContent).toMatch(/no repo público do Asafe:/i);
+    expect(bloco.querySelectorAll('li')).toHaveLength(0);
+  });
+
+  it('o primeiro bloco diz o §4.2 sem cláusula acrescentada', async () => {
+    await renderHome();
+    const texto = section(/como eu trabalho/i).textContent ?? '';
+    // §4.2, verbatim: "o que vai ser construído, o que fica de fora, e por quê".
+    // O "e de que forma" que estava aqui trocava justificativa por execução, e o
+    // bloco se chama "decido com justificativa".
+    expect(texto).toContain('o que vai ser construído, o que fica de fora, e por quê.');
+    expect(texto).not.toMatch(/de que forma/i);
   });
 
   it('não sobrou placeholder onde o documento já existe (§0)', async () => {
     const { container } = await renderHome();
     expect(container.textContent).not.toMatch(/URL do documento de decisões/i);
-    // E não nomeia arquivo que não está no repo.
+    // E não nomeia arquivo que não está no repo: o §4.2.1 cita `PLANNING.md`,
+    // `IDENTIDADE-VISUAL.md` e `REVISAO.md`, e nenhum dos três é versionado no
+    // Asafe. Link de auditoria que dá 404 desfaz o convite que ele faz.
     expect(container.textContent).not.toMatch(/PLANNING\.md/i);
+    expect(container.textContent).not.toMatch(/REVISAO\.md/i);
   });
 });
 
 describe('Home — contato (§3.4)', () => {
-  it('bifurca nos dois caminhos, com o mesmo peso', async () => {
+  it('lista os quatro canais do §3.4, na ordem do brief', async () => {
     await renderHome();
-    const titulos = within(section(/contato/i))
-      .getAllByRole('heading', { level: 3 })
-      .map((h) => h.textContent);
-    expect(titulos).toEqual(['Tenho uma vaga', 'Tenho um projeto']);
+    const hrefs = within(section(/contato/i))
+      .getAllByRole('link')
+      .map((a) => a.getAttribute('href'));
+    expect(hrefs).toEqual([
+      'mailto:luiz_dev@outlook.com',
+      'https://www.linkedin.com/in/luiz-dev',
+      'https://github.com/FreitasAssis',
+      CV.href,
+    ]);
   });
 
-  it('dá e-mail copiável nos dois caminhos', async () => {
+  it('não bifurca mais em "tenho uma vaga" / "tenho um projeto" (§3.4)', async () => {
+    // §3.4: os dois caminhos saíram porque "pressupunham venda ativa", e o §1
+    // fez disso regra de propósito — o site existe para ser alcançável, não
+    // para converter. Um h3 novo aqui seria a triagem voltando pela porta dos
+    // fundos.
+    await renderHome();
+    const contato = section(/contato/i);
+    expect(within(contato).queryAllByRole('heading', { level: 3 })).toEqual([]);
+    expect(contato.textContent).not.toMatch(/tenho uma vaga|tenho um projeto/i);
+  });
+
+  it('dá o e-mail copiável uma vez, por extenso (§3.4)', async () => {
     await renderHome();
     const emails = within(section(/contato/i)).getAllByRole('link', {
       name: 'luiz_dev@outlook.com',
     });
-    expect(emails).toHaveLength(2);
+    // Uma vez: quando eram dois caminhos o endereço aparecia duplicado, um em
+    // cada caixa. Sem as caixas, repeti-lo seria ruído.
+    expect(emails).toHaveLength(1);
     emails.forEach((a) => expect(a).toHaveAttribute('href', 'mailto:luiz_dev@outlook.com'));
   });
 
@@ -293,11 +347,16 @@ describe('Home — contato (§3.4)', () => {
     expect(CV.href).toMatch(/^\/cv\/luiz-freitas-\d{4}-\d{2}\.pdf$/);
   });
 
-  it('não expõe WhatsApp — a decisão ainda é do Luiz (§12)', async () => {
+  it('não publica telefone nem WhatsApp', async () => {
+    // O §12 não lista mais "decidir se expõe WhatsApp" como pendência, e a
+    // constante `WHATSAPP` saiu de content/contact.ts junto com o caminho que a
+    // hospedaria. O que este teste protege continua valendo sem pendência
+    // aberta: publicar um número é irreversível — sai de indexador, de print, de
+    // encaminhamento.
     const { container } = await renderHome();
     expect(container.textContent).not.toMatch(/whats\s?app/i);
     const hrefs = Array.from(container.querySelectorAll('a')).map((a) => a.getAttribute('href'));
-    expect(hrefs.filter((h) => /wa\.me|whatsapp/i.test(h ?? ''))).toEqual([]);
+    expect(hrefs.filter((h) => /wa\.me|whatsapp|^tel:/i.test(h ?? ''))).toEqual([]);
   });
 });
 

@@ -2,18 +2,25 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import SobrePage from '@/app/sobre/page';
-import { ABOUT_SEEKING } from '@/content/about';
 import { LAYER_1, LAYER_2, LAYER_2_CAVEAT, LAYER_3_NEVER } from '@/content/tech';
 
 /**
  * `/sobre` (§3.4, §4.3, §4.4).
  *
- * O teste mais importante deste arquivo é o segundo: os três parágrafos do §4.3
- * estão escritos aqui **por extenso**, e não importados de `content/about.ts`.
+ * O teste mais importante deste arquivo é o segundo: os **cinco** parágrafos do
+ * §4.3 estão escritos aqui por extenso, e não importados de `content/about.ts`.
  * Importar deixaria o teste concordar com qualquer coisa que alguém escrevesse
- * lá — inclusive um quarto parágrafo inventado, que é exatamente o que o brief
- * proíbe em letras maiúsculas ("**Não gerar.**"). Copiado à mão, o texto do §4.3
- * fica travado nos dois sentidos: reescrever quebra, acrescentar quebra.
+ * lá. Copiado à mão, o texto do §4.3 fica travado nos dois sentidos: reescrever
+ * quebra, acrescentar quebra.
+ *
+ * Eram três, e o guarda existia para impedir que o parágrafo final fosse
+ * **gerado** — o §4.3 dizia "Não gerar" em letras maiúsculas. O Luiz escreveu os
+ * dois últimos e o §12 fechou com "todo o texto do site está escrito", então a
+ * trava mudou de alvo sem mudar de força: agora ela impede reescrita e adição
+ * a um texto declarado terminado. O último parágrafo em especial tem calibragem
+ * anotada no §4.3 ("porta encostada, não trancada nem escancarada"), e um
+ * ajuste de temperatura feito de boa-fé é exatamente o tipo de mudança que este
+ * teste precisa pegar.
  *
  * É a mesma disciplina de `tests/unit/experience.test.ts`, e ela nasceu de um
  * erro real neste repo: uma frase escrita ao lado de texto curado achatou "três
@@ -26,6 +33,8 @@ const PARAGRAFOS_DO_BRIEF = [
   'Sou santista — nascido em Santos e torcedor do Peixe — e nordestino de coração: moro em Natal, no Rio Grande do Norte. Casado, e músico nas horas vagas.',
   'Programo profissionalmente desde 2017, quando comecei desenvolvendo web no IFRN, como bolsista no campus de Educação a Distância. De lá pra cá passei por startup, consultoria e educação, e hoje sou desenvolvedor full stack sênior na Analytica Ensino — onde acompanho, desde a concepção, uma plataforma educacional usada por cerca de 400 mil alunos, professores e gestores da rede pública do Paraná.',
   'A parte de músico não é hobby desencontrado do resto: é de onde saiu o Asafe. Passei anos organizando repertório de Missa em planilha e caderno, e resolvi construir a ferramenta que eu queria ter.',
+  'Estou na Analytica desde 2023 e gosto de onde estou. Esse portfólio é uma forma de deixar registrado o que construí, e de ser facilmente encontrado.',
+  'Se um dia aparecer um próximo desafio, o que me atrai é problema com regra própria — onde entender o domínio é metade do trabalho, ou até mais. Gosto de coisa bem planejada, de participar da decisão quando posso, e de time onde ajudar quem está ao lado é rotina.',
 ];
 
 const secao = (name: RegExp | string) =>
@@ -45,31 +54,46 @@ describe('/sobre — o texto do §4.3', () => {
     expect(h1[0]).toHaveTextContent('Sobre');
   });
 
-  it('traz os três parágrafos do brief, verbatim — e nada além', () => {
+  it('traz os cinco parágrafos do brief, verbatim — e nada além', () => {
     const { container } = renderPagina();
     const paragrafos = Array.from(secaoDoTexto(container).querySelectorAll('p')).map(
       (p) => p.textContent,
     );
 
-    // Três, exatamente. Um quarto parágrafo não passa despercebido: o §4.3 diz
-    // que o texto sobre "o que ele procura hoje" é a última pendência do site e
-    // que NÃO deve ser gerado. Quando o Luiz mandar as frases, este teste falha
-    // — e falhar aqui é o pedágio que prova que o texto veio dele.
+    // Cinco, exatamente, e cada um comparado inteiro. Um sexto parágrafo, uma
+    // vírgula trocada ou um "porta escancarada" no lugar do condicional do §4.3
+    // falham aqui — que é o ponto: o §12 declara o texto do site terminado, e
+    // texto terminado não se "melhora" em passagem.
     expect(paragrafos).toEqual(PARAGRAFOS_DO_BRIEF);
   });
 
-  it('o quarto parágrafo continua vazio, e não virou placeholder na tela (§4.3)', () => {
+  it('o último parágrafo mantém a calibragem do §4.3 — porta encostada', () => {
     const { container } = renderPagina();
-    expect(ABOUT_SEEKING).toBeNull();
-    // "Se estiver vazio na hora do build, omita o parágrafo — a página funciona
-    // sem ele." Omitir é diferente de anunciar a falta: nada de `{{ }}`, nada de
-    // "em breve", nada de lorem. A assimetria com o buraco do retrato é
-    // deliberada e está explicada em app/sobre/page.tsx.
+    const texto = container.textContent ?? '';
+    // O §4.3 anexa uma nota a este parágrafo: ele "não declara disponibilidade
+    // NEM indisponibilidade". As duas formas de quebrá-lo têm sinais opostos e
+    // são fáceis de escrever sem perceber, então as duas estão travadas.
+    //
+    // Quente demais — vira "disponível para oportunidades", proibido pelo nome
+    // no §1:
+    expect(texto).not.toMatch(/dispon[íi]vel (para|a)/i);
+    expect(texto).not.toMatch(/aberto a (propostas|oportunidades)/i);
+    expect(texto).not.toMatch(/procurando (vaga|oportunidade)/i);
+    // Frio demais — se o site disser que ele não sai de lá, ninguém o guarda, e
+    // ser guardado é a função da página (§1).
+    expect(texto).not.toMatch(/não pretendo sair|não estou (procurando|disponível)/i);
+    // E o condicional que sustenta as duas coisas continua escrito.
+    expect(texto).toContain('Se um dia aparecer um próximo desafio');
+  });
+
+  it('não sobrou placeholder de texto na página (§12)', () => {
+    const { container } = renderPagina();
+    // §12: "todo o texto do site está escrito. O que falta é imagem e código."
+    // Nada de "em breve", nada de lorem, nada de `{{ }}` de texto — o único
+    // buraco legítimo da página é o do retrato, que é imagem.
     const texto = container.textContent ?? '';
     expect(texto).not.toMatch(/\bem breve\b/i);
     expect(texto).not.toMatch(/lorem ipsum/i);
-    expect(texto).not.toMatch(/o que (ele|eu) procur/i);
-    // O único `{{ }}` da página é o buraco do retrato, e ele diz "retrato".
     const buracos = texto.match(/\{\{[^}]*\}\}/g) ?? [];
     expect(buracos).toHaveLength(1);
     expect(buracos[0]).toMatch(/retrato/i);

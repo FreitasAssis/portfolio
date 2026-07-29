@@ -1,5 +1,5 @@
 /**
- * Os contatos reais e a bifurcação do §3.4, num lugar só.
+ * Os contatos reais, num lugar só.
  *
  * Estavam escritos à mão dentro do `ContactBlock` e do `Footer`. Com o
  * `/contato` nascendo, passariam a existir em três arquivos — e copiar contato é
@@ -46,53 +46,41 @@ export type ContactLink = {
 };
 
 /**
- * **Pendência do §12: "decidir se expõe WhatsApp no /contato".**
+ * Os quatro canais do §3.4, **nesta ordem**, que é a ordem do brief: "e-mail em
+ * texto copiável, LinkedIn, GitHub e o CV em PDF".
  *
- * Expor número de telefone é irreversível — sai de indexador, de print, de
- * encaminhamento — e a decisão é do Luiz, não do build. Enquanto for `null`, o
- * caminho "Tenho um projeto" fica com e-mail e GitHub, que já convertem sem
- * backend (§3.4).
+ * ## Por que não existem mais os dois caminhos
  *
- * **A edição, quando ele decidir:** trocar `null` por
- * `{ href: 'https://wa.me/55DDDNÚMERO', label: 'WhatsApp', external: true }`.
- * É só isso — o caminho abaixo já espalha o valor na lista de links, e
- * `tests/unit/contato.test.tsx` tem um teste que falha enquanto isto for `null`
- * dizendo por quê, para que ligar o WhatsApp seja uma decisão registrada e não
- * um efeito colateral.
+ * Até esta revisão o `/contato` bifurcava em "Tenho uma vaga" e "Tenho um
+ * projeto". O §3.4 tirou os dois, com o motivo escrito: eles **pressupunham
+ * venda ativa**, e o §1 passou a dizer que a finalidade do site não é converter
+ * — é existir e ser encontrável. Um visitante que precisa se classificar antes
+ * de achar um endereço está numa triagem de funil, não numa página de contato.
+ *
+ * O que a bifurcação escondia, e que esta lista resolve de graça: o CV vivia
+ * **só** dentro da caixa "Tenho uma vaga". Quem se lesse como cliente nunca via
+ * o currículo, embora o §3.4 sempre tenha pedido o CV no `/contato` sem
+ * qualificar para quem. Numa lista única não há caixa onde um link possa se
+ * esconder.
+ *
+ * ## O WhatsApp saiu daqui
+ *
+ * Havia um `WHATSAPP: ContactLink | null = null` neste arquivo, com um teste
+ * travando o `null`, porque o §12 listava "decidir se expõe WhatsApp" como
+ * pendência do Luiz. **O §12 não lista mais** — e o caminho "Tenho um projeto",
+ * que era o único lugar onde o número entraria, deixou de existir. Uma constante
+ * nula guardando uma decisão que ninguém está tomando é andaime que envelhece
+ * como se fosse trabalho pendente (§2).
+ *
+ * O que ficou no lugar não é menos: o teste que importava nunca foi
+ * `expect(WHATSAPP).toBeNull()` — tautologia sobre uma constante —, e sim o que
+ * varre o DOM procurando `wa.me`, telefone e a palavra "WhatsApp". Esse
+ * continua, na home e no `/contato`, porque publicar um número é irreversível e
+ * a proteção vale mesmo sem pendência aberta.
  */
-export const WHATSAPP: ContactLink | null = null;
-
-const emailLink: ContactLink = { href: `mailto:${EMAIL}`, label: EMAIL };
-
-/**
- * Os dois caminhos do §3.4, "lado a lado, com a mesma dignidade visual".
- *
- * Mesma forma de dado para os dois — mesmo título, mesmo parágrafo, mesma lista
- * de links — porque é o que impede que um ganhe peso do outro por descuido. É a
- * única bifurcação do site, e ela existe porque os dois públicos do §1 convergem
- * em tudo menos no fim da jornada.
- */
-export const CONTACT_PATHS = [
-  {
-    id: 'vaga',
-    title: 'Tenho uma vaga',
-    blurb:
-      'Remoto, a partir de Natal (RN). CLT ou PJ. O currículo conta a mesma coisa que este site, em uma página.',
-    links: [
-      emailLink,
-      { href: LINKEDIN, label: 'linkedin.com/in/luiz-dev', external: true },
-      { href: CV.href, label: CV.label, download: true },
-    ] as ContactLink[],
-  },
-  {
-    id: 'projeto',
-    title: 'Tenho um projeto',
-    blurb:
-      'Me escreva contando o que você quer construir. Respondo com o que dá pra fazer, em que ordem, e o que eu deixaria de fora da primeira versão.',
-    links: [
-      emailLink,
-      { href: GITHUB, label: 'github.com/FreitasAssis', external: true },
-      ...(WHATSAPP ? [WHATSAPP] : []),
-    ] as ContactLink[],
-  },
+export const CONTACT_LINKS: readonly ContactLink[] = [
+  { href: `mailto:${EMAIL}`, label: EMAIL },
+  { href: LINKEDIN, label: 'linkedin.com/in/luiz-dev', external: true },
+  { href: GITHUB, label: 'github.com/FreitasAssis', external: true },
+  { href: CV.href, label: CV.label, download: true },
 ] as const;

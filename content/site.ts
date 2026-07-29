@@ -129,11 +129,18 @@ export const META = {
    * §3.2 — "uma mostra iniciativa, a outra mostra experiência". A descrição diz
    * a mesma divisão, e os quatro degraus da trajetória são os do §4.3
    * ("passei por startup, consultoria e educação"), com o IFRN de onde ela sai.
+   *
+   * **"desde 2017", nunca uma contagem de anos.** Esta frase vai para o snippet
+   * do Google, que é a superfície que o §1 chama de mais importante do site —
+   * e é o único texto do repo que continua circulando depois de ninguém mais
+   * olhar para ele. Um "nove anos" aqui vira mentira no aniversário seguinte,
+   * dentro de um cache que ninguém revisa (§2, baixa manutenção). A âncora é o
+   * ano de início, que é permanente; quem lê faz a conta com a data de hoje.
    */
   projetos: {
     title: 'Projetos e experiência — Luiz Freitas',
     description:
-      'Os dois apps que construí por conta própria, Asafe e E aí, fez?, e nove anos de trajetória: IFRN, startup, consultoria e educação.',
+      'Os dois apps que construí por conta própria, Asafe e E aí, fez?, e a trajetória desde 2017: IFRN, startup, consultoria e educação.',
   },
 
   /**
@@ -147,15 +154,22 @@ export const META = {
   },
 
   /**
-   * `/contato`. A bifurcação do §3.4 e a ausência de formulário, que é decisão
-   * e não falta ("formulário some no spam e não dá confirmação"). Os canais
-   * listados são os que a página de fato mostra — se o WhatsApp for ligado um
-   * dia (§12), esta frase entra na conta.
+   * `/contato`. Os quatro canais que a página de fato mostra, na ordem do §3.4,
+   * e a ausência de formulário, que é decisão e não falta ("some no spam, não
+   * dá confirmação, e precisa de backend").
+   *
+   * A descrição antiga abria com "Dois caminhos, tenho uma vaga ou tenho um
+   * projeto". Ela saiu com a bifurcação (§3.4) — e sairia de qualquer forma
+   * pelo §1: era a única meta description do site que classificava o leitor
+   * antes de lhe dar a informação, que é a forma de venda mais discreta que
+   * existe. Aqui o nome e o cargo entram porque esta é a rota que alguém abre
+   * depois de procurar "Luiz Freitas desenvolvedor" (§1: SEO é o que mais
+   * importa), e o resto é o que a página tem.
    */
   contato: {
     title: 'Contato — Luiz Freitas',
     description:
-      'Dois caminhos, tenho uma vaga ou tenho um projeto, e os dois chegam no mesmo e-mail. Sem formulário: e-mail, LinkedIn, GitHub e o CV em PDF.',
+      'Como falar com Luiz Freitas, desenvolvedor full stack em Natal (RN): e-mail escrito por extenso, LinkedIn, GitHub e o currículo em PDF. Sem formulário.',
   },
 } as const satisfies Record<string, RouteMeta>;
 

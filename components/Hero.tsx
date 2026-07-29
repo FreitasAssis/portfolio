@@ -29,8 +29,13 @@ export function Hero() {
       {/* Sem `text-balance`: na coluna de leitura ele encurta as linhas do meio e
           a tese sai com serrilha. Sem escalonar por viewport a display de 39px
           cabe nove caracteres por linha em 360px, e a frase vira uma coluna. */}
+      {/* "Construo software desde 2017", e não "nove anos": o §4.1 é explícito —
+          "número escrito à mão envelhece sozinho e vira mentira sem ninguém
+          perceber (§2, baixa manutenção). O ano é permanente." A h1 é o pior
+          lugar possível para um dado que apodrece: ela é o que o Google mostra e
+          o que a pessoa lê primeiro. */}
       <h1 className="mt-6 font-display text-xl leading-[1.12] font-extrabold tracking-tight sm:text-2xl lg:text-3xl">
-        Nove anos construindo software — e dois dos produtos aqui nasceram de problemas que eu mesmo
+        Construo software desde 2017 — e dois dos produtos aqui nasceram de problemas que eu mesmo
         vivo.
       </h1>
 

@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Container } from '@/components/Container';
 import { Portrait } from '@/components/Portrait';
 import { TechLayers } from '@/components/TechLayers';
-import { ABOUT_PARAGRAPHS, ABOUT_SEEKING, EDUCATION } from '@/content/about';
+import { ABOUT_PARAGRAPHS, EDUCATION } from '@/content/about';
 import { META } from '@/content/site';
 import { pageMetadata } from '@/lib/seo';
 
@@ -13,24 +13,21 @@ export const metadata: Metadata = pageMetadata({ meta: META.sobre, path: '/sobre
  * `/sobre` (§3.4): **curto. Pessoa primeiro, tecnologia depois**, na voz do
  * parágrafo real que já existia no site antigo (§4.3).
  *
- * A ordem da página é essa frase, literalmente: os três parágrafos do §4.3, o
+ * A ordem da página é essa frase, literalmente: os cinco parágrafos do §4.3, o
  * retrato, e só então a tecnologia. A formação fecha, "em algum canto" como o
  * §4.3 permite — é a última pergunta do recrutador e a primeira que ninguém
  * quer ler antes do resto.
  *
- * ## O quarto parágrafo
+ * ## Os dois últimos parágrafos
  *
- * O §4.3 tem um quarto parágrafo, e ele **não está aqui de propósito**: o brief
- * diz "não gerar" e "se estiver vazio na hora do build, omita o parágrafo — a
- * página funciona sem ele". Ela funciona: o terceiro parágrafo fecha no Asafe,
- * que é a ponte para os projetos, e não fica buraco de sentido.
+ * Eram três aqui, e a página omitia o final porque o §4.3 mandava **não gerar**
+ * o que o Luiz ainda não tinha escrito. Ele escreveu; o §12 fechou com "todo o
+ * texto do site está escrito". Não sobrou ramo condicional: os cinco parágrafos
+ * saem do mesmo `map`, e a única forma de a página ter um número diferente é
+ * alguém editar a tupla em `content/about.ts` — que não compila com seis.
  *
- * Não há placeholder visível aqui, ao contrário do retrato e dos prints — e a
- * assimetria é deliberada. Um buraco de imagem precisa gritar para que alguém
- * produza o arquivo; um "{{ o que ele procura hoje }}" no fim da página sobre
- * uma pessoa lê como abandono para o visitante e não acelera nada, porque a
- * pendência já está registrada onde quem trabalha no repo a encontra
- * (`content/about.ts` e `docs/plans/RETOMADA.md`).
+ * O último tem calibragem própria, explicada em `content/about.ts`: porta
+ * encostada, nem trancada nem escancarada. Não o esquente nem o esfrie.
  *
  * O `<main>` é do layout — uma landmark por documento.
  */
@@ -51,10 +48,6 @@ export default function SobrePage() {
             {paragraph}
           </p>
         ))}
-        {/* Uma edição, quando o Luiz mandar as frases: `ABOUT_SEEKING` deixa de
-            ser null em content/about.ts e o parágrafo nasce aqui, com a mesma
-            forma dos outros três. Ver o comentário de lá. */}
-        {ABOUT_SEEKING ? <p className="prose-measure text-ink">{ABOUT_SEEKING}</p> : null}
       </Container>
 
       {/* O retrato vem depois do texto, não ao lado: numa coluna de leitura de

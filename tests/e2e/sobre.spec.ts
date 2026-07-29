@@ -29,14 +29,17 @@ test('a página abre com a pessoa e fecha com a tecnologia (§3.4)', async ({ pa
   await expect(page.getByText(/Sou santista/)).toBeVisible();
 });
 
-test('são três parágrafos, e o quarto não nasceu gerado (§4.3)', async ({ page }) => {
+test('são os cinco parágrafos do §4.3, e nenhum a mais', async ({ page }) => {
   await page.goto('/sobre');
-  // O §4.3 chama o parágrafo final de "última pendência de texto do site" e diz
-  // **não gerar**. Se ele estiver vazio no build, o brief manda omitir — e é o
-  // que a página faz. Quatro parágrafos aqui significa que alguém escreveu.
+  // Eram três, e o teste guardava a ausência do final — o §4.3 dizia "não
+  // gerar". O Luiz escreveu os dois últimos e o §12 fechou: "todo o texto do
+  // site está escrito". Cinco é o número; seis significa que alguém escreveu
+  // por conta própria, e quatro que alguém apagou.
   const secao = page.locator('section').filter({ hasText: 'Sou santista' });
-  await expect(secao.locator('p')).toHaveCount(3);
+  await expect(secao.locator('p')).toHaveCount(5);
   await expect(page.getByText(/em breve|lorem ipsum/i)).toHaveCount(0);
+  // O fecho do §4.3 chegou ao artefato publicado, com o condicional intacto.
+  await expect(page.getByText(/Se um dia aparecer um próximo desafio/)).toBeVisible();
 });
 
 test('a prosa fica na faixa de 65–75 caracteres (§6.3)', async ({ page }) => {
@@ -46,7 +49,7 @@ test('a prosa fica na faixa de 65–75 caracteres (§6.3)', async ({ page }) => 
   // teto era verificado. E o parágrafo da camada 2 fica de fora de propósito —
   // ele é `text-xs`, e 68ch medidos em 18px dariam 76 na fonte menor.
   const larguras = await medidas(page.locator('section p.prose-measure'));
-  expect(larguras).toHaveLength(3);
+  expect(larguras).toHaveLength(5);
   for (const m of larguras) {
     expect(m).toBeGreaterThanOrEqual(65);
     expect(m).toBeLessThanOrEqual(75);

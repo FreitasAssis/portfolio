@@ -11,23 +11,28 @@ import { expect, test } from '@playwright/test';
 
 const CV = '/cv/luiz-freitas-2026-07.pdf';
 
-test('os dois caminhos aparecem lado a lado, com o mesmo peso (§3.4)', async ({ page }) => {
+test('a página é uma lista de canais, sem triagem (§3.4)', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 800 });
   await page.goto('/contato');
 
-  // A caixa é o pai direto do título. Filtrar `div` por texto pegaria o
-  // ancestral mais externo que contém a frase — que é a página inteira.
-  const caixa = (nome: string) =>
-    page.getByRole('heading', { name: nome, exact: true }).locator('xpath=..');
-  const vaga = caixa('Tenho uma vaga');
-  const projeto = caixa('Tenho um projeto');
+  // Havia aqui um teste que media a igualdade das duas caixas ("Tenho uma
+  // vaga" / "Tenho um projeto") em pixel. O §3.4 tirou os dois caminhos —
+  // "pressupunham venda ativa" — e o §1 explicou por quê: o site não existe
+  // para converter. O que sobrou a medir é que a bifurcação não voltou.
+  const corpo = await page.locator('body').innerText();
+  expect(corpo).not.toMatch(/Tenho uma vaga|Tenho um projeto|Escolha o caminho/i);
 
-  // "Lado a lado": mesma linha, mesma largura, mesmo topo. É a única bifurcação
-  // do site, e hierarquizar um caminho sobre o outro desfaria o motivo dela.
-  const [a, b] = await Promise.all([vaga.boundingBox(), projeto.boundingBox()]);
-  expect(a!.y).toBe(b!.y);
-  expect(a!.width).toBe(b!.width);
-  expect(a!.x).toBeLessThan(b!.x);
+  // Os quatro canais do §3.4, na ordem do brief. Escopo no `main`: o rodapé
+  // repete e-mail, GitHub e LinkedIn em toda página, e o que se mede aqui é o
+  // conteúdo da rota.
+  const canais = page.locator('main a');
+  await expect(canais).toHaveCount(4);
+  await expect(canais).toHaveText([
+    'luiz_dev@outlook.com',
+    'linkedin.com/in/luiz-dev',
+    'github.com/FreitasAssis',
+    'Baixar o CV em PDF',
+  ]);
 });
 
 test('o CV está publicado e responde 200 (§7)', async ({ page, request }) => {
@@ -78,8 +83,10 @@ test('cabe em 360px sem rolagem horizontal, nos dois temas (§9)', async ({ page
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
     expect(overflow, tema).toBeLessThanOrEqual(0);
-    // Em 360px os dois caminhos empilham; o que não pode é um sumir.
-    await expect(page.getByRole('heading', { name: 'Tenho uma vaga' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Tenho um projeto' })).toBeVisible();
+    // Em 360px a lista e o retrato empilham; o que não pode é um canal sumir —
+    // e o CV é o que mais tem a perder, porque é o único que não cabe também no
+    // rodapé.
+    await expect(page.getByRole('link', { name: 'Baixar o CV em PDF' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'luiz_dev@outlook.com' }).first()).toBeVisible();
   }
 });

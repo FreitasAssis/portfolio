@@ -142,13 +142,19 @@ test('o que ainda falta está escrito na tela, não escondido (§0)', async ({ p
   await expect(page.getByText(/URL do documento de decisões/)).toHaveCount(0);
 });
 
-test('o documento de decisões do Asafe é linkável (§4.2.1)', async ({ page }) => {
+test('os dois documentos de decisão do Asafe são linkáveis (§4.2.1)', async ({ page }) => {
   await page.goto('/');
-  // É o link que substitui qualquer declaração sobre método — sem ele, a
-  // afirmação do §4.2 fica sem o convite de auditoria que a sustenta.
-  await expect(page.getByRole('link', { name: /DESIGN\.md do Asafe/ })).toHaveAttribute(
+  // São os links que substituem qualquer declaração sobre método — sem eles, a
+  // afirmação do §4.2 fica sem o convite de auditoria que a sustenta. O §4.2.1
+  // nomeia três arquivos; o repo público versiona estes dois, e só se linka o
+  // que existe.
+  await expect(page.getByRole('link', { name: 'DESIGN.md' })).toHaveAttribute(
     'href',
     'https://github.com/FreitasAssis/Asafe/blob/main/docs/DESIGN.md',
+  );
+  await expect(page.getByRole('link', { name: 'identidade-visual.md' })).toHaveAttribute(
+    'href',
+    'https://github.com/FreitasAssis/Asafe/blob/main/docs/identidade-visual.md',
   );
 });
 
