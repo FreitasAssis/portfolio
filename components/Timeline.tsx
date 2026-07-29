@@ -123,7 +123,10 @@ function Impact({ item, arrow }: { item: Experience; arrow: '↑' | '↓' | null
 
 export function Timeline() {
   return (
-    <Container as="section" width="reading" className="py-16">
+    // `id` é alvo da âncora vinda da Trajetória condensada da home: quem clica em
+    // "Ver detalhe de cada posição" quer as posições, não o topo da página.
+    // `scroll-mt-8` evita que o h2 encoste na borda superior da viewport no salto.
+    <Container as="section" width="reading" id="experiencia" className="scroll-mt-8 py-16">
       <h2 className="font-display text-xl font-bold tracking-tight">Experiência profissional</h2>
 
       <ul className="mt-10">

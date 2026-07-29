@@ -39,11 +39,14 @@ export function Container({
   as: Tag = 'div',
   width = 'reading',
   className,
+  id,
   children,
 }: {
   as?: ContainerTag;
   width?: ContainerWidth;
   className?: string;
+  /** Alvo de âncora. Só isso — não vire porta de entrada para props arbitrárias. */
+  id?: string;
   children: ReactNode;
 }) {
   // px-5 no menor tamanho: em 360px sobram 320px de conteúdo, que é o piso do §9.
@@ -54,5 +57,9 @@ export function Container({
     .filter(Boolean)
     .join(' ');
 
-  return <Tag className={classes}>{children}</Tag>;
+  return (
+    <Tag className={classes} id={id}>
+      {children}
+    </Tag>
+  );
 }

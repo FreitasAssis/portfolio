@@ -89,7 +89,10 @@ export function TimelineCondensed() {
       </ul>
 
       <p className="mt-8 font-mono text-xs">
-        <Link href="/projetos" className="text-accent-text underline underline-offset-4">
+        {/* Âncora, não o topo: o link promete "detalhe de cada posição", e o topo
+            do /projetos é a seção de projetos próprios. Cair lá obrigaria a rolar
+            passando por dois cards grandes para achar o que foi prometido. */}
+        <Link href="/projetos#experiencia" className="text-accent-text underline underline-offset-4">
           Ver detalhe de cada posição
         </Link>
       </p>

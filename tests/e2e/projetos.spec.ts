@@ -19,6 +19,27 @@ test('as duas seções são distinguíveis (§3.2)', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Projetos e experiência');
 });
 
+test('a âncora da home cai na experiência, não no topo', async ({ page }) => {
+  // `href` para âncora inexistente é falha silenciosa: o navegador não reclama,
+  // só ignora o fragmento e deixa a pessoa no topo. Por isso este teste clica de
+  // verdade e mede onde a página parou, em vez de conferir o href — isso o
+  // unitário já faz.
+  await page.goto('/');
+  await page.getByRole('link', { name: /ver detalhe/i }).click();
+  await page.waitForURL(/\/projetos#experiencia$/);
+
+  const alvo = page.locator('#experiencia');
+  await expect(alvo).toBeVisible();
+  await expect(alvo.getByRole('heading', { name: 'Experiência profissional' })).toBeVisible();
+
+  // O salto tem que ter acontecido: o topo da seção perto do topo da viewport, e
+  // a página rolada para baixo dos cards de projeto.
+  const y = await alvo.evaluate((el) => el.getBoundingClientRect().top);
+  expect(y).toBeGreaterThanOrEqual(-1);
+  expect(y).toBeLessThan(120);
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+});
+
 test('a sobreposição está rotulada, não escondida (§4.5)', async ({ page }) => {
   await page.goto('/projetos');
   // Três posições se sobrepõem no tempo: Boomer corre junto da ez.devs e, logo

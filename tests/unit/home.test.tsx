@@ -209,11 +209,17 @@ describe('Home — trajetória condensada (§3.1)', () => {
    * O dado que as sustenta continua travado em tests/unit/experience.test.ts.
    * ----------------------------------------------------------------------- */
 
-  it('leva ao detalhe em /projetos', async () => {
+  /* Âncora, não o topo. O link promete "detalhe de cada posição", e o topo do
+     /projetos é a seção de projetos próprios — cair lá obrigaria a rolar
+     passando por dois cards grandes até achar o que foi prometido. O alvo
+     `#experiencia` vive em components/Timeline.tsx; um e2e confere que ele
+     existe de fato na página construída, porque href apontando para âncora
+     inexistente é falha silenciosa. */
+  it('leva ao detalhe na âncora da experiência em /projetos', async () => {
     await renderHome();
     expect(within(section(/trajetória/i)).getByRole('link', { name: /ver detalhe/i })).toHaveAttribute(
       'href',
-      '/projetos',
+      '/projetos#experiencia',
     );
   });
 });
