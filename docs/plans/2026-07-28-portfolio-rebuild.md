@@ -830,6 +830,26 @@ git add -A && git commit -m "content: cases do Asafe e do E aí, fez?"
 
 ## Task 7: /projetos
 
+> **Decisão do Luiz (2026-07-29) — o card usa retrato nos dois projetos.**
+> A Task 7 liga a home e o `/projetos` ao `content/projects`, substituindo o
+> `ProjectCardPlaceholder`. Ao fazer isso: **o card não usa necessariamente a `cover`.**
+>
+> As duas capas têm orientações diferentes, e de propósito — a do Asafe é retrato (tela de
+> repertório, "inconfundível já em miniatura", §4.7) e a do "E aí, fez?" é paisagem 1200×630,
+> porque é a imagem OG do app, *"o único elemento projetado para ser visto fora do app"*.
+> Nas páginas de case isso é certo e fica: são lidas em sequência, e cada capa é o artefato
+> honesto daquele projeto.
+>
+> **No card, não.** Ali os dois são vistos no mesmo instante oferecendo a mesma coisa ("abrir
+> o app"). Um celular alto ao lado de um cartão largo faz o olho ler duas *categorias* de
+> coisa em vez de duas ofertas paralelas, e o paralelismo é o que faz o bloco funcionar.
+>
+> Solução, sem captura nova: o card do Asafe usa a `cover` (já é retrato); o do "E aí, fez?"
+> usa um dos três prints retrato já capturados — **`02.webp` (placar com as unidades)** é o
+> mais legível em miniatura e mostra o produto funcionando. Isso pede um campo próprio no
+> frontmatter (algo como `cardShot`), validado pelo carregador como os demais, em vez de um
+> `if (slug === ...)` no componente.
+
 **Files:**
 - Create: `app/projetos/page.tsx`, `components/ProjectCard.tsx`, `components/Timeline.tsx`
 
