@@ -127,12 +127,17 @@ test('o foco de teclado é visível nos CTAs (§9)', async ({ page }) => {
 
 test('o que ainda falta está escrito na tela, não escondido (§0)', async ({ page }) => {
   await page.goto('/');
-  // Os prints chegaram (Task 6b) e os cards saem do conteúdo desde a Task 7 —
-  // não sobrou buraco de print na home. O CV em PDF (Task 8) ainda é lacuna, e
-  // continua escrita na tela em vez de escondida.
+  // Os prints chegaram (Task 6b), os cards saem do conteúdo desde a Task 7 e o
+  // CV entrou na Task 8 — a home não tem mais buraco nenhum. O que ainda falta
+  // no site (o retrato do §6.5) está escrito na tela do /sobre e do /contato,
+  // que é onde ele vai morar.
   await expect(page.getByText(/\{\{ print:/)).toHaveCount(0);
   await expect(page.locator('article img')).toHaveCount(2);
-  await expect(page.getByText('{{ CV em PDF }}')).toBeVisible();
+  await expect(page.getByText('{{ CV em PDF }}')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Baixar o CV em PDF' })).toHaveAttribute(
+    'href',
+    /^\/cv\/luiz-freitas-\d{4}-\d{2}\.pdf$/,
+  );
   // E nada de placeholder onde o dado já chegou.
   await expect(page.getByText(/URL do documento de decisões/)).toHaveCount(0);
 });

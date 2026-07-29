@@ -34,13 +34,13 @@ Contrato: `docs/private/PORTFOLIO-BRIEF.md` (fora do git — repo é público).
 | 6a | Escrever os dois cases | ✅ |
 | 6b | Semear Asafe local, grupo demo no eaifez, capturar 8 prints | ✅ |
 | 7 | `/projetos` — cards + timeline | ✅ |
-| 8 | `/sobre`, `/contato`, CV | ⬜ próxima |
-| 9 | SEO e metadados por rota | ⬜ |
+| 8 | `/sobre`, `/contato`, CV | ✅ |
+| 9 | SEO e metadados por rota | ⬜ próxima |
 | 10 | OG images (começa por spike de viabilidade) | ⬜ |
 | 11 | Piso de qualidade — a11y, 360px, Lighthouse | ⬜ |
 | 12 | Deploy na Cloudflare + redirects 301 | ⬜ |
 
-Gates ao fim da sessão: `npm run verify` exit 0 · unit **175 passed | 0 todo** · e2e **35 passed**.
+Gates ao fim da sessão: `npm run verify` exit 0 · unit **201 passed | 0 todo** · e2e **49 passed**.
 
 ---
 
@@ -93,7 +93,21 @@ então o candidato a corrigir é o CV. **Decisão do Luiz.** A do Asafe está re
 pontas dizem `Next.js, Expo, TypeScript, Supabase, Drizzle ORM, Cloudflare Workers`, e há
 teste travando (o exemplo do §5 do brief é ilustração de schema, não a lista de verdade).
 
-### 5. Contraste de `--accent-ink` em texto pequeno
+### 5. A camada 1 do §4.4 divergia do CV — resolvido a favor do CV
+
+O §4.4 punha `React Native / Expo` na **camada 2**; o `docs/cv/luiz-freitas.html`
+põe em **"Uso hoje"**. O §4.5 manda os dois contarem a mesma história com as
+mesmas palavras, então uma ponta tinha que ceder. Cedeu o §4.4: a stack da
+Analytica em `content/experience.ts` (posição atual) tem React Native e o
+frontmatter do Asafe tem Expo — o dado do próprio site já dizia "uso hoje", e o
+`/projetos` mostra os dois a poucos blocos de distância. A ordem dos termos da
+camada 1 no `/sobre` é agora a do CV, letra por letra. Justificativa completa em
+`content/tech.ts`; teste em `tests/unit/sobre.test.tsx`.
+
+Não foram importados `MySQL`, `Nuxt` e `Sidekiq`, que existem no CV e não no
+§4.4: encurtar uma lista não conta história errada; mover um item de camada, sim.
+
+### 6. Contraste de `--accent-ink` em texto pequeno
 
 `#FAFAFA` sobre `#C8506A` mede **4.18:1** — passa AA Large, reprova AA normal. Afeta o botão
 "Abrir o E aí, fez?" na home e o CTA primário do case. A correção é no token para os dois
@@ -152,11 +166,42 @@ logo em seguida, da Opah IT. O trecho da Task 7 no plano dizia duas; o dado mand
 |---|---|
 | Lockup e ícone do E aí, fez? | ✅ `eaifez/public/brand/{lockup,icon}.svg` |
 | Ícone do Asafe | ✅ `asafe/apps/web/app/icon.svg` |
-| 8 prints | ⬜ Task 6b |
-| Retrato do Luiz | ⬜ §6.5 — com instrumento ou em Natal, não headshot |
-| CV em PDF para `public/cv/` | ⬜ Task 8 (existe em `docs/private/`) |
-| Últimas frases do `/sobre` | ⬜ **não gerar** (§4.3); se vazio, omitir o parágrafo |
+| 8 prints | ✅ Task 6b |
+| Retrato do Luiz | ⬜ §6.5 — 4:5, com instrumento ou em Natal, não headshot |
+| CV em PDF para `public/cv/` | ✅ `luiz-freitas-2026-07.pdf` |
+| Últimas frases do `/sobre` | ⬜ **não gerar** (§4.3); o parágrafo está omitido |
 | WhatsApp no `/contato` | ⬜ indeciso |
+
+**Retrato (§6.5).** O buraco está no `/sobre` (`max-w-[16rem]`) e, pequeno, no
+`/contato` (`max-w-[10rem]`), nos dois casos em `4:5` — proporção que é premissa
+de `components/Portrait.tsx`, não do brief. Quando a foto chegar: salvar em
+`public/sobre/retrato.webp` com dimensões declaradas (§9), trocar o
+`AssetPlaceholder` por `next/image` com `alt` descritivo, e mexer só nesse
+arquivo — as duas chamadas passam por ele. Um `<Portrait size="inline" />` no
+`ContactBlock` põe a foto também na home, se o Luiz quiser essa leitura de
+"bloco de contato".
+
+**WhatsApp (§12).** Uma edição: `WHATSAPP` em `content/contact.ts` deixa de ser
+`null` e vira `{ href: 'https://wa.me/55…', label: 'WhatsApp', external: true }`.
+O caminho "Tenho um projeto" já espalha o valor. O teste que trava a pendência
+falha junto, de propósito.
+
+**Último parágrafo do `/sobre` (§4.3).** `ABOUT_SEEKING` em `content/about.ts`
+segue `null`, e a página **omite** o parágrafo, como o brief manda — sem
+placeholder na tela, ao contrário do retrato. A assimetria é deliberada e está
+explicada em `app/sobre/page.tsx`. Quando ele mandar as frases, é uma edição lá;
+o teste "os três parágrafos do §4.3, verbatim — e nada além" vai falhar, e falhar
+é o pedágio que prova que o texto veio dele e não de geração.
+
+**CV.** `public/cv/luiz-freitas-2026-07.pdf`, cópia byte a byte do
+`docs/private/CV-Luiz-Freitas.pdf` (sha256 conferido). Verificado antes de
+publicar, extraindo o texto renderizado do PDF: uma página, `/XObject` vazio —
+nenhuma imagem embutida, portanto nenhuma foto de documento —, zero glifos não
+mapeados na extração (ou seja, o texto lido é o texto todo), nenhum CPF, RG,
+telefone, endereço ou data de nascimento, e os três únicos links são
+`luizfreitas.com.br`, o LinkedIn e o GitHub. O nome do arquivo carrega a data
+(§7); reemitir significa trocar o arquivo **com a data nova** e atualizar `CV`
+em `content/contact.ts`.
 
 **Banco local do Asafe** (docker, `supabase_*_asafe`, porta 54321): tem 18 músicas, 68
 perícopes, 23 dias litúrgicos, 6 repertórios, 20 fontes autorizadas. Mas `song_pericope`,

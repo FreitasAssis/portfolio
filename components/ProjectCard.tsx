@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { AccentZone } from '@/components/AccentZone';
-import { ProjectCardPlaceholder } from '@/components/ProjectCardPlaceholder';
+import { AssetPlaceholder } from '@/components/AssetPlaceholder';
 import { isShotPending, type Project } from '@/lib/projects';
 
 /**
@@ -44,7 +44,12 @@ export function ProjectCard({
           uns 400px do lado direito. */}
       <article className="grid gap-8 border-t border-rule py-12 sm:grid-cols-[15rem_1fr] sm:items-center sm:gap-10">
         {isShotPending(shot) ? (
-          <ProjectCardPlaceholder label={shot.alt} spec="390–430pt · 2x/3x · WebP (§4.7)" />
+          <AssetPlaceholder
+            label={`print: ${shot.alt}`}
+            spec="390–430pt · 2x/3x · WebP (§4.7)"
+            aspect="aspect-[390/844]"
+            width="max-w-[15rem]"
+          />
         ) : (
           <Image
             src={shot.src}

@@ -3,7 +3,7 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 
 import { AccentZone } from '@/components/AccentZone';
 import { Container } from '@/components/Container';
-import { ProjectCardPlaceholder } from '@/components/ProjectCardPlaceholder';
+import { AssetPlaceholder } from '@/components/AssetPlaceholder';
 import { Decisoes, mdxComponents, Stack } from '@/components/mdx-components';
 import { getAllProjects, getProject, isShotPending, type Project } from '@/lib/projects';
 
@@ -108,7 +108,12 @@ function Shot({
   return (
     <div className={`w-full ${className}`}>
       {isShotPending(shot) ? (
-        <ProjectCardPlaceholder label={shot.alt} spec="390–430pt · 2x/3x · WebP (§4.7)" />
+        <AssetPlaceholder
+          label={`print: ${shot.alt}`}
+          spec="390–430pt · 2x/3x · WebP (§4.7)"
+          aspect="aspect-[390/844]"
+          width="max-w-[15rem]"
+        />
       ) : (
         <Image
           src={shot.src}

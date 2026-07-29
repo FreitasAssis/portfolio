@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import Page from '@/app/page';
 import { formatPeriod } from '@/components/TimelineCondensed';
+import { CV } from '@/content/contact';
 import { experience } from '@/content/experience';
 import { getAllProjects } from '@/lib/projects';
 
@@ -280,14 +281,16 @@ describe('Home — contato (§3.4)', () => {
     expect(container.querySelector('input')).toBeNull();
   });
 
-  it('marca o CV como pendente em vez de inventar o link (§0)', async () => {
+  it('baixa o CV, com a data no nome do arquivo (§7)', async () => {
+    // Até a Task 8 este teste exigia o contrário: um `{{ CV em PDF }}` visível,
+    // porque o arquivo ainda não estava no repo e link quebrado no bloco de
+    // contato é pior que a ausência dele. O arquivo chegou.
     await renderHome();
     const contato = section(/contato/i);
-    expect(within(contato).getByText(/\{\{ *CV em PDF/i)).toBeInTheDocument();
-    const hrefs = within(contato)
-      .getAllByRole('link')
-      .map((a) => a.getAttribute('href'));
-    expect(hrefs.filter((h) => /\.pdf$/i.test(h ?? ''))).toEqual([]);
+    expect(within(contato).queryByText(/\{\{ *CV em PDF/i)).toBeNull();
+    const cv = within(contato).getByRole('link', { name: CV.label });
+    expect(cv).toHaveAttribute('href', CV.href);
+    expect(CV.href).toMatch(/^\/cv\/luiz-freitas-\d{4}-\d{2}\.pdf$/);
   });
 
   it('não expõe WhatsApp — a decisão ainda é do Luiz (§12)', async () => {
