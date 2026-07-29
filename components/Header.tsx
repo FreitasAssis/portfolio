@@ -34,7 +34,16 @@ export function Header() {
   const pathname = usePathname() ?? '/';
 
   return (
-    <header className="border-b border-rule">
+    // `id="topo"` é o alvo do "Voltar ao topo" do fim de um case
+    // (`components/CaseEndNav.tsx`). Fica aqui, e não num `href="#"` vazio, por
+    // uma razão de teclado: seguir um fragmento NOMEADO move o ponto de partida
+    // da navegação sequencial para o elemento alvo, então o próximo Tab
+    // continua a partir do cabeçalho — que é onde a navegação do site está, e é
+    // exatamente o que quem pediu o topo quer. Com `#`, a página rola e o foco
+    // fica para trás, no rodapé.
+    // O elo é uma string dos dois lados, como o `#experiencia` da Timeline;
+    // quem impede a quebra silenciosa é o e2e, que CLICA e mede onde parou.
+    <header id="topo" className="border-b border-rule">
       {/* flex-wrap em vez de menu: em 360px a nav cai para a linha de baixo e
           continua uma linha de links, sem hambúrguer e sem animação (§6.4). */}
       <Container

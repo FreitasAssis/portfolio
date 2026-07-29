@@ -40,6 +40,7 @@ export function Container({
   width = 'reading',
   className,
   id,
+  'aria-label': ariaLabel,
   children,
 }: {
   as?: ContainerTag;
@@ -47,6 +48,13 @@ export function Container({
   className?: string;
   /** Alvo de âncora. Só isso — não vire porta de entrada para props arbitrárias. */
   id?: string;
+  /**
+   * Nome da landmark, quando `as` é `nav` ou `section`. Também é explícita e
+   * nomeada, pelo mesmo motivo do `id`: o §9 exige que duas landmarks do mesmo
+   * tipo tenham nomes distintos, e isso é requisito de acessibilidade, não uma
+   * porta para `...rest`.
+   */
+  'aria-label'?: string;
   children: ReactNode;
 }) {
   // px-5 no menor tamanho: em 360px sobram 320px de conteúdo, que é o piso do §9.
@@ -58,7 +66,7 @@ export function Container({
     .join(' ');
 
   return (
-    <Tag className={classes} id={id}>
+    <Tag className={classes} id={id} aria-label={ariaLabel}>
       {children}
     </Tag>
   );

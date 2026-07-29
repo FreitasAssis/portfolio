@@ -159,6 +159,106 @@ test('a capa encabeça a galeria em vez de sumir dentro dela (§3.3)', async ({ 
   }
 });
 
+/* ------------------------------------------------------------------------- *
+ * Fim do case (§3.3, §6.4, §9).
+ *
+ * A página do Asafe mede 7.915px em 1440×900 e 14.138px em 360×740 — 8,8 e 19,1
+ * telas —, e só a seção de decisões responde por 41% a 50% disso. O bloco do fim
+ * é a resposta estática a esse comprimento: nada de botão flutuante, que seria
+ * um segundo momento de movimento (§6.4).
+ * ------------------------------------------------------------------------- */
+
+const fimDoCase = (page: import('@playwright/test').Page) =>
+  page.getByRole('navigation', { name: 'Fim do case' });
+
+test('a corrente do próximo case é derivada, não um par escrito à mão (§4.6)', async ({ page }) => {
+  // O encadeamento sai do `order` do frontmatter (tests/unit/projects.test.ts
+  // prova a derivação com uma corrente sintética de três). Aqui o que se
+  // verifica é o resultado no artefato que vai ao ar: o primeiro leva ao
+  // segundo, e o último não inventa um laço de volta ao primeiro.
+  await page.goto('/projetos/asafe');
+  await expect(fimDoCase(page).getByRole('link', { name: /próximo case/i })).toHaveAttribute(
+    'href',
+    '/projetos/eaifez',
+  );
+
+  await page.goto('/projetos/eaifez');
+  const fim = fimDoCase(page);
+  await expect(fim.getByRole('link', { name: /próximo case/i })).toHaveCount(0);
+  await expect(fim.getByRole('link', { name: 'Ver todos os projetos' })).toHaveAttribute(
+    'href',
+    '/projetos',
+  );
+});
+
+test('o "voltar ao topo" leva ao topo de verdade (§9)', async ({ page }) => {
+  // Mesma razão do teste da âncora da /projetos: `href` para fragmento
+  // inexistente é falha silenciosa — o navegador não reclama, só não sai do
+  // lugar. Por isso este teste CLICA e mede onde a página parou.
+  await page.goto('/projetos/asafe');
+  const topo = fimDoCase(page).getByRole('link', { name: 'Voltar ao topo' });
+  await topo.scrollIntoViewIfNeeded();
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+  await topo.click();
+  await page.waitForURL(/\/projetos\/asafe#topo$/);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  // E o alvo é o cabeçalho, não um `<div>` qualquer: é o que põe o ponto de
+  // partida da navegação de teclado na navegação do site.
+  expect(await page.locator('#topo').evaluate((el) => el.tagName)).toBe('HEADER');
+});
+
+test('depois do salto, o Tab continua do topo e não do rodapé (§9)', async ({ page }) => {
+  // O motivo de o alvo ser um `id` e não um `href="#"` vazio. Com `#`, a página
+  // rola e o ponto de partida da navegação sequencial fica para trás: quem usa
+  // teclado vê o topo e tabula a partir do fim da página.
+  await page.goto('/projetos/asafe');
+  await fimDoCase(page).getByRole('link', { name: 'Voltar ao topo' }).click();
+  await page.keyboard.press('Tab');
+
+  const focado = page.locator(':focus');
+  await expect(focado).toHaveAttribute('href', '/');
+  // E o foco está visível, com o anel do §9 — que vem de graça por ser um <a>.
+  expect(await focado.evaluate((el) => getComputedStyle(el).outlineWidth)).toBe('2px');
+});
+
+test('os dois links do fim têm nomes distinguíveis e cabem em 360px (§9)', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto('/projetos/eaifez');
+
+  const nomes = await fimDoCase(page)
+    .getByRole('link')
+    .evaluateAll((els) => els.map((el) => el.textContent!.trim()));
+  expect(nomes).toEqual(['Ver todos os projetos', 'Voltar ao topo']);
+
+  // Os dois inteiros dentro da coluna, sem estourar a viewport estreita. O
+  // teste de rolagem horizontal da página inteira já roda acima; aqui o que
+  // importa é que o bloco novo não é o que a estoura.
+  for (const link of await fimDoCase(page).getByRole('link').all()) {
+    await expect(link).toBeVisible();
+    const box = (await link.boundingBox())!;
+    expect(box.x + box.width).toBeLessThanOrEqual(360);
+  }
+});
+
+test('o acento não se apaga no fim do case (§6.1, §6.4)', async ({ page }) => {
+  // O bloco fica DENTRO da AccentZone de propósito. Medido no fim da página:
+  // com ele dentro, a zona cobre 76,0% da viewport em 1440×900 e 59,6% em
+  // 360×740; com ele fora, cairia para 63,3% e 39,4% — a 4,4 pontos do limiar
+  // de 35% do AccentTracker. Perto o bastante para o acento se apagar bem no
+  // fim do case, que é movimento novo no lugar mais silencioso possível.
+  for (const [slug, hex] of [
+    ['asafe', '#2f3a5e'],
+    ['eaifez', '#c8506a'],
+  ] as const) {
+    await page.goto(`/projetos/${slug}`);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect(fimDoCase(page)).toBeInViewport();
+    await expect(page.locator('html')).toHaveAttribute('data-accent', slug);
+    expect(await accentVar(page)).toBe(hex);
+  }
+});
+
 test('a galeria reserva o espaço antes de a imagem chegar (§9)', async ({ page }) => {
   // O motivo de o §9 pedir dimensão declarada é este, e não o atributo em si:
   // a galeria fica no fim de uma página longa, e sem reserva ela empurra o

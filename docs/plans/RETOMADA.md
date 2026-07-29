@@ -40,7 +40,18 @@ Contrato: `docs/private/PORTFOLIO-BRIEF.md` (fora do git — repo é público).
 | 11 | Piso de qualidade — a11y, 360px, Lighthouse | ⬜ |
 | 12 | Deploy na Cloudflare + redirects 301 | ⬜ |
 
-Gates ao fim da sessão: `npm run verify` exit 0 · unit **238 passed | 0 todo** · e2e **68 passed**.
+Gates ao fim da sessão: `npm run verify` exit 0 · unit **253 passed | 0 todo** · e2e **73 passed**.
+
+**Fim do case (fora da tabela de tasks).** As páginas de case são longas —
+medido sobre o `out/`: 7.915px (Asafe) e 6.719px ("E aí, fez?") em 1440×900;
+14.138px e 12.068px em 360×740, ou 19,1 e 16,3 telas. O pedido era um "voltar ao
+topo"; o botão flutuante está descartado pelo §6.4 (movimento novo, componente
+de cliente, flutuando sobre o conteúdo justamente onde 360px é mais apertado).
+O que entrou é um bloco **estático** no fim de cada case (`components/CaseEndNav.tsx`):
+link para o próximo case, derivado do `order` (§4.6) em `nextProject`, e uma
+âncora `#topo` para o `id` do `<header>`. **Só nos cases** — a home (4,4 telas),
+a `/projetos` (4,9) e o `/sobre` (2,1) não têm um "próximo" para oferecer, e sem
+ele o bloco vira widget de navegação repetido em todo lugar.
 
 **O que a Task 10 tem que preencher.** A estrutura de OG está pronta e falta só a imagem.
 O ponto de entrada é **um**: o parâmetro `image` de `pageMetadata` em `lib/seo.ts`. As seis

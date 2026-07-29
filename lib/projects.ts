@@ -470,6 +470,29 @@ export async function getAllProjects(): Promise<Project[]> {
   return projects.sort((a, b) => a.order - b.order);
 }
 
+/**
+ * O case seguinte na ordem do §4.6, ou `null` quando o slug é o último.
+ *
+ * **Derivado do `order`, nunca de um par escrito à mão.** A tentação óbvia no
+ * fim de um case é `slug === 'asafe' ? 'eaifez' : '/projetos'`, e ela quebra a
+ * promessa do §2 ("adicionar projeto novo = criar um arquivo") no lugar mais
+ * silencioso possível: com um terceiro `.mdx`, a página nasce, o link continua
+ * apontando para o segundo case e nada reclama. Aqui o encadeamento é uma
+ * consequência do mesmo campo que já ordena os cards da home e da `/projetos`.
+ *
+ * Função pura, sobre uma lista qualquer, por dois motivos: o teste pode
+ * exercitar uma corrente de três projetos sem inventar arquivo no repo — que é
+ * o que prova que a coisa é derivada e não um par disfarçado —, e a ordenação
+ * acontece aqui dentro, então o resultado não depende de quem chamou ter
+ * ordenado antes.
+ */
+export function nextProject(projects: readonly Project[], slug: string): Project | null {
+  const ordered = [...projects].sort((a, b) => a.order - b.order);
+  const index = ordered.findIndex((p) => p.slug === slug);
+  if (index === -1) throw new Error(`content/projects: não existe projeto com slug "${slug}"`);
+  return ordered[index + 1] ?? null;
+}
+
 export async function getProject(slug: string): Promise<Project> {
   const all = await getAllProjects();
   const project = all.find((p) => p.slug === slug);

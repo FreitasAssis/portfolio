@@ -3,11 +3,18 @@ import Image from 'next/image';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 
 import { AccentZone } from '@/components/AccentZone';
+import { CaseEndNav } from '@/components/CaseEndNav';
 import { Container } from '@/components/Container';
 import { AssetPlaceholder } from '@/components/AssetPlaceholder';
 import { Decisoes, mdxComponents, Stack } from '@/components/mdx-components';
 import { caseTitle } from '@/content/site';
-import { getAllProjects, getProject, isShotPending, type Project } from '@/lib/projects';
+import {
+  getAllProjects,
+  getProject,
+  isShotPending,
+  nextProject,
+  type Project,
+} from '@/lib/projects';
 import { pageMetadata } from '@/lib/seo';
 
 /**
@@ -224,6 +231,9 @@ function Gallery({ project }: { readonly project: Project }) {
 export default async function CasePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const project = await getProject(slug);
+  // Encadeamento derivado do `order` (§4.6), nunca de um par escrito à mão —
+  // ver a nota em `nextProject`.
+  const next = nextProject(await getAllProjects(), slug);
 
   return (
     <AccentZone accent={project.slug}>
@@ -256,6 +266,9 @@ export default async function CasePage({ params }: { params: Promise<{ slug: str
       </Container>
 
       <Gallery project={project} />
+
+      {/* Dentro da zona de acento, de propósito — ver a nota do componente. */}
+      <CaseEndNav next={next} />
     </AccentZone>
   );
 }

@@ -4,7 +4,14 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { ACCENTS } from '@/components/AccentZone';
-import { getAllProjects, getProject, isShotPending, parseProject } from '@/lib/projects';
+import {
+  getAllProjects,
+  getProject,
+  isShotPending,
+  nextProject,
+  parseProject,
+  type Project,
+} from '@/lib/projects';
 
 import { accentSlugsInCss, resolveTokens, token } from '../helpers/globals-css';
 
@@ -48,6 +55,62 @@ describe('carregador de projetos', () => {
       expect(p.liveUrl).toMatch(/^https:\/\//);
       expect(p.status).toBe('live');
     }
+  });
+});
+
+/* ------------------------------------------------------------------------- *
+ * `nextProject` — o encadeamento do fim do case (§4.6).
+ *
+ * O ponto destes testes é provar DERIVAÇÃO, não o par que existe hoje. Um
+ * `slug === 'asafe' ? 'eaifez' : null` escrito à mão passaria em qualquer
+ * asserção feita só sobre o conteúdo real — por isso a corrente de três abaixo,
+ * com slugs que não existem no repo e em ordem embaralhada.
+ * ------------------------------------------------------------------------- */
+
+describe('próximo case (§4.6)', () => {
+  /** Só os dois campos que a função lê. O resto do `Project` é irrelevante. */
+  const fake = (slug: string, order: number) => ({ slug, order, name: slug }) as unknown as Project;
+
+  it('encadeia pelo `order`, e não pela ordem em que a lista chegou', () => {
+    // Embaralhada de propósito: se a função dependesse da posição no array, o
+    // terceiro projeto do repo herdaria o link errado no dia em que o
+    // carregador mudasse de ordenação.
+    const lista = [fake('terceiro', 3), fake('primeiro', 1), fake('segundo', 2)];
+
+    expect(nextProject(lista, 'primeiro')?.slug).toBe('segundo');
+    expect(nextProject(lista, 'segundo')?.slug).toBe('terceiro');
+    expect(nextProject(lista, 'terceiro')).toBeNull();
+  });
+
+  it('um case novo entre os dois entra na corrente sozinho (§2)', () => {
+    // A promessa do §2 é "projeto novo = um arquivo, zero mexida em código".
+    // Aqui ela é medida: os mesmos dois slugs de hoje, um terceiro no meio da
+    // ordem, e o encadeamento se reorganiza sem nenhuma linha de código.
+    // Um par escrito à mão continuaria mandando o Asafe direto ao "E aí, fez?"
+    // e pularia o case novo, sem erro nenhum.
+    expect(nextProject([fake('asafe', 1), fake('eaifez', 2)], 'asafe')?.slug).toBe('eaifez');
+
+    const comNovo = [fake('asafe', 1), fake('novo', 2), fake('eaifez', 3)];
+    expect(nextProject(comNovo, 'asafe')?.slug).toBe('novo');
+    expect(nextProject(comNovo, 'novo')?.slug).toBe('eaifez');
+    expect(nextProject(comNovo, 'eaifez')).toBeNull();
+  });
+
+  it('o último case não volta para o primeiro — quem decide o destino é a página', () => {
+    // `null` é a resposta honesta: a função sabe que acabou a corrente, e não
+    // inventa um laço que devolveria ao leitor um case que ele já leu. Para
+    // onde ir depois é decisão de interface, e está em `CaseEndNav`.
+    expect(nextProject([fake('unico', 1)], 'unico')).toBeNull();
+  });
+
+  it('slug fora da lista é erro, não `null` silencioso', () => {
+    expect(() => nextProject([fake('asafe', 1)], 'fantasma')).toThrow(/fantasma/);
+  });
+
+  it('no conteúdo real, o Asafe leva ao "E aí, fez?" e ele fecha a corrente', async () => {
+    const all = await getAllProjects();
+    expect(nextProject(all, 'asafe')?.name).toBe('E aí, fez?');
+    expect(nextProject(all, 'eaifez')).toBeNull();
   });
 });
 
