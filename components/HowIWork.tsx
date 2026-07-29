@@ -15,7 +15,7 @@ import { Container } from '@/components/Container';
 const BLOCKS = [
   {
     title: 'Decido com justificativa.',
-    body: 'Todo projeto meu começa por um documento de decisões — o que vai ser construído, o que fica de fora, e por quê. O código vem depois, e pra chegar lá uso as ferramentas mais rápidas disponíveis, IA inclusive. O desenho e as escolhas são meus, estão escritos, e você pode ler:',
+    body: 'Todo projeto meu começa por um documento de decisões — o que vai ser construído, o que fica de fora, por quê, e de que forma. O código vem depois, e pra chegar lá uso as ferramentas mais rápidas disponíveis, IA inclusive. O desenho e as escolhas são meus, estão escritos, e você pode ler:',
     /* O §4.2 escreve o rótulo como "`PLANNING.md` do Asafe", mas esse arquivo não
        existe no repo — o documento de decisões é o `docs/DESIGN.md`, que abre
        com "referência viva de arquitetura e do porquê das decisões do Asafe...
@@ -35,7 +35,7 @@ const BLOCKS = [
   },
   {
     title: 'Escopo é uma decisão, não um acidente.',
-    body: 'Sei o que fica de fora da primeira versão e por quê. Entregar é melhor que planejar pra sempre.',
+    body: 'Sei o que fica de fora da primeira versão e por quê. Cada etapa é bem planejada, assim como as entregas.',
     link: null,
   },
   {
