@@ -12,14 +12,14 @@ order: 1
 stack:
   - Next.js
   - name: Expo
-    why: '{{ por que o app nativo, e não só a web }}'
+    why: o monorepo guarda o app nativo ao lado do web, e o domínio — perícope, tags efetivas, ranqueamento — mora em packages/core, compartilhado em vez de reescrito por plataforma.
   - TypeScript
   - name: Supabase
-    why: '{{ por que Supabase }}'
+    why: Postgres, Auth, Storage e Realtime num serviço só. O RLS expressa nativamente o modelo "vejo o global + o meu + o do meu grupo", e o Realtime cobre a navegação sincronizada sem servidor always-on.
   - name: Drizzle ORM
-    why: '{{ por que Drizzle }}'
+    why: dono do schema e das migrations, com as políticas de RLS versionadas no mesmo pacote e testadas no CI antes de migrar produção.
   - name: Cloudflare Workers
-    why: '{{ por que Workers }}'
+    why: o OpenNext roda o Next fora da Vercel, e o grátis da Cloudflare permite uso comercial e serve os links públicos pela CDN. Um app sem fins lucrativos precisa caber no plano gratuito.
 cover:
   src: '{{ }}'
   alt: repertório do Asafe montado na ordem do rito, com um bloco de músicas para cada momento da celebração
@@ -33,33 +33,122 @@ shots:
 decisions:
   - chose: busca por dois eixos — posição na celebração e perícope
     insteadOf: um eixo de busca só
-    because: '{{ o porquê — Task 6 }}'
+    because: >-
+      Posição diz onde a música entra no rito; perícope diz sobre o quê
+      ela fala. Só a posição devolve um repertório estruturalmente certo e
+      genérico — todo domingo precisa de uma Entrada, mas as leituras mudam. Só
+      a perícope devolve um repertório temático e fora de lugar, com o canto
+      reflexivo do Evangelho sugerido para uma Entrada festiva. O casamento por
+      perícope é por sobreposição normalizada de versículos, não por string
+      igual: Lc 15,11-32 e Lc 15,1-3.11-32 são a mesma parábola do filho
+      pródigo recortada de dois jeitos, e só a interseção de intervalos faz o
+      vínculo atravessar os anos. No ranqueador, o conteúdo lidera e a posição
+      restringe — foi assim que se corrigiu o caso de uma música de Comunhão
+      ligada a uma leitura que vazava para todos os momentos: o fix manteve o
+      sinal de conteúdo e restringiu pelo slot. Um motor só, com os dois eixos,
+      serve a Missa (rígida, guiada por posição) e o grupo de oração ou o
+      casamento, onde quem carrega é o tema.
   - chose: AGPL-3.0
     insteadOf: MIT
-    because: '{{ o porquê — Task 6 }}'
+    because: >-
+      A GPL comum só dispara a obrigação de abrir o código quando o binário é
+      distribuído — e um app web nunca é distribuído, ele é hospedado. A
+      cláusula §13 da AGPL trata interagir com usuários pela rede como
+      distribuição: quem sobe um Asafe modificado é obrigado a publicar as
+      modificações. Podem derivar e forkar; não podem fechar. O trade-off é
+      honesto — a AGPL espanta parte da adoção comercial, porque muitas
+      empresas proíbem dependências AGPL, e se o objetivo fosse maximizar
+      adoção a MIT seria a escolha. Como o Asafe é uma ferramenta comunitária
+      sem fins lucrativos, proteger o trabalho dos voluntários pesou mais.
+      Marca e comunidade são proteções separadas da licença.
   - chose: licença de uso com consentimento explícito e registro probatório
     insteadOf: cessão dos direitos das cifras enviadas pela comunidade
-    because: '{{ o porquê — Task 6 }}'
-  - chose: snapshot litúrgico congelado
-    insteadOf: '{{ a alternativa }}'
-    because: '{{ o porquê — Task 6 }}'
-  - chose: RLS no Supabase
-    insteadOf: '{{ a alternativa }}'
-    because: '{{ o porquê — Task 6 }}'
+    because: >-
+      A regra de ouro do modelo é "estrutura é livre, conteúdo é restrito": a
+      referência da música (título, compositor, tags) mora em song, a cifra
+      mora à parte em song_content, com RLS própria — expor o metadado nunca
+      expõe a cifra. Antes de ir ao catálogo global, o proponente declara a
+      autoria. Obra própria abre um consentimento versionado (licença
+      escolhida, quem, quando): o autor não transfere titularidade, concede uma
+      licença de uso, e a atribuição acompanha a obra em toda superfície
+      pública. Obra de terceiro entra só como referência, salvo permissão com
+      evidência guardada em copyright_evidence e revisada por um moderador.
+      Não é um checkbox solto: é trilha auditável, que sustenta a decisão caso
+      surja questionamento.
+  - chose: snapshot litúrgico congelado na criação do repertório
+    insteadOf: apontar para a fonte litúrgica viva
+    because: >-
+      A camada litúrgica resolve, de fontes externas, qual domingo, o ciclo, o
+      tempo, a cor e as referências das leituras. É dado volátil: as APIs de
+      liturgia em português fazem scraping, mudam recorte e saem do ar. Por
+      isso, ao criar o repertório, grava-se uma cópia congelada em
+      repertoire.liturgical_snapshot. Snapshot ≠ cache: o cache
+      (lectionary) é referência regenerável, o snapshot é registro imutável —
+      como a nota fiscal, que copia o preço da compra em vez de apontar para o
+      preço atual. Se a fonte mudar amanhã, o repertório daquela Missa continua
+      mostrando o que foi montado. Só referências entram no snapshot; o texto
+      integral das leituras é da CNBB, é buscado ao vivo e nunca persistido.
+  - chose: RLS no Postgres
+    insteadOf: autorização espalhada pelos endpoints da aplicação
+    because: >-
+      O modelo de acesso do domínio é "vejo o catálogo global, o meu, e o que
+      foi compartilhado com o meu grupo" — isso é, na essência, uma regra de
+      visibilidade de dado, e o lugar dela é o Row-Level Security. É à prova de
+      esquecimento: a política vale em toda query, por qualquer cliente ou
+      caminho, o que deixa o app usar supabase-js direto onde o RLS já
+      resolve, sem backend próprio. É também o que sustenta a separação
+      referência × conteúdo, porque song_content tem política própria — a
+      regra de direito autoral é garantida pelo banco, não pela esperança de
+      que todo endpoint se lembre dela. Link público é leitura por token via
+      função security definer: o visitante anônimo nunca varre tabela. O
+      trade-off é que RLS é sutil — um vazamento de metadado em song_tag
+      passou e foi fechado, e desde então é disciplina: RLS em toda tabela
+      nova ou alterada, com teste.
 ---
 
 ## O problema
 
-`{{ por que isso existe, na vida real — Task 6, com a landing de asafe.mus.br como fonte }}`
+Ministério de música de paróquia é trabalho voluntário, e o repertório vive em folha solta no
+Drive e PDF perdido no WhatsApp. São duas dores, e elas se somam toda semana: achar a música
+certa para cada momento da celebração, e **não repetir** o que se cantou no domingo passado.
+
+Eu vivo esse problema como músico. O Asafe nasceu de montar repertório à mão.
 
 ## O que é
 
-`{{ o produto em 3 ou 4 frases — Task 6 }}`
+Um app para montar e compartilhar repertório litúrgico. O catálogo guarda cifra e letra em
+ChordPro, transpõe o tom e esconde os acordes para quem só canta. O repertório é montado na
+ordem do rito, momento a momento — e, numa Missa com data, o app traz as leituras e o salmo do
+dia, ajusta os momentos ao tempo litúrgico e sugere músicas ligadas àquelas leituras.
+
+Na hora da celebração há o modo ao vivo (tela cheia, autoscroll, refrão) e o modo projeção,
+com uma sessão sincronizada em que um mestre conduz a tela de toda a equipe. O repertório é
+dividido com o grupo ou por um link de leitura que abre sem login. Além do acervo pessoal há
+uma comunidade, com curadoria, para publicar e aproveitar repertório de outros ministérios.
+
+É gratuito, sem plano pago, e o código é aberto sob AGPL-3.0.
 
 <Decisoes />
+
+Todas elas estão registradas por escrito, com a alternativa e o trade-off, em
+[`docs/DESIGN.md`](https://github.com/FreitasAssis/Asafe/blob/main/docs/DESIGN.md), no repo
+público.
 
 <Stack />
 
 ## Estado
 
-`{{ no ar desde X; o que vem depois — Task 6 }}`
+No ar desde julho de 2026, em pré-lançamento. Estão de pé o catálogo com curadoria pessoal, o
+editor ChordPro, o repertório por momento, a liturgia da Missa com sugestão por leitura, os
+modos ao vivo e projeção com sessão sincronizada, a importação em lote, os grupos e a
+comunidade com moderação. A camada de direitos autorais está inteira: gate de promoção,
+consentimento, permissão por obra e por fonte autorizada, atribuição sempre visível. É PWA
+instalável.
+
+O que vem depois: uso offline completo dos repertórios na hora da celebração, e o app nativo
+em Expo, para o qual o monorepo já está montado.
+
+Uma coisa continua em aberto, e é jurídica, não técnica: o mecanismo de direitos está pronto,
+mas o texto do termo de licença ainda é placeholder no código e os critérios do que conta como
+permissão válida não estão fechados. Até fecharem, a postura é conservadora — nada é
+classificado automaticamente, sempre com um humano no loop.

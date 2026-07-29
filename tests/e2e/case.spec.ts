@@ -91,7 +91,8 @@ test('o case cabe em 360px sem rolagem horizontal (§9)', async ({ page }) => {
 
 test('o que falta está escrito na tela, não escondido (§0)', async ({ page }) => {
   await page.goto('/projetos/asafe');
-  // Prosa e prints são da Task 6. Enquanto não chegam, o buraco é visível.
+  // Os prints são da Task 6b. Enquanto não chegam, o buraco é visível.
   await expect(page.getByText(/\{\{ print:/)).toHaveCount(4);
-  await expect(page.getByText(/\{\{ o produto em 3 ou 4 frases/)).toBeVisible();
+  // A prosa chegou na Task 6a: nenhum `{{ }}` sobra no corpo do case.
+  await expect(page.locator('article').getByText(/\{\{/)).toHaveCount(0);
 });

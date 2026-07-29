@@ -13,9 +13,9 @@ stack:
   - Next.js
   - TypeScript
   - name: Supabase
-    why: '{{ por que Supabase }}'
-  - name: Cloudflare Pages
-    why: '{{ o porquê está nas Decisões — resumir aqui em uma linha }}'
+    why: Postgres, Auth (link mágico e Google) e Storage num serviço só. O RLS é a barreira de autorização; o service role só aparece no cron de fechamento e no seed.
+  - name: Cloudflare Workers
+    why: hospedagem e o cron horário que fecha as rodadas no mesmo lugar, num plano gratuito que permite uso comercial. O porquê inteiro está nas Decisões.
 cover:
   src: '{{ }}'
   alt: 'card compartilhável do E aí, fez? com o resultado da semana, o único elemento feito para ser visto fora do app'
@@ -27,30 +27,80 @@ shots:
   - src: '{{ }}'
     alt: 'configuração de privacidade do E aí, fez?, separando desafio privado de desafio de mostrar'
 decisions:
-  - chose: a unidade (1 a N membros) como quem compete
-    insteadOf: bifurcar o código entre um produto para casais e outro para amigos
-    because: '{{ o porquê — Task 6 }}'
-  - chose: Cloudflare Pages
+  - chose: a unidade de 1 a N membros como quem compete
+    insteadOf: pontuar no nível da pessoa
+    because: >-
+      Quem dá check-in é a pessoa (checkins.user_id); quem ganha ou perde é a
+      unidade — a rodada pontua, vence e cai no nível dela
+      (rounds.loser_unit_ids, o placar da temporada, o troféu). UNIT_SIZE = 2
+      é só o teto do pack de casais, não uma trava do schema: como a abstração é
+      1..N, o mesmo motor de rodada, veredito e prenda serve pack solo (unidade
+      de um), casais (dois) e um futuro pack de time, sem um único
+      if (é_casais). O pack define o tamanho da unidade; o motor é agnóstico.
+      E uma regra social veio de graça: o dia só conta para a unidade se todos
+      os membros atuais marcarem "fiz" — se um marca "fiz" e o outro "não
+      fiz", o estado vira "divergente", que é socialmente significativo: alguém
+      está devendo para o outro. Como a apuração usa os membros atuais, a turma
+      aguenta trocar de elenco no meio da temporada.
+  - chose: separar, no schema, o desafio privado do desafio de mostrar
+    insteadOf: exigir prova em todo desafio
+    because: >-
+      Todo desafio carrega um modo, no enum challenge_mode. O privado é "só
+      entre vocês": marca que fez, sem plateia e sem prova. O de mostrar é
+      feito para ser exibido — habilita prova (link ou foto) e alimenta o card
+      compartilhável. Num app de casais isso é crítico, porque forçar
+      "mostre/prove" em tudo mataria justamente os desafios que reaproximam (um
+      abraço de trinta segundos, sem pressa). O default é confiar: marcou, tá
+      valendo, sem vigilância; a prova só entra onde o ponto é mostrar, e o app
+      não trata o usuário como suspeito. O que segura a mentira fácil é social,
+      não técnico — a confirmação mútua da unidade. E o mesmo enum é, ao mesmo
+      tempo, controle de privacidade e alavanca de aquisição: os de mostrar são
+      os que geram o card que traz gente nova, e os privados protegem a
+      intimidade que sustenta a retenção.
+  - chose: Cloudflare Workers
     insteadOf: Vercel
-    because: '{{ o porquê — Task 6 }}'
-  - chose: check-in na honra
-    insteadOf: prova obrigatória do desafio
-    because: '{{ o porquê — Task 6 }}'
-  - chose: separação entre desafio privado e desafio de mostrar
-    insteadOf: '{{ a alternativa }}'
-    because: '{{ o porquê — Task 6 }}'
-  - chose: card de template, sem IA no MVP
+    because: >-
+      O plano Hobby da Vercel proíbe uso comercial, e o grátis da Cloudflare não
+      — hospedar na Vercel amarraria o projeto a um plano pago antes de existir
+      qualquer receita. Junto vem o Cron Trigger que fecha as rodadas de hora em
+      hora, no mesmo Worker, sem serviço à parte. O caminho é o
+      @opennextjs/cloudflare (o next-on-pages, de Cloudflare Pages, foi
+      descontinuado pela própria Cloudflare). O custo é sair do caminho feliz do
+      Next: o adapter anda atrás do framework, então convenção nova demora — o
+      proxy.ts do Next 16 ainda não roda ali, e o app fica no middleware.ts.
+  - chose: card de sentença como template do next/og
     insteadOf: gerar o card com IA
-    because: '{{ o porquê — Task 6 }}'
+    because: >-
+      O card é o clímax do produto e é também a imagem OG das páginas públicas
+      da rodada: quando o link cai no WhatsApp, o preview é o card. Ele é
+      montado com next/og a partir dos dados da rodada e da skin do pack —
+      renderiza no edge, cacheia e custa zero. Gerar por IA acrescentaria custo
+      por card e variação, justamente onde o que se quer é uma peça reconhecível
+      toda semana, com a voz do pack.
 ---
 
 ## O problema
 
-`{{ por que isso existe, na vida real — Task 6, com a landing de eaifez.com.br como fonte }}`
+Grupo de amigos combina de se ver mais e a semana passa igual. Casal diz que vai fazer alguma
+coisa diferente e não faz. O que move essas turmas não é lembrete nem meta de app de
+produtividade — é a brincadeira de prenda: alguém vacila e paga um mico que o grupo escolhe.
+
+Sem dinheiro e sem humilhação. A prenda é a desculpa; o que se quer de verdade é o encontro.
 
 ## O que é
 
-`{{ o produto em 3 ou 4 frases — Task 6 }}`
+Um PWA de desafio semanal entre amigos, com prenda não-monetária. A turma cria um grupo,
+escolhe o pack e o nível de ousadia, e abre uma rodada de 3 a 14 dias: um desafio único da
+janela, escolhido ou sorteado, e um desafio diário que o app revela a cada dia, igual para
+todas as duplas.
+
+Cada pessoa marca "fiz" ou "vacilei", na confiança. Quando a rodada fecha, sai a sentença: o
+app apura quem vacilou mais, sorteia a prenda e gera o card compartilhável. Empate perfeito
+vira celebração, com opção de desempate em morte súbita. O placar da temporada guarda quem
+está voando e quem carrega o troféu.
+
+A primeira versão é o pack de casais. Pack é skin: cor, voz e baralho de desafios próprios,
+sobre o mesmo motor.
 
 <Decisoes />
 
@@ -58,4 +108,13 @@ decisions:
 
 ## Estado
 
-`{{ no ar desde X; o que vem depois — Task 6 }}`
+No ar desde julho de 2026, com o pack de casais. Estão de pé o grupo com link de convite, a
+rodada com desafio único e diários, o check-in por pessoa com confirmação mútua e a apuração.
+A sentença é automática: um cron horário fecha as rodadas vencidas, e quem abrir uma rodada já
+vencida a fecha na hora. Também estão no ar o desempate em morte súbita, a prenda sorteada, o
+placar da temporada e as páginas públicas da rodada com imagem OG dinâmica. É PWA instalável,
+com notificação push, e prova por foto é apagada sete dias depois do fim da rodada.
+
+O que vem depois são os outros packs — amigos, família, igreja. A arquitetura está pronta para
+eles: é para isso que a unidade é 1..N e que o pack é skin. O código é fechado, então o que dá
+para auditar aqui é o app no ar, não o repo.
