@@ -1,28 +1,16 @@
 import Link from 'next/link';
 
-import { Container } from '@/components/Container';
+import { EndNav } from '@/components/EndNav';
 import type { Project } from '@/lib/projects';
 
 /**
  * Fim do case: para onde ir depois de ter lido, e o caminho de volta ao topo.
  *
- * ## Por que existe, e por que NÃO é um botão flutuante
- *
- * A página de um case é longa de verdade — medido no Chromium sobre o `out/`:
- * 7.915px no Asafe e 6.719px no "E aí, fez?" em 1440×900 (8,8 e 7,5 telas), e
- * 14.138px / 12.068px em 360×740 (19,1 e 16,3 telas). Só a seção de decisões
- * responde por 41% a 53% dessa altura. Quem chega ao fim rolou muito.
- *
- * O reflexo seria o botão flutuante que aparece no scroll. Ele está descartado
- * pelo §6.4: "movimento: um só momento orquestrado — a transição de acento ao
- * entrar num case. Fora isso, hover discreto e nada mais". Um botão que entra e
- * sai da viewport é um segundo momento de movimento, precisa de componente de
- * cliente com listener de scroll, e flutua sobre o conteúdo justamente onde a
- * tela é mais apertada (§9, 360px).
- *
- * Este bloco é estático: zero JavaScript, nenhum movimento novo, foco de teclado
- * de graça, e disponível exatamente quando é desejado — quem quer o topo é quem
- * terminou de ler.
+ * A forma — a régua, a coluna, a tipografia mono, a âncora `#topo` e a landmark
+ * nomeada — mora em `components/EndNav.tsx`, que é o mesmo bloco usado pela
+ * home, pela `/projetos` e pelo `/sobre`. As razões de o bloco ser estático em
+ * vez de um botão flutuante estão lá. O que é específico do case está aqui, e é
+ * só uma coisa: o próximo case.
  *
  * ## O bloco tem DOIS trabalhos, e o primeiro é o mais importante
  *
@@ -32,19 +20,11 @@ import type { Project } from '@/lib/projects';
  * ordem valer alguma coisa, em vez de ser só a ordem em que os dois aparecem nos
  * cards. O "voltar ao topo" vem depois, e menor.
  *
- * ## Tipografia e forma
- *
- * Mono, como manda o §6.3 para metadado — navegação é metadado, e é o que o
- * cabeçalho e o "Ver detalhe de cada posição" da `TimelineCondensed` já fazem.
- * O tratamento é o mesmo dos dois: o link primário em `text-accent-text` com
- * sublinhado, o secundário no registro quieto do rodapé (`text-ink-2`,
- * `hover:text-ink`). Nada de tratamento novo, nenhum ícone, nenhuma caixa — o
- * §6.4 já gastou o gesto de layout do site na quebra de grade dos cards, e este
- * bloco é texto e uma régua.
- *
- * A régua fica na coluna de leitura (`reading`, 792px) e não em `wide`, que é a
- * largura do rodapé (1080px). Duas réguas da mesma largura a 96px de distância
- * leriam como dois rodapés; mais estreita, a de cima lê como o fim da leitura.
+ * É também o que separa este bloco do das outras três páginas: a corrente dos
+ * cases é uma sequência de verdade (Asafe → E aí, fez? → `/projetos`), derivada
+ * do `order` do frontmatter. A home, a `/projetos` e o `/sobre` não têm
+ * "próximo" nenhum a oferecer, e inventar um transformaria o bloco num menu de
+ * navegação repetido em cada rota. Lá o bloco leva só a âncora.
  *
  * ## Sobre a cor do link "próximo case"
  *
@@ -63,15 +43,7 @@ import type { Project } from '@/lib/projects';
  */
 export function CaseEndNav({ next }: { readonly next: Project | null }) {
   return (
-    <Container
-      as="nav"
-      width="reading"
-      // O cabeçalho já tem `aria-label="Principal"`. Duas landmarks de navegação
-      // no mesmo documento precisam de nomes diferentes para serem escolhíveis
-      // na lista de landmarks de um leitor de tela (§9).
-      aria-label="Fim do case"
-      className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-4 border-t border-rule py-10 font-mono"
-    >
+    <EndNav label="Fim do case">
       <p className="text-sm">
         {next ? (
           <Link
@@ -91,18 +63,6 @@ export function CaseEndNav({ next }: { readonly next: Project | null }) {
           </Link>
         )}
       </p>
-
-      {/* Âncora pura, sem JavaScript. O alvo é o `id` do <header> e não um
-          `href="#"` vazio: os dois rolam para o topo, mas só o alvo nomeado
-          move o ponto de partida da navegação sequencial de teclado para lá.
-          Com `#`, quem clica vê o topo e continua tabulando a partir do rodapé.
-          Não há `scroll-behavior: smooth` — ele brigaria com o §6.4 e com
-          `prefers-reduced-motion`. */}
-      <p className="text-xs text-ink-2">
-        <a href="#topo" className="hover:text-ink">
-          Voltar ao topo
-        </a>
-      </p>
-    </Container>
+    </EndNav>
   );
 }

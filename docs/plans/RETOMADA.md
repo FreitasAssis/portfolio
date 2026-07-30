@@ -40,18 +40,37 @@ Contrato: `docs/private/PORTFOLIO-BRIEF.md` (fora do git — repo é público).
 | 11 | Piso de qualidade — a11y, 360px, Lighthouse | ⬜ |
 | 12 | Deploy na Cloudflare + redirects 301 | ⬜ |
 
-Gates ao fim da sessão: `npm run verify` exit 0 · unit **253 passed | 0 todo** · e2e **73 passed**.
+Gates ao fim da sessão: `npm run verify` exit 0 · unit **264 passed | 0 todo** · e2e **81 passed**.
 
-**Fim do case (fora da tabela de tasks).** As páginas de case são longas —
-medido sobre o `out/`: 7.915px (Asafe) e 6.719px ("E aí, fez?") em 1440×900;
-14.138px e 12.068px em 360×740, ou 19,1 e 16,3 telas. O pedido era um "voltar ao
-topo"; o botão flutuante está descartado pelo §6.4 (movimento novo, componente
-de cliente, flutuando sobre o conteúdo justamente onde 360px é mais apertado).
-O que entrou é um bloco **estático** no fim de cada case (`components/CaseEndNav.tsx`):
-link para o próximo case, derivado do `order` (§4.6) em `nextProject`, e uma
-âncora `#topo` para o `id` do `<header>`. **Só nos cases** — a home (4,4 telas),
-a `/projetos` (4,9) e o `/sobre` (2,1) não têm um "próximo" para oferecer, e sem
-ele o bloco vira widget de navegação repetido em todo lugar.
+**Fim do conteúdo (fora da tabela de tasks).** O pedido era um "voltar ao topo".
+O botão flutuante está descartado pelo §6.4 (movimento novo, componente de
+cliente, flutuando sobre o conteúdo justamente onde 360px é mais apertado). O que
+entrou é um bloco **estático**: régua na coluna de leitura, tipografia mono e uma
+âncora `#topo` apontando para o `id` do `<header>` — nunca `href="#"`, que rola
+igual mas deixa o ponto de partida do Tab no rodapé.
+
+A forma mora em **`components/EndNav.tsx`** e é a mesma em quatro rotas;
+`components/CaseEndNav.tsx` é um chamador dela que acrescenta o link do próximo
+case, derivado do `order` (§4.6) em `nextProject`. Um idioma, não quatro — há
+teste comparando o `outerHTML` das duas âncoras.
+
+**Está na home, na `/projetos`, no `/sobre` e nos dois cases. Não está no
+`/contato`.** A primeira versão ficou só nos cases alegando que as outras são
+curtas, e a medida por trás disso era de **desktop**. Medido no `out/` em
+**360×740**, que é o piso do §9: home **5.272px (7,1 telas)**, `/projetos`
+**6.750px (9,1)**, `/sobre` **2.969px (4,0)**, `/contato` **990px (1,3)**. Os
+números de desktop (4,4 / 4,9 / 2,1) subestimavam pela metade. Como a solução é
+uma âncora estática, não havia custo a racionar — e o Android não tem o gesto de
+tocar a barra de status que o iOS oferece. O `/contato` fica fora porque o §3.4 o
+encolheu a um título, uma linha e quatro links: 1,3 telas.
+
+**Por que não no rodapé**, que resolveria as três de uma vez: ele apareceria no
+`/contato`, apareceria **duas vezes** num case, e é `contentinfo` — chrome igual
+em toda rota. No fim do `<main>` o link lê como o fim do que se estava lendo.
+A exclusão do `/contato` tem teste nos dois níveis (`tests/unit/contato.test.tsx`
+conta os links da página; `tests/e2e/contato.spec.ts` conta os do `<main>` e mede
+a altura), justamente para que ninguém a "simplifique" movendo o bloco para o
+rodapé.
 
 **O que a Task 10 tem que preencher.** A estrutura de OG está pronta e falta só a imagem.
 O ponto de entrada é **um**: o parâmetro `image` de `pageMetadata` em `lib/seo.ts`. As seis

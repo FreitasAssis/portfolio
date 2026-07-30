@@ -121,3 +121,52 @@ test('o tema escuro não quebra a página (§9)', async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(0);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
+
+test('o "voltar ao topo" do /sobre leva ao topo de verdade, nos dois temas (§9)', async ({
+  page,
+}) => {
+  // `href` para fragmento inexistente é falha silenciosa. Este teste clica e
+  // mede. Nos dois temas porque a régua e o `text-ink-2` do bloco são tokens que
+  // trocam de valor no escuro — foi assim que o acento escuro já morreu em
+  // silêncio neste repo.
+  for (const tema of ['light', 'dark'] as const) {
+    await page.addInitScript((t) => localStorage.setItem('theme', t), tema);
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto('/sobre');
+
+    const bloco = page.getByRole('navigation', { name: 'Fim da página' });
+    const topo = bloco.getByRole('link', { name: 'Voltar ao topo' });
+    await topo.scrollIntoViewIfNeeded();
+    expect(await page.evaluate(() => window.scrollY), tema).toBeGreaterThan(600);
+
+    await topo.click();
+    await page.waitForURL(/\/sobre#topo$/);
+    expect(await page.evaluate(() => window.scrollY), tema).toBe(0);
+    expect(await page.locator('#topo').evaluate((el) => el.tagName)).toBe('HEADER');
+
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, tema).toBeLessThanOrEqual(0);
+    // Um link só: o /sobre não tem "próximo" a oferecer (§4.6).
+    await expect(bloco.getByRole('link')).toHaveCount(1);
+  }
+});
+
+test('a régua do fim não encosta no texto da formação (§6.4)', async ({ page }) => {
+  // A seção "Formação" era a última da página e por isso só tinha `pt-16`. Sem
+  // um `pb`, a régua do bloco novo colaria no parágrafo do diploma — o `EndNav`
+  // não traz margem de cima nenhuma, por decisão: cada seção paga o próprio
+  // ritmo vertical. Esta é a medida que prova que o `py-16` entrou.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/sobre');
+
+  const diploma = (await page
+    .locator('section', { has: page.getByRole('heading', { name: 'Formação' }) })
+    .locator('p')
+    .boundingBox())!;
+  const fim = (await page.getByRole('navigation', { name: 'Fim da página' }).boundingBox())!;
+
+  // 64px de `py-16`, e o bloco vem DEPOIS do texto — não ao lado nem antes.
+  expect(fim.y - (diploma.y + diploma.height)).toBeGreaterThanOrEqual(48);
+});

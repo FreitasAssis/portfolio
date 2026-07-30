@@ -171,3 +171,73 @@ test('não há formulário de contato (§11)', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('form')).toHaveCount(0);
 });
+
+/* ------------------------------------------------------------------------- *
+ * Fim da página (§6.4, §9).
+ *
+ * O bloco de `components/EndNav.tsx` era só dos cases. A exclusão da home, da
+ * `/projetos` e do `/sobre` tinha sido decidida medindo altura de DESKTOP — a
+ * home mede 4,4 telas em 1440×900 —, e em 360px o mesmo conteúdo é duas a três
+ * vezes mais alto. Como a solução é uma âncora estática (sem JS, sem movimento,
+ * sem elemento flutuante), não havia custo a racionar. O `/contato` continua
+ * fora: ele cabe numa tela.
+ * ------------------------------------------------------------------------- */
+
+const fimDaPagina = (page: import('@playwright/test').Page) =>
+  page.getByRole('navigation', { name: 'Fim da página' });
+
+test('o "voltar ao topo" da home leva ao topo de verdade (§9)', async ({ page }) => {
+  // `href` para fragmento inexistente é falha silenciosa: o navegador não
+  // reclama, só não sai do lugar. Por isso o teste CLICA e mede onde parou, como
+  // já faz o da âncora da experiência em projetos.spec.ts.
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto('/');
+
+  const topo = fimDaPagina(page).getByRole('link', { name: 'Voltar ao topo' });
+  await topo.scrollIntoViewIfNeeded();
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+  await topo.click();
+  await page.waitForURL(/\/#topo$/);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  // E o alvo é o cabeçalho, não um `<div>` qualquer: é o que põe o ponto de
+  // partida da navegação de teclado na navegação do site.
+  expect(await page.locator('#topo').evaluate((el) => el.tagName)).toBe('HEADER');
+});
+
+test('o bloco do fim é o mesmo idioma dos cases, e cabe em 360px (§6.4, §9)', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto('/');
+
+  const bloco = fimDaPagina(page);
+  // Um link só: a corrente de "próximo" é dos cases (§4.6).
+  await expect(bloco.getByRole('link')).toHaveCount(1);
+  // Texto e uma régua — nem ícone, nem caixa, nem nada flutuando (§6.4).
+  await expect(bloco.locator('svg, img')).toHaveCount(0);
+  const forma = await bloco.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return {
+      position: s.position,
+      regua: [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth],
+      fonte: s.fontFamily,
+    };
+  });
+  expect(forma.position).toBe('static');
+  expect(forma.regua).toEqual(['1px', '0px', '0px', '0px']);
+  expect(forma.fonte).toMatch(/JetBrains/i);
+
+  const caixa = (await bloco.getByRole('link').boundingBox())!;
+  expect(caixa.x + caixa.width).toBeLessThanOrEqual(360);
+});
+
+test('depois do salto, o Tab continua do topo e não do rodapé (§9)', async ({ page }) => {
+  // O motivo de o alvo ser um `id` e não um `href="#"` vazio. Com `#`, a página
+  // rola e o ponto de partida da navegação sequencial fica para trás.
+  await page.goto('/');
+  await fimDaPagina(page).getByRole('link', { name: 'Voltar ao topo' }).click();
+  await page.keyboard.press('Tab');
+
+  const focado = page.locator(':focus');
+  await expect(focado).toHaveAttribute('href', '/');
+  expect(await focado.evaluate((el) => getComputedStyle(el).outlineWidth)).toBe('2px');
+});

@@ -225,3 +225,21 @@ describe('/sobre — guardrails do brief', () => {
     expect(container.querySelector('main')).toBeNull();
   });
 });
+
+describe('/sobre — fim da página (§6.4, §9)', () => {
+  it('fecha com o "voltar ao topo", no mesmo idioma dos cases', () => {
+    // 2,1 telas em 1440×900 — a mais curta das três que ganharam o bloco, e
+    // ainda assim cinco parágrafos, o retrato, duas camadas de tecnologia e a
+    // formação. Em 360px isso não cabe em uma tela nem perto.
+    renderPagina();
+    const topo = screen.getByRole('link', { name: 'Voltar ao topo' });
+    expect(topo).toHaveAttribute('href', '#topo');
+    expect(screen.getByRole('navigation', { name: 'Fim da página' })).toContainElement(topo);
+  });
+
+  it('não inventa um "próximo" — o bloco leva só a âncora (§4.6)', () => {
+    renderPagina();
+    const bloco = screen.getByRole('navigation', { name: 'Fim da página' });
+    expect(within(bloco).getAllByRole('link')).toHaveLength(1);
+  });
+});

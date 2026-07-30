@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 
 import { ContactBlock } from '@/components/ContactBlock';
 import { Container } from '@/components/Container';
+import { EndNav } from '@/components/EndNav';
 import { Hero } from '@/components/Hero';
 import { HowIWork } from '@/components/HowIWork';
 import { PersonJsonLd } from '@/components/JsonLd';
@@ -54,6 +55,10 @@ export default async function Page() {
       <TimelineCondensed />
       <HowIWork />
       <ContactBlock />
+
+      {/* O fim do `<main>`, e não o rodapé — a justificativa está no componente.
+          Só a âncora: a home não tem "próximo" a oferecer. */}
+      <EndNav />
     </>
   );
 }

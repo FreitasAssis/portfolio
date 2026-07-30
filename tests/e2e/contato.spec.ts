@@ -90,3 +90,22 @@ test('cabe em 360px sem rolagem horizontal, nos dois temas (§9)', async ({ page
     await expect(page.getByRole('link', { name: 'luiz_dev@outlook.com' }).first()).toBeVisible();
   }
 });
+
+test('não tem "voltar ao topo" — a página cabe numa tela (§3.4)', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto('/contato');
+
+  // A exclusão é decisão registrada, não esquecimento. As outras três rotas de
+  // conteúdo fecham com o bloco de `components/EndNav.tsx`; esta não, porque o
+  // §3.4 a encolheu a um título, uma linha e quatro links — um atalho para o topo
+  // numa página que cabe numa tela é ruído.
+  //
+  // É também o teste que impede a "simplificação" de mover o bloco para o
+  // rodapé: lá ele apareceria nas seis rotas de uma vez, inclusive aqui.
+  await expect(page.getByRole('link', { name: 'Voltar ao topo' })).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Fim da página' })).toHaveCount(0);
+
+  // E ela de fato é curta: menos de duas telas de 740px em 360px de largura.
+  const altura = await page.evaluate(() => document.documentElement.scrollHeight);
+  expect(altura).toBeLessThan(2 * 740);
+});

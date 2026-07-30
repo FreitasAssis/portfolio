@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { Container } from '@/components/Container';
+import { EndNav } from '@/components/EndNav';
 import { Portrait } from '@/components/Portrait';
 import { TechLayers } from '@/components/TechLayers';
 import { ABOUT_PARAGRAPHS, EDUCATION } from '@/content/about';
@@ -68,7 +69,11 @@ export default function SobrePage() {
           não de um argumento. Sem foto de documento, sem data de nascimento,
           sem RG: a proibição do §4.3 vale para a página tanto quanto para o CV,
           e há teste conferindo. */}
-      <Container as="section" className="pt-16">
+      {/* `py-16` e não `pt-16`: esta seção deixou de ser a última coisa da
+          página quando o "voltar ao topo" entrou, e a régua dele precisa de
+          espaço acima. Cada seção paga o próprio ritmo vertical — o `EndNav`
+          não traz margem de cima nenhuma. */}
+      <Container as="section" className="py-16">
         <h2 className="font-display text-xl font-bold tracking-tight">Formação</h2>
         <p className="mt-4 font-mono text-xs leading-relaxed text-ink-2">
           <span className="text-ink">{EDUCATION.degree}</span>
@@ -76,6 +81,10 @@ export default function SobrePage() {
           {EDUCATION.institution} — {EDUCATION.conclusion}
         </p>
       </Container>
+
+      {/* Só a âncora: o `/sobre` não tem "próximo". A justificativa de estar
+          aqui e não no rodapé está no componente. */}
+      <EndNav />
     </>
   );
 }

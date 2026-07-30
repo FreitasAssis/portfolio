@@ -150,3 +150,18 @@ describe('/contato — guardrails do brief', () => {
     expect(container.querySelector('main')).toBeNull();
   });
 });
+
+describe('/contato — sem "voltar ao topo", de propósito (§3.4)', () => {
+  it('a página que cabe numa tela não ganha atalho para o topo', () => {
+    // A exclusão é decisão registrada, não esquecimento. A home, a `/projetos` e
+    // o `/sobre` fecham com o bloco de `components/EndNav.tsx`; esta rota não,
+    // porque o §3.4 a encolheu a um título, uma linha e quatro links — um
+    // "voltar ao topo" aqui aponta para onde a pessoa já está.
+    //
+    // É também por isso que o bloco NÃO mora no rodapé, que apareceria nas seis
+    // rotas de uma vez: a justificativa completa está em components/EndNav.tsx.
+    renderPagina();
+    expect(screen.queryByRole('link', { name: 'Voltar ao topo' })).toBeNull();
+    expect(screen.queryByRole('navigation')).toBeNull();
+  });
+});

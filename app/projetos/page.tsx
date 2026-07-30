@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { Container } from '@/components/Container';
+import { EndNav } from '@/components/EndNav';
 import { ProjectCard } from '@/components/ProjectCard';
 import { Timeline } from '@/components/Timeline';
 import { META } from '@/content/site';
@@ -42,6 +43,11 @@ export default async function ProjetosPage() {
       </Container>
 
       <Timeline />
+
+      {/* A página mais alta do site fora dos cases: dois cards grandes e cinco
+          posições com `built`, `impact` e `stack`. Só a âncora — a corrente de
+          "próximo" é dos cases (§4.6), e esta é a rota pai deles. */}
+      <EndNav />
     </>
   );
 }

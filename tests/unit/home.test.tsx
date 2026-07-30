@@ -387,3 +387,26 @@ describe('Home — guardrails do brief', () => {
     );
   });
 });
+
+describe('Home — fim da página (§6.4, §9)', () => {
+  it('fecha com o "voltar ao topo", no mesmo idioma dos cases', async () => {
+    // O bloco só existia nos cases, e a razão da exclusão era altura de desktop
+    // (a home mede 4,4 telas em 1440×900). Em 360px o mesmo conteúdo é duas a
+    // três vezes mais alto, e no Android não há o gesto de tocar a barra de
+    // status que o iOS oferece. Como é uma âncora estática, não havia custo a
+    // economizar. A forma é a de `components/EndNav.tsx`, não uma variação.
+    await renderHome();
+    const topo = screen.getByRole('link', { name: 'Voltar ao topo' });
+    expect(topo).toHaveAttribute('href', '#topo');
+    expect(screen.getByRole('navigation', { name: 'Fim da página' })).toContainElement(topo);
+  });
+
+  it('não inventa um "próximo" — o bloco leva só a âncora (§4.6)', async () => {
+    // A corrente de próximo case é dos cases, onde o §4.6 argumenta uma
+    // sequência. Na home ela seria menu de navegação repetido.
+    await renderHome();
+    const bloco = screen.getByRole('navigation', { name: 'Fim da página' });
+    expect(within(bloco).getAllByRole('link')).toHaveLength(1);
+    expect(bloco.textContent).not.toMatch(/próxim/i);
+  });
+});

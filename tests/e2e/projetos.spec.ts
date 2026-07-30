@@ -182,3 +182,36 @@ test('o card leva ao app e ao case (§3.2)', async ({ page }) => {
     .evaluateAll((els) => els.map((el) => el.getBoundingClientRect()).map((r) => r.height > r.width));
   expect(formatos).toEqual([true, true]);
 });
+
+test('o "voltar ao topo" da /projetos leva ao topo de verdade (§9)', async ({ page }) => {
+  // A página mais alta do site fora dos cases: dois cards grandes e cinco
+  // posições com `built`, `impact` e `stack`. Medido em 360px, que é onde o
+  // atalho importa — e onde o Android não tem o gesto de barra de status do iOS.
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto('/projetos');
+
+  const bloco = page.getByRole('navigation', { name: 'Fim da página' });
+  const topo = bloco.getByRole('link', { name: 'Voltar ao topo' });
+  await topo.scrollIntoViewIfNeeded();
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+  await topo.click();
+  await page.waitForURL(/\/projetos#topo$/);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  expect(await page.locator('#topo').evaluate((el) => el.tagName)).toBe('HEADER');
+
+  // Um link só, e ele não estoura a viewport estreita (§4.6, §9).
+  await expect(bloco.getByRole('link')).toHaveCount(1);
+  const caixa = (await topo.boundingBox())!;
+  expect(caixa.x + caixa.width).toBeLessThanOrEqual(360);
+});
+
+test('a régua do fim é mais estreita que a do rodapé (§6.4)', async ({ page }) => {
+  // Duas réguas da mesma largura a 96px de distância leriam como dois rodapés. A
+  // de cima fica na coluna de leitura, a do rodapé em `wide`.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/projetos');
+  const fim = (await page.getByRole('navigation', { name: 'Fim da página' }).boundingBox())!;
+  const rodape = (await page.locator('footer > div').boundingBox())!;
+  expect(fim.width).toBeLessThan(rodape.width);
+});

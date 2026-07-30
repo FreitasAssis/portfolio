@@ -296,3 +296,21 @@ describe('/projetos — experiência profissional (§4.5)', () => {
 });
 
 const byCompany = (company: string) => experience.find((e) => e.company === company)!;
+
+describe('/projetos — fim da página (§6.4, §9)', () => {
+  it('fecha com o "voltar ao topo", no mesmo idioma dos cases', async () => {
+    // A página mais alta do site fora dos cases: dois cards grandes e cinco
+    // posições com `built`, `impact` e `stack` — 4,9 telas em 1440×900, e em
+    // 360px muito mais. A forma vem de `components/EndNav.tsx`.
+    await renderPagina();
+    const topo = screen.getByRole('link', { name: 'Voltar ao topo' });
+    expect(topo).toHaveAttribute('href', '#topo');
+    expect(screen.getByRole('navigation', { name: 'Fim da página' })).toContainElement(topo);
+  });
+
+  it('não inventa um "próximo" — o bloco leva só a âncora (§4.6)', async () => {
+    await renderPagina();
+    const bloco = screen.getByRole('navigation', { name: 'Fim da página' });
+    expect(within(bloco).getAllByRole('link')).toHaveLength(1);
+  });
+});
