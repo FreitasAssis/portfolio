@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="LF">
+  <style>
+    .bg { fill: #14161A; }
+    .fg { fill: #FAFAFA; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #FAFAFA; }
+      .fg { fill: #14161A; }
+    }
+  </style>
+  <rect class="bg" width="64" height="64" rx="12"/>
+  <g class="fg">
+    <rect x="8"  y="8"  width="8"  height="48"/>
+    <rect x="8"  y="48" width="24" height="8"/>
+    <rect x="36" y="8"  width="8"  height="48"/>
+    <rect x="36" y="8"  width="20" height="8"/>
+    <rect x="36" y="24" width="16" height="8"/>
+  </g>
+</svg>
