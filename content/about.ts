@@ -36,7 +36,7 @@
 export const ABOUT_PARAGRAPHS: readonly [string, string, string, string, string] = [
   'Sou santista — nascido em Santos e torcedor do Peixe — e nordestino de coração: moro em Natal, no Rio Grande do Norte. Casado, e músico nas horas vagas.',
   'Programo profissionalmente desde 2017, quando comecei desenvolvendo web no IFRN, como bolsista no campus de Educação a Distância. De lá pra cá passei por startup, consultoria e educação, e hoje sou desenvolvedor full stack sênior na Analytica Ensino — onde acompanho, desde a concepção, uma plataforma educacional usada por cerca de 400 mil alunos, professores e gestores da rede pública do Paraná.',
-  'A parte de músico não é hobby desencontrado do resto: é de onde saiu o Asafe. Passei anos organizando repertório de Missa em planilha e caderno, e resolvi construir a ferramenta que eu queria ter.',
+  'A parte de músico não é hobby desencontrado do resto, já tocava na igreja antes mesmo de programar, inclusive o Asafe veio daqui. Passei anos organizando repertório de Missa em drive, planilha e caderno, e resolvi construir a ferramenta que eu queria ter há tempos, a que torna prático esse trabalho e que se tornou o meu xodó.',
   'Estou na Analytica desde 2023 e gosto de onde estou. Esse portfólio é uma forma de deixar registrado o que construí, e de ser facilmente encontrado.',
   'Se um dia aparecer um próximo desafio, o que me atrai é problema com regra própria — onde entender o domínio é metade do trabalho, ou até mais. Gosto de coisa bem planejada, de participar da decisão quando posso, e de time onde ajudar quem está ao lado é rotina.',
 ] as const;
