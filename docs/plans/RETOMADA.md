@@ -36,11 +36,11 @@ Contrato: `docs/private/PORTFOLIO-BRIEF.md` (fora do git — repo é público).
 | 7 | `/projetos` — cards + timeline | ✅ |
 | 8 | `/sobre`, `/contato`, CV | ✅ |
 | 9 | SEO e metadados por rota | ✅ |
-| 10 | OG images (começa por spike de viabilidade) | ⬜ próxima |
-| 11 | Piso de qualidade — a11y, 360px, Lighthouse | ⬜ |
+| 10 | OG images (começa por spike de viabilidade) | ✅ |
+| 11 | Piso de qualidade — a11y, 360px, Lighthouse | ⬜ próxima |
 | 12 | Deploy na Cloudflare + redirects 301 | ⬜ |
 
-Gates ao fim da sessão: `npm run verify` exit 0 · unit **264 passed | 0 todo** · e2e **81 passed**.
+Gates ao fim da sessão: `npm run verify` exit 0 · unit **273 passed | 0 todo** · e2e **88 passed**.
 
 **Fim do conteúdo (fora da tabela de tasks).** O pedido era um "voltar ao topo".
 O botão flutuante está descartado pelo §6.4 (movimento novo, componente de
@@ -72,13 +72,24 @@ conta os links da página; `tests/e2e/contato.spec.ts` conta os do `<main>` e me
 a altura), justamente para que ninguém a "simplifique" movendo o bloco para o
 rodapé.
 
-**O que a Task 10 tem que preencher.** A estrutura de OG está pronta e falta só a imagem.
-O ponto de entrada é **um**: o parâmetro `image` de `pageMetadata` em `lib/seo.ts`. As seis
-rotas já emitem `og:title`, `og:description`, `og:url`, `og:site_name`, `og:locale` e
-`twitter:card`. Nenhuma `page.tsx` precisa mudar se o caminho vencedor for
-`opengraph-image.tsx` por rota (o Next preenche sozinho); se o caminho for o pré-build em
-`public/og/`, cada chamada passa o caminho e o case tira o dele do frontmatter. Há teste em
-`tests/unit/site.test.ts` que **falha quando a imagem entrar** — é o lembrete de atualizá-lo.
+**Como a Task 10 terminou.** O spike respondeu que **o Next gera sim as OG images em build
+time** sob `output: 'export'` — desde que a rota declare `export const dynamic = 'force-static'`,
+a mesma trava do item 8 das armadilhas. São cinco arquivos `opengraph-image.tsx` (quatro rotas
+fixas + `[slug]`, que precisa do próprio `generateStaticParams`), o card mora em `lib/og.tsx` e
+o texto das quatro rotas fixas em `OG_CARDS`, em `content/site.ts`. Nenhuma `page.tsx` mudou:
+o Next injeta `og:image` sozinho.
+
+Duas consequências que valem lembrar:
+
+- **O parâmetro `image` de `pageMetadata` saiu.** Com a imagem vindo do arquivo ao lado da
+  página, um segundo caminho até o mesmo metadado só serviria para publicar duas `og:image`
+  na mesma rota. O teste de `tests/unit/site.test.ts` agora trava a ausência.
+- **O export escreve os cards sem extensão** (`out/sobre/opengraph-image`), e hospedagem
+  estática deduz o `Content-Type` do nome — sem regra, o card sai como
+  `application/octet-stream` e o crawler recusa. Quem fecha isso é `public/_headers`, que o
+  servidor estático dos testes passou a ler para exercitar o mesmo mapeamento do deploy.
+  O `generateImageMetadata`, que poria `.png` na URL, é incompatível com segmento dinâmico
+  sob `output: 'export'`; o porquê está em `lib/og.tsx`.
 
 ---
 

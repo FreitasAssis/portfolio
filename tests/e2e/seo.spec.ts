@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { inflateSync } from 'node:zlib';
 
 import { expect, test } from '@playwright/test';
 
@@ -139,7 +140,7 @@ test.describe('metadados por rota (§8)', () => {
     );
   });
 
-  test('o Open Graph está montado, faltando só a imagem da Task 10', () => {
+  test('o Open Graph está montado em toda rota', () => {
     for (const { path, file } of ROTAS) {
       const source = html(file);
       expect(metaContent(source, 'og:title'), `og:title de ${path}`).not.toBe('');
@@ -199,6 +200,115 @@ test.describe('§2 — baixa manutenção, no artefato publicado', () => {
     // importantes do site.
     expect(html('index.html')).toContain('Construo software desde 2017');
     expect(metaContent(html('projetos.html'), 'description')).toContain('desde 2017');
+  });
+});
+
+/**
+ * O PNG lido do byte, sem biblioteca: assinatura, IHDR e o primeiro pixel.
+ *
+ * Conferir o nome do arquivo não prova nada — o export escreve as OG images sem
+ * extensão, e um HTML de erro gravado no lugar do PNG passaria por qualquer
+ * checagem de caminho. O pixel do canto superior esquerdo é o preenchimento do
+ * card, que é onde a cor emprestada aparece.
+ *
+ * O primeiro pixel da primeira linha sai cru em qualquer um dos cinco filtros do
+ * PNG: todos os vizinhos de que eles dependem (esquerda, acima) estão fora da
+ * imagem e valem zero.
+ */
+function png(file: string): { width: number; height: number; fill: string } {
+  const bytes = readFileSync(OUT + file);
+  const assinatura = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  expect(bytes.subarray(0, 8).equals(assinatura), `${file} não é PNG`).toBe(true);
+
+  const idat: Buffer[] = [];
+  for (let i = 8; i + 8 <= bytes.length; ) {
+    const length = bytes.readUInt32BE(i);
+    const type = bytes.toString('ascii', i + 4, i + 8);
+    if (type === 'IDAT') idat.push(bytes.subarray(i + 8, i + 8 + length));
+    i += length + 12;
+  }
+
+  const pixel = inflateSync(Buffer.concat(idat)).subarray(1, 4);
+  return {
+    width: bytes.readUInt32BE(16),
+    height: bytes.readUInt32BE(20),
+    fill: `#${pixel.toString('hex').toUpperCase()}`,
+  };
+}
+
+test.describe('OG image por rota', () => {
+  /** O caminho da imagem dentro do `out/`, a partir da URL publicada. */
+  function arquivoDaImagem(file: string): string {
+    const url = metaContent(html(file), 'og:image');
+    expect(url, `og:image de ${file}`).toContain(SITE);
+    return new URL(url).pathname.replace(/^\//, '');
+  }
+
+  test('nenhuma das seis rotas fica sem og:image', () => {
+    for (const { path, file } of ROTAS) {
+      expect(metaContent(html(file), 'og:image'), `og:image de ${path}`).not.toBe('');
+    }
+  });
+
+  test('nenhuma rota compartilha a imagem de outra', () => {
+    const urls = ROTAS.map(({ file }) => arquivoDaImagem(file));
+    expect(new Set(urls).size, `imagens: ${JSON.stringify(urls)}`).toBe(urls.length);
+  });
+
+  test('cada og:image aponta para um arquivo que existe, e é PNG de 1200×630', () => {
+    // Um og:image em 404 é pior que nenhum: a plataforma mostra o card
+    // quebrado, e o `<meta>` presente esconde o problema de qualquer varredura
+    // que só conte tags.
+    for (const { path, file } of ROTAS) {
+      const imagem = png(arquivoDaImagem(file));
+      expect(imagem.width, `largura da imagem de ${path}`).toBe(1200);
+      expect(imagem.height, `altura da imagem de ${path}`).toBe(630);
+    }
+  });
+
+  test('o card de cada case carrega o hex da marca do projeto', () => {
+    // A mecânica de cor emprestada saindo do site: o preenchimento do card é o
+    // mesmo `accent` do frontmatter, e não uma cor escrita à mão aqui.
+    expect(png(arquivoDaImagem('projetos/asafe.html')).fill).toBe('#2F3A5E');
+    expect(png(arquivoDaImagem('projetos/eaifez.html')).fill).toBe('#C8506A');
+  });
+
+  test('as quatro rotas sem projeto ficam na base neutra', () => {
+    for (const file of ['index.html', 'projetos.html', 'sobre.html', 'contato.html']) {
+      expect(png(arquivoDaImagem(file)).fill, `preenchimento de ${file}`).toBe('#14161A');
+    }
+  });
+
+  test('cada imagem é alcançável e chega como image/png', async ({ request }) => {
+    // Ler o arquivo prova que ele existe; buscar prova que ele chega ao crawler
+    // no caminho e com o tipo que ele exige. O servidor do teste aplica o mesmo
+    // `_headers` do deploy, então é a regra de produção que está sendo medida.
+    for (const { path, file } of ROTAS) {
+      const resposta = await request.get(`/${arquivoDaImagem(file)}`);
+      expect(resposta.status(), `GET da imagem de ${path}`).toBe(200);
+      expect(resposta.headers()['content-type'], `tipo da imagem de ${path}`).toBe('image/png');
+    }
+  });
+
+  test('o _headers cobre toda OG image com Content-Type de PNG', () => {
+    // O export escreve os cards sem extensão no nome, e hospedagem estática
+    // deduz o tipo do nome: sem uma regra que case, o arquivo sai como
+    // application/octet-stream e o crawler recusa a imagem.
+    const regras = readFileSync(OUT + '_headers', 'utf8')
+      .split(/\n(?=\/)/)
+      .filter((bloco) => /content-type:\s*image\/png/i.test(bloco))
+      .map((bloco) => {
+        const padrao = bloco.split('\n')[0].trim();
+        return new RegExp(`^${padrao.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`);
+      });
+
+    for (const { path, file } of ROTAS) {
+      const caminho = `/${arquivoDaImagem(file)}`;
+      expect(
+        regras.some((regra) => regra.test(caminho)),
+        `nenhuma regra de _headers casa com ${caminho} (og:image de ${path})`,
+      ).toBe(true);
+    }
   });
 });
 

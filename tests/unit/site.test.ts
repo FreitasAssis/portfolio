@@ -121,14 +121,14 @@ describe('metadata por rota (§8)', () => {
     expect(meta.openGraph && 'locale' in meta.openGraph && meta.openGraph.locale).toBe('pt_BR');
   });
 
-  it('não declara OG image enquanto a Task 10 não gerar as imagens', () => {
-    // Melhor sem imagem do que apontando para um 404. Quando a Task 10 passar a
-    // fornecer `image`, este teste falha — e é o lembrete de atualizá-lo.
+  it('a OG image não passa por aqui — quem a declara é o opengraph-image.tsx da rota', () => {
+    // O Next descobre a imagem pelo nome do arquivo ao lado da página e injeta
+    // `og:image` sozinho. Uma imagem montada também aqui sairia duplicada no
+    // `<head>`, e o crawler escolhe uma das duas. Que a tag chegou ao HTML, e
+    // que o arquivo existe, é `tests/e2e/seo.spec.ts` quem mede.
     const meta = pageMetadata({ meta: META.home, path: '/' });
     expect(meta.openGraph && 'images' in meta.openGraph).toBe(false);
-
-    const comImagem = pageMetadata({ meta: META.home, path: '/', image: '/og/home.png' });
-    expect(comImagem.openGraph && 'images' in comImagem.openGraph).toBe(true);
+    expect(meta.twitter && 'images' in meta.twitter).toBe(false);
   });
 });
 

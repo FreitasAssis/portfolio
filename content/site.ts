@@ -105,3 +105,34 @@ export const META = {
 export function caseTitle(name: string): string {
   return `${name} — projeto de ${AUTHOR}`;
 }
+
+/**
+ * A manchete e a linha de apoio do card de OG das quatro rotas fixas. Os dois
+ * cases não estão aqui: o card deles é `name` + `tagline` do frontmatter, como
+ * a capa da própria página.
+ *
+ * **A `tagline` é sempre um trecho literal da `description` da rota.** A
+ * description inteira não cabe num card lido em miniatura, e escrever uma frase
+ * nova aqui criaria uma segunda versão da mesma promessa, num arquivo que
+ * ninguém abre ao editar a primeira. `tests/unit/og.test.ts` falha quando ela
+ * deixa de aparecer na description, e quando a `headline` deixa de abrir o
+ * `title`.
+ */
+export const OG_CARDS = {
+  home: {
+    headline: AUTHOR,
+    tagline: 'Desenvolvedor full stack sênior em Natal, RN.',
+  },
+  projetos: {
+    headline: 'Projetos e experiência',
+    tagline: 'Os dois apps que construí por conta própria, Asafe e E aí, fez?',
+  },
+  sobre: {
+    headline: 'Sobre',
+    tagline: 'Santista morando em Natal (RN), casado e músico nas horas vagas.',
+  },
+  contato: {
+    headline: 'Contato',
+    tagline: 'E-mail escrito por extenso, LinkedIn, GitHub e o currículo em PDF.',
+  },
+} as const satisfies Record<keyof typeof META, { headline: string; tagline: string }>;

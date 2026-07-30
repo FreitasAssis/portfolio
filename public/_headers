@@ -1,0 +1,15 @@
+# Tipo das OG images.
+#
+# O export estático escreve cada card em `<rota>/opengraph-image`, sem extensão,
+# e hospedagem estática deduz o Content-Type do nome do arquivo: sem estas duas
+# regras eles saem como application/octet-stream e o crawler do LinkedIn recusa
+# a imagem. O `*` casa qualquer coisa, barra inclusive, então a segunda regra
+# cobre tanto /sobre/opengraph-image quanto /projetos/asafe/opengraph-image.
+#
+# tests/e2e/seo.spec.ts confere que toda OG image do `out/` cai numa das regras.
+
+/opengraph-image
+  Content-Type: image/png
+
+/*/opengraph-image
+  Content-Type: image/png

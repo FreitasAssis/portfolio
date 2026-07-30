@@ -12,6 +12,11 @@
  * também codificam a regra de URL limpa (`/projetos` → `out/projetos.html`)
  * que o Cloudflare Pages aplica em produção — o que o teste exercita é o mesmo
  * mapeamento do deploy.
+ *
+ * Pelo mesmo motivo ele lê o `out/_headers`: as OG images saem do export sem
+ * extensão, e sem essa segunda camada elas seriam servidas aqui como
+ * `application/octet-stream` — que é justamente o defeito que o `_headers`
+ * existe para corrigir no ar.
  */
 import { readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -37,6 +42,26 @@ const TYPES = {
   '.webp': 'image/webp',
   '.woff2': 'font/woff2',
 };
+
+/** As regras de `out/_headers`, como par [padrão compilado, cabeçalhos]. */
+async function loadHeaderRules() {
+  const source = await readFile(join(ROOT, '_headers'), 'utf8').catch(() => '');
+  return source
+    .split(/\n(?=\/)/)
+    .map((bloco) => bloco.split('\n').filter((linha) => linha.trim() && !linha.startsWith('#')))
+    .filter((linhas) => linhas.length > 1)
+    .map(([padrao, ...cabecalhos]) => [
+      new RegExp(`^${padrao.trim().replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`),
+      Object.fromEntries(
+        cabecalhos.map((linha) => {
+          const [nome, ...valor] = linha.split(':');
+          return [nome.trim().toLowerCase(), valor.join(':').trim()];
+        }),
+      ),
+    ]);
+}
+
+const HEADER_RULES = await loadHeaderRules();
 
 async function resolveFile(pathname) {
   const clean = normalize(decodeURIComponent(pathname));
@@ -70,7 +95,11 @@ createServer(async (req, res) => {
   }
 
   const ext = file.slice(file.lastIndexOf('.'));
-  res.writeHead(status, { 'content-type': TYPES[ext] ?? 'application/octet-stream' });
+  const extras = HEADER_RULES.filter(([padrao]) => padrao.test(pathname)).map(([, h]) => h);
+  res.writeHead(status, {
+    'content-type': TYPES[ext] ?? 'application/octet-stream',
+    ...Object.assign({}, ...extras),
+  });
   res.end(await readFile(file));
 }).listen(PORT, '127.0.0.1', () => {
   process.stdout.write(`static server em http://127.0.0.1:${PORT} servindo ${ROOT}\n`);
