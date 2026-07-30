@@ -183,7 +183,14 @@ mudarem juntos; pertence à Task 11.
 10. **O canonical da home não tem barra final.** O Next normaliza (`trailingSlash` é falso) e
     emite `https://luizfreitas.com.br`. O `sitemap.ts` foi alinhado a isso de propósito — um
     `<loc>` com `/` no fim apontaria para a URL que o próprio site declara não-canônica.
-11. **Contagem de anos escrita à mão** ("nove anos"). O §2 proíbe e o §4.1 explica: o número
+11. **Prosa do frontmatter usa `|-`, nunca `>-`.** Os campos `because` (decisões) e `why`
+    (stack) são compilados como MDX. O escalar dobrado (`>-`) transforma linha em branco em
+    UM `\n`, que markdown lê como quebra leve dentro do MESMO parágrafo — o campo volta a
+    ser um bloco único de texto, que é exatamente o que a compilação em MDX veio desfazer.
+    E o `because` da decisão dos dois eixos do Asafe tem 171 palavras: é o texto mais
+    importante do site e o que mais convida a desistir no meio. `lib/projects.ts` recusa
+    bloco (`##`, lista, tabela) no campo, mas **não** tem como recusar `>-`.
+12. **Contagem de anos escrita à mão** ("nove anos"). O §2 proíbe e o §4.1 explica: o número
     envelhece sozinho e vira mentira sem ninguém perceber — não quebra build, não some da
     tela, não gera relato. Estava em **três** lugares ao mesmo tempo (h1 da home, description
     do `/projetos`, resumo do CV), porque é a forma natural de dizer a coisa em português e
@@ -191,6 +198,16 @@ mudarem juntos; pertence à Task 11.
     `tests/unit/manutencao.test.ts` (texto curado + o CV em HTML) e em `tests/e2e/seo.spec.ts`
     (varredura do `out/` inteiro, que é o único lugar que pega uma string escrita dentro de
     um componente).
+13. **Não citar número de usuários da Boomer** no `impact` de `content/experience.ts`. A base
+    era pequena e o número enfraquece justamente onde o escopo fortalece: a força daquela
+    posição é ter internalizado um app que estava com fornecedor terceirizado e a integração
+    com o Nota Potiguar, sistema de governo estadual. É a única posição em que o §4.5 pede
+    escopo sem métrica. Travado em `tests/unit/experience.test.ts`.
+14. **`Git` na stack do IFRN não contradiz o `LAYER_3_NEVER` de `content/tech.ts`.** Stack de
+    posição é registro do que foi usado, e o §4.5 lista assim. A regra do §4.4 que manda não
+    listar Git ("é como um chef listar 'sei usar faca'") é sobre a vitrine de tecnologias do
+    `/sobre`, que é outra seção. Tirar `Git` do IFRN para "resolver" a contradição não quebra
+    teste nenhum — o de `LAYER_3_NEVER` só varre o DOM do `/sobre`.
 
 ---
 

@@ -1,11 +1,9 @@
 @import 'tailwindcss';
 
-/* O tema é dirigido por `data-theme` no <html> — escrito antes da primeira
-   pintura pelo script do layout e trocado pelo ThemeToggle. O `dark:` que o
-   Tailwind traz de fábrica olha para `prefers-color-scheme`, ou seja,
-   discordaria do toggle manual exigido pelo §9 exatamente para quem escolheu o
-   contrário do sistema. Redefinido aqui para ler a MESMA fonte de verdade.
-   A primeira forma casa com o próprio <html>, a segunda com os descendentes. */
+/* Redefinido para ler `data-theme`: o `dark:` de fábrica do Tailwind lê
+   `prefers-color-scheme` e discordaria do toggle manual para quem escolheu o
+   contrário do sistema. A primeira forma casa o próprio <html>, a segunda os
+   descendentes. */
 @custom-variant dark (&:where(:root[data-theme='dark'], :root[data-theme='dark'] *));
 
 @theme {
@@ -13,7 +11,7 @@
   --font-body: var(--font-newsreader), ui-serif, Georgia, serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
-  /* escala 1.250 — major third, corpo em 18px (§6.3) */
+  /* escala 1.250 — major third, corpo em 18px */
   --text-xs: 0.72rem;
   --text-sm: 0.9rem;
   --text-base: 1.125rem;
@@ -24,14 +22,9 @@
   --text-4xl: 3.433rem;
 }
 
-/* Tokens do §6.2 expostos como utilitários: text-ink, bg-paper, border-rule,
-   text-accent-text, bg-accent, text-accent-ink.
-   `inline` é obrigatório aqui: sem ele o Tailwind emite
-   `--color-accent-text: var(--accent-text)` dentro do :root, a substituição
-   acontece no :root e o valor já resolvido é herdado — um `[data-accent]` mais
-   abaixo na árvore não trocaria mais nada e a mecânica da Task 2 morreria.
-   Com `inline`, o utilitário vira `color: var(--accent-text)` e resolve no
-   elemento que o usa. */
+/* `inline` é obrigatório: sem ele o Tailwind resolve o valor no :root e os
+   utilitários herdam o literal, então um `[data-accent]` mais abaixo na árvore
+   não troca mais nada e a injeção de acento morre em silêncio. */
 @theme inline {
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
@@ -44,20 +37,16 @@
 }
 
 :root {
-  /* base — cinzas frios, ligeiramente azulados. NÃO é creme. */
   --ink: #14161a;
   --ink-2: #5a616b;
   --paper: #fafafa;
   --paper-2: #f1f2f4;
   --rule: #e2e4e8;
 
-  /* acento — sem valor próprio. O projeto injeta.
-     Invariante: no caso SEM acento, --accent e --accent-ink são um par que vira
-     junto com o tema (--ink sobre --paper e vice-versa), então continua legível
-     nos dois. Isso só vale enquanto --accent não tem cor própria; assim que um
-     [data-accent] injeta um hex fixo de marca, --accent-ink precisa ser fixado
-     junto (ver abaixo) — senão o tema escuro joga um quase-preto em cima da
-     cor da marca. */
+  /* Acento sem valor próprio: o projeto injeta. Enquanto ele é um par que vira
+     com o tema, continua legível nos dois; um [data-accent] que injete hex fixo
+     precisa fixar --accent-ink junto, senão o tema escuro joga um quase-preto
+     sobre a cor da marca. */
   --accent: var(--ink);
   --accent-ink: var(--paper);
   --accent-text: var(--ink);
@@ -71,16 +60,9 @@
   --rule: #2a2e35;
 }
 
-/* injetado pelo case — hex reais das duas marcas.
-   --accent      = capa do case e borda ativa. O §6.2 também manda o estado de
-                   foco usar este token; não usamos — ver o comentário da regra
-                   de :focus-visible lá embaixo.
-   --accent-text = único usado em texto e link; é o que passa AA
-                   (travado em tests/unit/contrast.test.ts).
-   --accent-ink  = texto sobre o preenchimento do acento. Fixado por acento, e
-                   NÃO derivado de --paper: o preenchimento é a cor da marca e
-                   não vira com o tema, então o texto em cima dele também não
-                   pode virar. */
+/* --accent-ink é fixado por acento, e NÃO derivado de --paper: o preenchimento é
+   a cor da marca e não vira com o tema, então o texto em cima dele também não
+   pode virar. */
 [data-accent='asafe'] {
   --accent: #2f3a5e;
   --accent-text: #2f3a5e;
@@ -92,15 +74,11 @@
   --accent-ink: #fafafa;
 }
 
-/* O seletor duplo é obrigatório, NÃO é redundância — não "simplifique".
-   O AccentTracker (Task 2) faz
-   `document.documentElement.setAttribute('data-accent', ...)`, ou seja, o
-   data-accent cai no PRÓPRIO <html>. Um elemento não é descendente de si mesmo,
-   então só o combinador descendente jamais casaria, o override escuro nunca
-   dispararia e --accent-text ficaria silenciosamente no valor do tema claro:
-   1.71:1 (asafe) e 3.12:1 (eaifez) sobre o papel escuro — reprova AA sem
-   nenhum sintoma visível no código. A primeira forma cobre o data-accent no
-   <html>; a segunda cobre o data-accent numa seção lá embaixo. */
+/* O seletor duplo não é redundância: o AccentTracker escreve `data-accent` no
+   PRÓPRIO <html>, e um elemento não é descendente de si mesmo. Colapsar na forma
+   descendente faz o override escuro nunca disparar — --accent-text fica no valor
+   do tema claro (1.71:1 asafe, 3.12:1 eaifez sobre papel escuro), sem sintoma
+   visível no código. */
 :root[data-theme='dark'][data-accent='asafe'],
 :root[data-theme='dark'] [data-accent='asafe'] {
   --accent-text: #8e9ac4;
@@ -116,38 +94,24 @@ html {
   font-family: var(--font-body);
   font-size: 18px;
 
-  /* §6.1: a troca de acento no scroll é o ÚNICO movimento orquestrado do site
-     (§6.4). Curta, 200ms. O AccentTracker escreve data-accent aqui no <html>,
-     então é aqui que a cor vira. O bloco de prefers-reduced-motion lá embaixo
-     desliga isto: `transition-duration` é longhand com !important e ganha das
-     longhands que este atalho expande, independente da ordem. */
+  /* A troca de acento no scroll: o AccentTracker escreve data-accent aqui, então
+     é aqui que a cor vira. Desligado pelo bloco de prefers-reduced-motion. */
   transition:
     background-color 200ms ease,
     color 200ms ease;
 }
 
-/* §9: foco de teclado visível em todo elemento interativo.
-   DESVIO DELIBERADO DO §6.2, que atribui o estado de foco a --accent. Não
-   troque de volta. --accent é o hex cru da marca e não se adapta ao tema: com
-   o acento do Asafe no tema escuro o anel fica #2f3a5e sobre #0e1013, 1.713:1,
-   invisível na prática. O §9 exige foco de teclado visível e a WCAG 1.4.11 pede
-   3:1 para componente de interface não textual; onde a atribuição do §6.2 colide
-   com o piso do §9, o piso vence.
-   --accent-text é, por definição, o acento ajustado para continuar legível sobre
-   o papel do tema atual — exatamente o requisito de um anel de foco. Medido:
-   10.66 / 5.84 / 6.87 / 7.83 nos quatro pares acento × tema, todos bem acima de
-   3:1, e travado em tests/unit/contrast.test.ts, que lê o token daqui deste
-   arquivo (reverter para --accent quebra o teste, não passa despercebido).
-   A regra do §6.2 de que --accent-text é "só para texto e link" existe para
-   manter o hex cru fora do corpo do texto; um anel de foco não fere essa
-   intenção. */
+/* O anel usa --accent-text, e não --accent: --accent é o hex cru da marca e não
+   se adapta ao tema, então no escuro o anel do Asafe fica #2f3a5e sobre #0e1013
+   — 1.713:1, invisível. --accent-text mede 5.84 no pior par, acima do 3:1 da
+   WCAG 1.4.11. */
 :where(a, button, [tabindex]):focus-visible {
   outline: 2px solid var(--accent-text);
   outline-offset: 3px;
   border-radius: 2px;
 }
 
-/* medida de leitura 65–75 caracteres (§6.3) */
+/* medida de leitura, 65–75 caracteres */
 .prose-measure {
   max-width: 68ch;
 }

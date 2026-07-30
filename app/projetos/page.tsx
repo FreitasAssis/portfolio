@@ -10,20 +10,6 @@ import { pageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = pageMetadata({ meta: META.projetos, path: '/projetos' });
 
-/**
- * `/projetos` (§3.2): **duas seções explicitamente rotuladas, nunca
- * misturadas** — "uma mostra iniciativa, a outra mostra experiência".
- *
- * A distinção é o conteúdo desta página, então ela é estrutural: dois `<h2>`
- * com os nomes do §3.2, em larguras diferentes (os cards rompem a margem, que é
- * o único gesto de layout do §6.4; a experiência fica na coluna de leitura,
- * porque é texto) e sem nenhum elemento em comum entre as duas.
- *
- * O `<h1>` cobre as duas: um documento tem um `<h1>` só, e chamá-lo de
- * "Projetos" deixaria a metade de baixo sem título de página.
- *
- * O `<main>` é do layout — uma landmark por documento.
- */
 export default async function ProjetosPage() {
   const projects = await getAllProjects();
 
@@ -44,9 +30,6 @@ export default async function ProjetosPage() {
 
       <Timeline />
 
-      {/* A página mais alta do site fora dos cases: dois cards grandes e cinco
-          posições com `built`, `impact` e `stack`. Só a âncora — a corrente de
-          "próximo" é dos cases (§4.6), e esta é a rota pai deles. */}
       <EndNav />
     </>
   );

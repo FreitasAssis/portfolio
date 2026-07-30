@@ -1,20 +1,11 @@
 /**
- * Experiência profissional. §5 do brief: isto é tabela, não MDX — dado tipado.
+ * Experiência profissional, como dado tipado e texto curado. A fonte irmã é
+ * `docs/cv/luiz-freitas.html`, e as duas contam a mesma história com as mesmas
+ * palavras: editar um lado sem o outro é o erro que quem lê os dois percebe.
  *
- * O texto de `built` e `impact` é o do §4.5, literal. Regra do brief: "o site e
- * o CV contam a mesma história com as mesmas palavras — se um mudar, mude o
- * outro". A fonte irmã é `docs/cv/luiz-freitas.html`; editar um lado sem o
- * outro é o erro que quem lê os dois percebe.
- *
- * O §4.5 marca algumas expressões em negrito. Aqui elas viram texto puro: o
- * campo é `string`, e um campo de dado que carrega marcação obriga todo
- * consumidor a decidir como renderizá-la. A ênfase, quando importar, é decisão
- * de quem apresenta.
- *
- * Fora da timeline, de propósito (§4.5): o estágio na Agga System (3 meses,
- * 2017, Delphi) e o estágio em Engenharia Elétrica na SERT (2012–2014). Não
- * somam e ocupam espaço nobre — mesma decisão tomada no CV. Travado em
- * tests/unit/experience.test.ts.
+ * Fora da timeline de propósito, e travado em teste: o estágio na Agga System
+ * (3 meses, 2017, Delphi) e o de Engenharia Elétrica na SERT (2012–2014) — a
+ * mesma decisão tomada no CV.
  */
 export type Experience = {
   company: string;
@@ -25,46 +16,28 @@ export type Experience = {
   end: string | null;
   mode: string;
   /**
-   * Etiqueta "em paralelo" do §4.5: sem ela, a sobreposição parece erro de data.
+   * Etiqueta "em paralelo": sem ela, a sobreposição parece erro de data.
+   * Obrigatória em toda posição que se sobrepõe a outra no tempo — o conjunto é
+   * derivado de `start`/`end` em `tests/unit/experience.test.ts`, que também exige
+   * que o texto NOMEIE cada contraparte.
    *
-   * Presente em **toda** posição que se sobrepõe a outra no tempo — o conjunto é
-   * derivado de `start`/`end` em tests/unit/experience.test.ts, não mantido à
-   * mão. Continua `string` e não `string[]` mesmo com a Boomer correndo junto de
-   * duas: o valor carrega o recorte de datas de cada sobreposição
-   * ("de mar a dez/2021"), que uma lista de nomes jogaria fora. O teste exige
-   * que o texto **nomeie** cada contraparte, então a liberdade da prosa não
-   * abre espaço para o rótulo apontar para a empresa errada.
+   * É `string` e não `string[]` porque o valor carrega o recorte de datas de cada
+   * sobreposição ("de mar a dez/2021"), que uma lista de nomes jogaria fora.
    */
   parallel?: string;
   built: string;
   impact: string;
   stack: string[];
   /**
-   * Liga Opah → Analytica: o fio contínuo do §4.5.
-   *
-   * **O marcador sinaliza; quem narra é o `impact`.** A narrativa do fio já está
-   * curada no §4.5 e não precisa de frase nova: o `impact` da Opah diz "o
-   * terceiro projeto é o mesmo em que sigo até hoje, já no time próprio do
-   * cliente", e o da Analytica diz "acompanho o produto desde a concepção —
-   * comecei nele ainda pela consultoria". Juntos dão as duas pontas e a
-   * continuidade.
-   *
-   * Quem for renderizar isto (Task 7, `/projetos`): use ênfase, âncora ou
-   * marcador visual **sobre esse texto**, nunca uma frase paralela. Uma frase
-   * escrita à mão ao lado do texto curado foi exatamente por onde a imprecisão
-   * entrou na primeira tentativa — "a plataforma da Analytica nasceu na Opah IT"
-   * lê como se a Opah tivesse sido só a Analytica, quando foram **três projetos
-   * em times distintos** e a plataforma foi o terceiro. Achatar isso apaga um
-   * argumento de senioridade que o §4.5 faz questão de registrar.
-   *
-   * Por isso o fio não aparece na trajetória condensada da home: lá não há
-   * `built`/`impact` para sinalizar, e sem texto curado embaixo, marcador vira
-   * prosa inventada.
+   * Liga Opah → Analytica: o fio contínuo. O marcador SINALIZA sobre o `impact`
+   * das duas pontas, que já é texto curado — nunca uma frase paralela escrita à
+   * mão. "A plataforma da Analytica nasceu na Opah IT" lê como se a Opah tivesse
+   * sido só a Analytica, quando foram três projetos em times distintos.
    */
   thread?: 'plataforma-analytica';
 };
 
-/** Ordem cronológica decrescente, por data de início (travado em teste). */
+/** Ordem cronológica decrescente, por data de início. Travado em teste. */
 export const experience: readonly Experience[] = [
   {
     company: 'Analytica Ensino',
@@ -127,15 +100,11 @@ export const experience: readonly Experience[] = [
     start: '2019-09',
     end: '2021-12',
     mode: 'Natal, RN',
-    // A Boomer é a única que corre junto de duas: a ez.devs (mar–set/2021) e,
-    // logo em seguida, a Opah IT (set–dez/2021). O §4.5 só previa a primeira.
     parallel: 'ez.devs e Opah IT, de mar a dez/2021',
     built:
       'Startup de cashback em compras de supermercado, com três sócios e um único desenvolvedor antes da minha entrada. Internalizei o aplicativo em React Native, até então mantido por fornecedor terceirizado, e assumi sua evolução. Atuei também na API em Ruby on Rails, na área administrativa e nas integrações com serviços de terceiros.',
-    // §4.5: não citar número de usuários da Boomer. Base pequena; o número
-    // enfraquece onde o escopo fortalece. A força aqui é a internalização de um
-    // produto que estava com terceiro e a integração com sistema de governo
-    // estadual. Travado em tests/unit/experience.test.ts.
+    // Sem número de usuários, e há teste: a base era pequena e o número
+    // enfraquece justamente onde o escopo fortalece.
     impact:
       'Integração com o Nota Potiguar, programa da Secretaria de Tributação do Rio Grande do Norte.',
     stack: ['React Native', 'Ruby on Rails', 'PostgreSQL', 'Sidekiq', 'Docker', 'Heroku', 'Scrum'],
@@ -150,9 +119,9 @@ export const experience: readonly Experience[] = [
       'Campus de Educação a Distância, em time de cerca de 10 pessoas entre front-end, back-end e design. Templates em Django alinhados ao design do time de UX/UI, e plugins e manutenção do Moodle usado pelos alunos da modalidade EAD do instituto.',
     impact:
       'Onde a carreira começou, e onde o Python/Django, o React e o Vue entraram pela primeira vez.',
-    // Git entra aqui porque o §4.5 lista assim, e stack de posição é registro do
-    // que foi usado. A regra do §4.4 que manda não listar Git é sobre a vitrine
-    // de tecnologias ("é como um chef listar 'sei usar faca'"), que é outra coisa.
+    // `Git` aqui não contradiz o `LAYER_3_NEVER` de `content/tech.ts`: aquela regra
+    // é sobre a vitrine de tecnologias do /sobre, e stack de posição é registro do
+    // que foi usado. Tirá-lo daqui não quebra teste nenhum, e desalinha do CV.
     stack: ['Python', 'Django', 'React', 'Vue.js', 'Docker', 'Git', 'Scrum'],
   },
 ];

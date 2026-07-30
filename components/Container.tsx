@@ -1,28 +1,12 @@
 import type { ReactNode } from 'react';
 
 /**
- * As duas larguras do §6.4: uma coluna de leitura estreita e centrada, e a
- * quebra de grade — "o único gesto de layout", reservado ao que é trabalho
- * (cards de projeto, prints, capa de case).
+ * As duas larguras do site: a coluna de leitura e a quebra de grade, reservada ao
+ * que é trabalho (cards de projeto, prints, capa de case).
  *
- * `reading` fica em **44rem**. A versão anterior usava 36rem alegando "dentro da
- * faixa de 65–75 caracteres do §6.3", e a conta estava errada: 36rem = 648px é a
- * CAIXA, e o que sobra depois do padding é 576px. Medido no Chromium com o
- * Newsreader em 18px, 576px são **56,5 caracteres** — abaixo do piso de 65 do
- * §6.3, não dentro da faixa. A coluna estreitava a prosa em vez de protegê-la, e
- * de quebra empurrava a linha mais longa da Trajetória para duas linhas.
- *
- * 44rem = 792px de caixa e 702px de conteúdo, o que faz o `.prose-measure`
- * (68ch) finalmente ser o limite que morde — antes o contêiner cortava antes e o
- * token não fazia nada. Prosa em 68 caracteres, no meio da faixa do §6.3.
- *
- * Continuam **duas** variantes, e isso importa: o §6.4 diz que a quebra de grade
- * é "o único gesto de layout" e marca "aqui é trabalho, o resto é texto". Uma
- * terceira largura intermediária diluiria o gesto — por isso a Trajetória, que
- * é tabela e não prosa, foi acomodada alargando a coluna de leitura até a
- * medida que o §6.3 já pedia, e não ganhando um eixo próprio. `wide` segue
- * exclusiva dos cards de projeto: 1080 contra 792 ainda são 144px de sangria de
- * cada lado, visível de longe.
+ * `reading` é a CAIXA, não o texto: os 44rem viram 702px de conteúdo depois do
+ * padding, que é o que faz o `.prose-measure` de 68ch ser o limite que morde.
+ * Estreitar aqui derruba a prosa abaixo do piso de 65 caracteres.
  */
 const WIDTHS = {
   reading: 'max-w-[44rem]',
@@ -31,8 +15,6 @@ const WIDTHS = {
 
 export type ContainerWidth = keyof typeof WIDTHS;
 
-/** Elementos que fazem sentido como caixa de layout. Lista fechada em vez de
- *  `ElementType` para não abrir mão da checagem do JSX. */
 type ContainerTag = 'div' | 'section' | 'header' | 'footer' | 'article' | 'nav' | 'ul';
 
 export function Container({
@@ -46,21 +28,16 @@ export function Container({
   as?: ContainerTag;
   width?: ContainerWidth;
   className?: string;
-  /** Alvo de âncora. Só isso — não vire porta de entrada para props arbitrárias. */
   id?: string;
   /**
-   * Nome da landmark, quando `as` é `nav` ou `section`. Também é explícita e
-   * nomeada, pelo mesmo motivo do `id`: o §9 exige que duas landmarks do mesmo
-   * tipo tenham nomes distintos, e isso é requisito de acessibilidade, não uma
-   * porta para `...rest`.
+   * Nome da landmark, quando `as` é `nav` ou `section`. Duas landmarks do mesmo
+   * tipo no documento precisam de nomes distintos.
    */
   'aria-label'?: string;
   children: ReactNode;
 }) {
-  // px-5 no menor tamanho: em 360px sobram 320px de conteúdo, que é o piso do §9.
-  // Intocado de propósito — em telas estreitas a margem lateral é espaço que o
-  // conteúdo não tem sobrando. A folga extra entra só a partir de `sm`, que é
-  // onde a página estava apertada: px-10 (45px) no lugar de px-8 (36px).
+  // px-5 no menor tamanho: em 360px sobram os 320px de conteúdo que são o piso do
+  // site. A folga maior entra só a partir de `sm`.
   const classes = ['mx-auto w-full px-5 sm:px-10', WIDTHS[width], className]
     .filter(Boolean)
     .join(' ');

@@ -4,12 +4,8 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 import type { Decision, StackItem } from '@/lib/projects';
 
 /**
- * O mapa de elementos do corpo do case para os tokens do §6.
- *
- * Nada de plugin de tipografia: são doze elementos e a escala já está no
- * `globals.css`. A medida de leitura (65–75 caracteres, §6.3) não é imposta
- * aqui elemento a elemento — ela vem do contêiner que envolve o corpo, senão
- * cada regra nova teria que lembrar de repeti-la.
+ * O mapa de elementos do corpo do case. A medida de leitura não é imposta aqui
+ * elemento a elemento: ela vem do contêiner que envolve o corpo.
  */
 export const mdxComponents: MDXComponents = {
   h2: (props) => (
@@ -18,13 +14,11 @@ export const mdxComponents: MDXComponents = {
   h3: (props) => (
     <h3 className="mt-10 font-display text-lg font-semibold tracking-tight text-ink" {...props} />
   ),
-  // O corpo herda --font-body do <html> (§6.3: serifa no corpo, não no display).
   p: (props) => <p className="mt-5 leading-relaxed text-ink" {...props} />,
   ul: (props) => <ul className="mt-5 list-disc space-y-2 pl-5 text-ink" {...props} />,
   ol: (props) => <ol className="mt-5 list-decimal space-y-2 pl-5 text-ink" {...props} />,
   li: (props) => <li className="leading-relaxed" {...props} />,
   a: (props) => (
-    // §6.2: --accent-text é o único token permitido em texto e link.
     <a className="text-accent-text underline underline-offset-4" {...props} />
   ),
   strong: (props) => <strong className="font-semibold" {...props} />,
@@ -42,34 +36,17 @@ export const mdxComponents: MDXComponents = {
 
 /**
  * O mapa restrito para a prosa que mora no FRONTMATTER — o `because` de cada
- * decisão e o `why` de cada item da stack.
- *
- * Por que existe um segundo mapa: o `because` é o texto mais importante do
- * site e ele estava saindo como texto puro, num `<p>` só. Isso custava duas
- * coisas concretas. Sem parágrafo, a decisão dos dois eixos do Asafe virou um
- * bloco de 171 palavras — o item que mais precisa ser lido é o que mais
- * convida a desistir no meio. E sem `code`, `song_content` e
- * `rounds.loser_unit_ids` saíam em serifada no meio da frase, justamente nos
- * dois cases cujo argumento é modelagem de dados.
- *
- * Por que restrito e não o `mdxComponents` inteiro: o `because` não é um
- * documento, é um parágrafo (ou três). Um `##` aqui dentro entraria na lista
- * de `<h2>` da página e quebraria o índice do §3.3; uma lista ou uma imagem
- * quebrariam o ritmo da seção. Quem fecha essa porta de verdade é o
- * `parseProject`, que recusa construção de bloco no campo — este mapa só
- * estiliza o que sobrou.
+ * decisão e o `why` de cada item da stack. Restrito e não o `mdxComponents`
+ * inteiro porque esses campos são parágrafos, não documentos; quem recusa
+ * construção de bloco neles é o `parseProject`.
  */
 const prosaComponents: MDXComponents = {
   p: (props) => <p className="leading-relaxed" {...props} />,
-  // `text-ink` sobre a prosa em `text-ink-2`: o identificador ganha o mesmo
-  // degrau de contraste que tem no corpo do case.
-  //
-  // `overflow-wrap:anywhere` e não `break-words`: os dois deixam a palavra
-  // quebrar, mas só `anywhere` conta a quebra no cálculo de min-content — e é
-  // o min-content que dimensiona a trilha `1fr` da grade de cada decisão. Com
-  // `break-word`, `repertoire.liturgical_snapshot` (30 caracteres em mono, sem
-  // ponto de quebra natural) estourava a trilha e a página inteira ganhava
-  // 26px de rolagem horizontal a 360px, contra o §9.
+  // `overflow-wrap:anywhere` e não `break-words`: os dois quebram a palavra, mas
+  // só `anywhere` conta a quebra no cálculo de min-content — e é o min-content que
+  // dimensiona a trilha `1fr` da grade de cada decisão. Com `break-words`,
+  // `repertoire.liturgical_snapshot` estoura a trilha e a página ganha 26px de
+  // rolagem horizontal a 360px.
   code: (props) => (
     <code
       className="bg-paper-2 px-1.5 py-0.5 font-mono text-sm text-ink [overflow-wrap:anywhere]"
@@ -83,13 +60,7 @@ const prosaComponents: MDXComponents = {
   ),
 };
 
-/**
- * Um campo de prosa do frontmatter, compilado como MDX em tempo de build.
- *
- * O `space-y-4` mora aqui e não no mapa porque é o espaço ENTRE parágrafos: no
- * mapa ele viraria margem do primeiro também, e o campo deixaria de encostar
- * no que vem acima dele.
- */
+/** Um campo de prosa do frontmatter, compilado como MDX em tempo de build. */
 function Prosa({ source, className = '' }: Readonly<{ source: string; className?: string }>) {
   return (
     <div className={`space-y-4 ${className}`}>
@@ -99,15 +70,9 @@ function Prosa({ source, className = '' }: Readonly<{ source: string; className?
 }
 
 /**
- * A seção que carrega o site (§2). Ela é a única coisa que prova senioridade
- * num formato que recrutador e cliente entendem igual, e o §3.3 avisa: sem
- * ela, o case é vitrine.
- *
- * Por isso ela tem peso tipográfico acima das irmãs — h2 um degrau maior, régua
- * na cor do projeto em vez da régua neutra, e cada item numerado em mono. A
- * frase de cada item é montada aqui, não escrita no conteúdo: é o que garante
- * que o "em vez de" — a parte que prova que houve escolha, e não só adoção —
- * sobreviva a todo case futuro.
+ * A frase de cada decisão é montada aqui, e não escrita no conteúdo: é o que
+ * garante que o "em vez de" — a parte que prova que houve escolha, e não só
+ * adoção — sobreviva a qualquer case futuro.
  */
 export function Decisoes({ items }: { items: readonly Decision[] }) {
   return (
@@ -136,19 +101,9 @@ export function Decisoes({ items }: { items: readonly Decision[] }) {
 }
 
 /**
- * §3.3: a stack vem "com o porquê de cada escolha não-óbvia" — e o §2 manda a
- * tecnologia aparecer sempre grudada num projeto, nunca flutuando sozinha.
- * Nome em mono (metadado, §6.3), porquê no corpo serifado.
- *
- * CUIDADO AO EDITAR — escolha óbvia não ganha um traço no lugar do porquê. A
- * versão anterior punha `—` na segunda coluna quando `why` era `null`, e as
- * duas primeiras linhas do Asafe (Next.js, TypeScript) liam como campo que
- * ficou por preencher, e não como "não há o que explicar aqui". Sem porquê, o
- * item é só o nome, e a grade de duas colunas nem chega a existir naquela
- * linha — o que some é a coluna vazia, não a tecnologia.
- *
- * É `ul` e não `dl` por causa disso: um `dt` sem `dd` é `dl` inválido, e
- * inventar um `dd` vazio só para satisfazer a marcação traz o buraco de volta.
+ * Sem `why`, o item é só o nome e a grade de duas colunas não chega a existir na
+ * linha: um traço na coluna vazia leria como campo por preencher. É `ul` e não
+ * `dl` por isso — um `dt` sem `dd` é `dl` inválido.
  */
 export function Stack({ items }: { items: readonly StackItem[] }) {
   return (

@@ -1,10 +1,4 @@
-/**
- * Contraste WCAG 2.1 (luminância relativa).
- *
- * §6.2 do brief manda medir os pares acento × tema com medidor, não no olho:
- * `#C8506A` sobre fundo claro fica na fronteira do AA. Este módulo é o medidor,
- * e `tests/unit/contrast.test.ts` é quem trava os valores.
- */
+/** Contraste WCAG 2.1, por luminância relativa. */
 
 function channel(value: number): number {
   const c = value / 255;

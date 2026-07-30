@@ -1,37 +1,12 @@
 /**
- * O texto do `/sobre`. §4.3 do brief, **literal**.
+ * O texto do `/sobre`, curado e verbatim. Mora aqui como dado, e não dentro do
+ * componente, porque há teste que o compara palavra por palavra — ninguém
+ * reescreve estes parágrafos "para melhorar o ritmo".
  *
- * Está aqui como dado, e não escrito dentro do componente, por um motivo só: o
- * §4.3 é texto curado e o teste precisa de um lugar onde comparar palavra por
- * palavra. A regra do repo é a mesma que já vale para `content/experience.ts` —
- * "texto curado e texto inventado não convivem sem rótulo". Ninguém reescreve
- * estes parágrafos para "melhorar o ritmo": o registro do §4 é primeira pessoa,
- * específico, sem adjetivo de venda.
- *
- * ## Os dois últimos parágrafos chegaram
- *
- * Até esta revisão eram três, e o §4.3 pedia **não gerar** o final — a única
- * parte do site que não se inferia do CV nem do histórico. O Luiz escreveu os
- * dois no brief, e o §12 fechou com *"todo o texto do site está escrito; o que
- * falta é imagem e código"*. Estão copiados daqui de baixo verbatim, incluindo
- * pontuação e travessão.
- *
- * **Calibragem do último parágrafo — não mexer sem intenção.** O §4.3 anexa uma
- * nota a ele: *"Ele não declara disponibilidade **nem** indisponibilidade. Se o
- * site dissesse que o Luiz não sai de lá, ninguém o guardaria — e ser guardado é
- * justamente a função da página no cenário em que ela precisa servir (§1). Porta
- * encostada, não trancada nem escancarada."* A temperatura foi ajustada de
- * propósito: "se um dia aparecer" é condicional, não convite; "gosto de onde
- * estou", no parágrafo anterior, é o contrapeso que impede a leitura de
- * disponibilidade. Qualquer reescrita que soe mais quente vira "disponível para
- * oportunidades", que o §1 proíbe por nome; qualquer uma que soe mais fria
- * fecha a porta que a página existe para deixar encostada.
- *
- * O tipo é uma **tupla de cinco**, não `string[]`. Isso é proposital: um sexto
- * elemento não compila. A trava mudou de tamanho, não de natureza — antes
- * impedia gerar o parágrafo que faltava, agora impede acrescentar prosa a um
- * texto que o §12 declara terminado. A segunda trava é o teste que compara os
- * cinco parágrafos renderizados, um a um.
+ * **A temperatura do último parágrafo é calibrada:** ele não declara
+ * disponibilidade nem indisponibilidade. Porta encostada. Há teste que falha se
+ * alguém o esquentar ("disponível para", "aberto a propostas") ou esfriar ("não
+ * pretendo sair").
  */
 export const ABOUT_PARAGRAPHS: readonly [string, string, string, string, string] = [
   'Sou santista — nascido em Santos e torcedor do Peixe — e nordestino de coração: moro em Natal, no Rio Grande do Norte. Casado, e músico nas horas vagas.',
@@ -42,11 +17,9 @@ export const ABOUT_PARAGRAPHS: readonly [string, string, string, string, string]
 ] as const;
 
 /**
- * §4.3: "Formação, se for exibida em algum canto".
- *
- * Exibida, e só isso: **sem foto de documento, sem data de nascimento, sem RG** —
- * a proibição do §4.3 vale para a página tanto quanto para o CV. O que está aqui
- * é o que está no `docs/cv/luiz-freitas.html`, com as mesmas palavras (§4.5).
+ * A formação, e só ela: sem foto de documento, sem data de nascimento, sem RG. O
+ * que está aqui é o que está no `docs/cv/luiz-freitas.html`, com as mesmas
+ * palavras.
  */
 export const EDUCATION = {
   degree: 'Tecnólogo em Análise e Desenvolvimento de Sistemas',

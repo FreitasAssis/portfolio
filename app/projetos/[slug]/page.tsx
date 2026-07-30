@@ -17,26 +17,11 @@ import {
 } from '@/lib/projects';
 import { pageMetadata } from '@/lib/seo';
 
-/**
- * Obrigatório sob `output: 'export'` (§7): é esta lista que decide quais HTML
- * saem no `out/`. Como ela vem do carregador, um `.mdx` novo em
- * `content/projects/` já nasce com rota — nenhuma linha de código a mais.
- */
+/** Sob `output: 'export'`, é esta lista que decide quais HTML saem no `out/`. */
 export async function generateStaticParams() {
   return (await getAllProjects()).map((project) => ({ slug: project.slug }));
 }
 
-/**
- * O título e a descrição do case (§8), inteiramente derivados do conteúdo.
- *
- * É aqui que a promessa do §2 encosta no §8: o título sai do `name` do
- * frontmatter pela fórmula do §8 (`Asafe — projeto de Luiz Freitas`) e a
- * descrição sai do campo `description` do próprio `.mdx`. Um case novo entra
- * com metadado correto **sem uma linha de código** — e sem descrição ele nem
- * builda, porque `parseProject` exige o campo. As duas coisas juntas são o que
- * impede o bug do §8 de voltar pela porta dos cases, que é por onde o site vai
- * crescer.
- */
 export async function generateMetadata({
   params,
 }: {
@@ -52,19 +37,10 @@ export async function generateMetadata({
 }
 
 /**
- * A capa do §3.3: cor do projeto, nome e uma linha do que é.
- *
- * CUIDADO AO EDITAR — texto sobre o preenchimento `--accent` só existe em
- * tamanho grande, de propósito. O par `--accent-ink` sobre `--accent` é
- * verificado em 3:1 (`tests/unit/contrast.test.ts`), que é o piso da WCAG para
- * texto grande; o do "E aí, fez?" mede 4.18:1 e reprova o piso de 4.5:1 do
- * texto normal. Daí a tagline em `text-lg` (25px) e nada de metadado miúdo
- * aqui dentro. Rótulo pequeno vai fora da faixa, sobre o papel.
- *
- * A faixa sangra a largura toda, mas o texto dela fica na coluna de leitura:
- * o §6.4 dá ao site UM gesto de layout, e gastá-lo aqui deixaria o nome do
- * projeto num eixo e o corpo do case em outro. Quem rompe a margem é a cor e
- * são os prints — o que é trabalho.
+ * Nada de texto pequeno sobre o preenchimento `--accent`: o par
+ * `--accent-ink`/`--accent` do "E aí, fez?" mede 4.18:1, que passa o piso de 3:1
+ * da WCAG para texto grande e reprova o 4.5:1 do texto normal. Rótulo miúdo vai
+ * fora da faixa, sobre o papel.
  */
 function Cover({ project }: { project: Project }) {
   return (
@@ -80,12 +56,9 @@ function Cover({ project }: { project: Project }) {
 }
 
 /**
- * Os dois links do §3.3. O do repo só existe quando o repo é público: o
- * "E aí, fez?" é privado (§4.6), e botão que leva a 404 é pior que ausência.
- *
- * Ficam fora da faixa colorida por acessibilidade — sobre o papel, o anel de
- * foco (`--accent-text`, §9) tem contraste; sobre o preenchimento do acento,
- * ele desapareceria, porque é a mesma cor da faixa no tema claro.
+ * Fora da faixa colorida de propósito: sobre o papel o anel de foco
+ * (`--accent-text`) tem contraste; sobre o preenchimento do acento ele
+ * desapareceria, por ser a mesma cor da faixa no tema claro.
  */
 function Actions({ project }: { project: Project }) {
   return (
@@ -113,31 +86,19 @@ function Actions({ project }: { project: Project }) {
 }
 
 /**
- * Um print, ou o buraco tracejado enquanto ele não existe (§0).
+ * Um print, ou o buraco tracejado enquanto ele não existe.
  *
- * `next/image` mesmo com `images.unoptimized` (§7 exporta estático): aqui ele
- * não serve para otimizar, serve para o que o §9 pede — dimensão declarada,
- * `loading="lazy"` de graça e, principalmente, a reserva de espaço. Sem ela a
- * galeria fica no fim de uma página longa e empurra o rodapé ao carregar.
- *
- * CUIDADO AO EDITAR — a largura precisa ser DEFINIDA em CSS (`w-full` dentro de
- * uma caixa com `max-w`), com a altura em `auto`. A proporção declarada nos
- * atributos só reserva espaço se um dos dois eixos for definido: com
- * `w-auto h-auto`, o navegador não tem de onde partir e a imagem mede 0×0 até
- * o byte chegar — que é exatamente o pulo de layout que o §9 manda evitar.
- * Medido no Chromium: com os dois em `auto`, as quatro imagens abriam em 0×0.
- *
- * Cantos arredondados e um fio de contorno vêm do §4.7 ("sem moldura de
- * celular… cantos arredondados, sombra sutil"). O fio é necessário porque o
- * fundo do próprio print é claro e encostaria no papel do site sem borda
- * visível — o contorno é o que faz a captura ler como objeto.
+ * A largura precisa ser DEFINIDA em CSS (`w-full` numa caixa com `max-w`) e a
+ * altura ficar em `auto`. A proporção declarada nos atributos só reserva espaço
+ * se um dos eixos for definido: com os dois em `auto`, as imagens abrem em 0×0
+ * até o byte chegar.
  */
 function Shot({
   shot,
   className = '',
 }: {
   readonly shot: Project['cover'];
-  /** O teto da caixa. É por chamada porque capa e print têm pesos diferentes. */
+  /** O teto de largura da caixa. */
   readonly className?: string;
 }) {
   return (
@@ -163,50 +124,27 @@ function Shot({
 }
 
 /**
- * A galeria do §3.3 — capa e os três prints do §4.7, na quebra de grade, que é
- * onde mora o trabalho (§6.4).
- *
- * CUIDADO AO EDITAR — a capa tem linha própria porque **a proporção dela varia
- * por projeto**. A do "E aí, fez?" é a imagem OG do app, 1200×630, paisagem:
- * o §4.7 a escolhe justamente por ser "o único elemento projetado para ser
- * visto fora do app". A do Asafe é um repertório, retrato de celular. Numa
- * grade de quatro colunas as duas orientações não convivem: a linha ganha a
- * altura do print mais alto (~520px) e o card paisagem (~126px) flutua no meio
- * dela como uma estampa. Em linha própria, cada uma é limitada pelo eixo que
- * lhe cabe — a paisagem pela largura, a retrato pela altura — e as duas saem
- * do mesmo tamanho aparente.
- *
- * Os três prints ficam num strip de três. Em uma coluna no telefone, e não em
- * duas: são três, e duas colunas deixariam o terceiro órfão numa segunda
- * linha, encostado à esquerda.
+ * A capa tem linha própria porque a proporção dela varia por projeto (a do
+ * "E aí, fez?" é paisagem, a do Asafe retrato). Numa grade única a linha ganha a
+ * altura do print mais alto e o card paisagem flutua no meio dela.
  */
 function Gallery({ project }: { readonly project: Project }) {
-  // A orientação sai da medida declarada, não de um `if (slug === 'eaifez')`:
-  // é o dado do projeto que decide, e um case novo com capa paisagem acerta
-  // sozinho. Print pendente cai em retrato, que é a forma do placeholder.
   const capaPaisagem = !isShotPending(project.cover) && project.cover.width > project.cover.height;
 
   return (
     <Container as="section" width="wide" className="py-14">
       <h2 className="sr-only">Prints do {project.name}</h2>
 
-      {/* A capa retrato tem teto MAIOR que o dos prints (20rem contra os 17rem
-          a que a coluna chega em `lg`), e não o mesmo. Com o teto igual, a capa
-          do Asafe — que é retrato, ao contrário da do "E aí, fez?" — sairia
-          menor que os três prints que ela encabeça, porque o strip cresce com a
-          coluna e ela não. Capa menor que a galeria inverte a hierarquia que o
-          §3.3 dá a ela. */}
+      {/* O teto da capa retrato é maior que o dos prints (20rem contra os 17rem a
+          que a coluna chega em `lg`) porque o strip cresce com a coluna e ela
+          não: igualando os tetos, a capa sai menor que os prints que encabeça. */}
       <div className="flex justify-center">
         <Shot shot={project.cover} className={capaPaisagem ? 'max-w-[34rem]' : 'max-w-[20rem]'} />
       </div>
 
-      {/* O strip de três só abre em `lg`, e o critério é medido, não estético:
-          empilhado, cada print tem 270px. Numa grade de três, a coluna só
-          alcança esses 270px a partir de ~874px de viewport — em `sm` daria
-          165px e em `md`, 202px. Abrir antes faria a captura ENCOLHER ao
-          ganhar espaço de tela, que é o pior dos dois mundos. De `lg` para
-          cima o teto sai e o print ocupa a coluna inteira: 290px em 1024,
-          306px na largura máxima do contêiner. */}
+      {/* O strip só abre em `lg`: empilhado cada print tem 270px, e numa grade de
+          três a coluna só alcança 270px a partir de ~874px de viewport. Abrir em
+          `sm` (165px) ou `md` (202px) faz a captura ENCOLHER ao ganhar tela. */}
       <ul className="mt-10 grid justify-items-center gap-8 lg:grid-cols-3">
         {project.shots.map((shot) => (
           <li key={shot.alt} className="w-full max-w-[15rem] lg:max-w-none">
@@ -218,21 +156,9 @@ function Gallery({ project }: { readonly project: Project }) {
   );
 }
 
-/**
- * O case (§3.3). O template é fixo e a ordem das seções também — quem garante
- * que o corpo em MDX traz todas, e nessa ordem, é o `parseProject`.
- *
- * A página inteira é uma `AccentZone` (§6.1): é o case que empresta a cor ao
- * site, e uma zona do tamanho da página cobre a viewport com folga, então o
- * `AccentTracker` a elege e o header, o rodapé e o fundo acompanham.
- *
- * O `<main>` é do layout — uma landmark por documento.
- */
 export default async function CasePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const project = await getProject(slug);
-  // Encadeamento derivado do `order` (§4.6), nunca de um par escrito à mão —
-  // ver a nota em `nextProject`.
   const next = nextProject(await getAllProjects(), slug);
 
   return (
@@ -240,24 +166,16 @@ export default async function CasePage({ params }: { params: Promise<{ slug: str
       <Cover project={project} />
       <Actions project={project} />
 
-      {/* `reading` é a coluna estreita do §6.4; `prose-measure` trava a medida
-          de 65–75 caracteres do §6.3 mesmo se a coluna crescer um dia.
-
-          O `prose-measure` fica no wrapper interno, e não no `Container`: ele é
-          `max-width`, então no contêiner o teto de 68ch valeria para a caixa
-          COM padding, e os 45px de cada lado sairiam do texto. Medido no
-          Chromium: com a classe no contêiner o corpo do case renderizava a
-          59,2 caracteres — abaixo do piso de 65 justamente na página que o
-          §6.3 cita por nome ("medida de leitura em 65–75 caracteres nos
-          cases"). Por dentro do padding, dá os 68ch exatos. */}
+      {/* O `prose-measure` fica neste wrapper, e não no `Container`: sendo
+          `max-width`, no contêiner o teto de 68ch valeria para a caixa COM
+          padding e os 45px de cada lado sairiam do texto — o corpo do case caía
+          para 59,2 caracteres, abaixo do piso de 65. */}
       <Container as="article" width="reading" className="pb-6">
         <div className="prose-measure">
           <MDXRemote
             source={project.body}
             components={{
               ...mdxComponents,
-              // Os dois pontos em que o corpo dá lugar ao dado estruturado do
-              // frontmatter: o MDX escolhe o lugar, o template escolhe a forma.
               Decisoes: () => <Decisoes items={project.decisions} />,
               Stack: () => <Stack items={project.stack} />,
             }}
@@ -267,7 +185,6 @@ export default async function CasePage({ params }: { params: Promise<{ slug: str
 
       <Gallery project={project} />
 
-      {/* Dentro da zona de acento, de propósito — ver a nota do componente. */}
       <CaseEndNav next={next} />
     </AccentZone>
   );

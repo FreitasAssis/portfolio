@@ -1,7 +1,7 @@
 import { Container } from '@/components/Container';
 
-/** Contatos reais. O e-mail aparece por extenso porque o §3.4 pede texto
- *  copiável — um link escrito "e-mail" não se copia. */
+/** O e-mail aparece por extenso para ser copiável: um link escrito "e-mail" não
+ *  se copia. */
 const LINKS = [
   { href: 'mailto:luiz_dev@outlook.com', label: 'luiz_dev@outlook.com', external: false },
   { href: 'https://github.com/FreitasAssis', label: 'github.com/FreitasAssis', external: true },
@@ -12,11 +12,6 @@ const LINKS = [
   },
 ] as const;
 
-/**
- * Rodapé quieto: uma régua, os três contatos e o ano. Sem imagem, sem ícone de
- * rede social (§6.5), sem repetir a navegação. Componente de servidor — o ano
- * é resolvido no build, que é o que um site estático pode prometer.
- */
 export function Footer() {
   return (
     <footer className="mt-24 border-t border-rule">

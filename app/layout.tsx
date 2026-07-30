@@ -11,21 +11,14 @@ import { AUTHOR, SITE_URL } from '@/content/site';
 import './globals.css';
 
 /**
- * O que é do site inteiro, e só isso (§8).
+ * Sem `title` nem `description` de propósito: um par aqui vira o valor de
+ * qualquer rota que esqueça de declarar o seu, e a rota fica publicada com a
+ * descrição errada sem sintoma. Sem herança ela sai sem `<title>` e o teste
+ * sobre o `out/` a aponta pelo nome.
  *
- * **Sem `title` e sem `description` aqui de propósito.** Um par no layout vira
- * o valor de qualquer rota que esqueça de declarar o seu — que é como o site
- * antigo terminou com a mesma descrição nas quatro páginas, e o silêncio é o
- * que torna esse bug caro. Sem herança, a rota que esquecer sai sem `<title>` e
- * o teste do §8 sobre o `out/` a aponta pelo nome.
- *
- * **Sem `title.template`:** ver a nota em `content/site.ts` — o §8 tem dois
- * sufixos e a home não tem nenhum.
- *
- * `metadataBase` é o que faz canonical e OG saírem absolutos. Sob
- * `output: 'export'` não existe requisição de onde inferir o host: sem esta
- * linha o Next avisa no build e resolve tudo contra `http://localhost:3000`,
- * publicando canonical que aponta para a máquina de quem buildou.
+ * `metadataBase` é obrigatório sob `output: 'export'`: não há requisição de onde
+ * inferir o host, então sem ele o Next resolve canonical e OG contra
+ * `http://localhost:3000`.
  */
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -33,8 +26,6 @@ export const metadata: Metadata = {
   creator: AUTHOR,
 };
 
-// §6.3: display grotesca, corpo serifado (a inversão é deliberada) e mono só
-// para metadado.
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
   variable: '--font-bricolage',
@@ -72,15 +63,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      {/* O <main> mora aqui: uma única landmark por documento, e as páginas
-          ficam livres para compor <Container> por dentro — inclusive seções que
-          sangram a largura toda, como a capa de um case. */}
       <body className="flex min-h-dvh flex-col">
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
-        {/* Depois do conteúdo: o tracker escaneia o DOM da página que está no ar
-            e re-escaneia a cada rota (ver o comentário do componente). */}
         <AccentTracker />
       </body>
     </html>

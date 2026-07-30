@@ -1,74 +1,39 @@
 /**
- * Identidade do site e o dicionário de metadados por rota (§8).
+ * Identidade do site e o dicionário de metadados por rota.
  *
- * ## Por que este arquivo existe
+ * Os pares título/descrição ficam lado a lado aqui de propósito: espalhados por
+ * um `<Head>` em cada página, ninguém compara, e foi assim que o site antigo
+ * terminou com a mesma descrição nas quatro. `tests/unit/site.test.ts` falha se
+ * dois títulos ou duas descrições coincidirem.
  *
- * O §8 abre com o diagnóstico do site antigo: **o mesmo `title` e a mesma
- * `description` nas quatro páginas**. O bug não nasceu de desleixo — nasceu de
- * os metadados morarem espalhados, um `<Head>` por página, longe uns dos
- * outros, onde ninguém compara. Aqui eles ficam **lado a lado**, e a comparação
- * vira teste: `tests/unit/site.test.ts` falha se dois títulos ou duas
- * descrições coincidirem.
- *
- * ## Por que em `content/`, e por que não se chama `strings.ts`
- *
- * `content/*.ts` já é o padrão do repo para texto curado como dado tipado
- * (`about.ts`, `experience.ts`, `contact.ts`): texto que alguém escreveu com
- * intenção, que um teste compara palavra por palavra, e que não se reescreve
- * "para melhorar o ritmo". Descrição de meta é exatamente isso — o §8 pede
- * "escrita à mão, **factual**" e o §4 fixa o registro. Então ela entra no
- * padrão em vez de inventar um terceiro lugar.
- *
- * O nome é `site.ts` e não `strings.ts` de propósito. Um arquivo chamado
- * `strings` é um convite para toda string da interface migrar para cá, e isso é
- * máquina de i18n construída por acúmulo — que o §11 proíbe agora ("versão em
- * inglês: strings já isoladas; ligar depois é barato", não "faça o i18n").
- * O escopo aqui é fechado: a identidade do site e o par título/descrição de
- * cada rota. Quando o inglês entrar, este arquivo ganha um irmão e um seletor;
- * nada mais precisa se mexer.
- *
- * As descrições dos **cases** não estão aqui: elas moram no frontmatter de cada
- * `content/projects/*.mdx`, junto do resto do case. É o §2 — "adicionar projeto
- * novo = criar um arquivo, zero mexida em código" — e uma descrição de case
- * escrita neste dicionário seria a única parte do case fora do arquivo do case.
+ * As descrições dos cases não estão aqui — moram no frontmatter de cada
+ * `content/projects/*.mdx`, para que um case novo seja só um arquivo.
  */
 
 /**
- * A base absoluta de canonical, sitemap e OG. **Fonte única.**
- *
- * Sem protocolo relativo e sem barra no fim: tudo o que consome isto compõe
- * caminhos que já começam com `/`, e a barra dupla quebra o canonical em
- * silêncio (o Google trata `//projetos` como outra URL).
- *
- * Vira `metadataBase` em `app/layout.tsx`. Sob `output: 'export'` não há
- * requisição para inferir o host, então **sem esta constante o Next resolveria
- * canonical e OG contra `localhost:3000`** e o site publicaria links para a
- * máquina de quem buildou.
+ * A base absoluta de canonical, sitemap e OG. **Fonte única, e sem barra no
+ * fim:** tudo o que consome isto compõe caminhos que já começam com `/`, e a
+ * barra dupla quebra o canonical em silêncio (`//projetos` é outra URL).
  */
 export const SITE_URL = 'https://luizfreitas.com.br';
 
 export const AUTHOR = 'Luiz Freitas';
 
-/** O mesmo `lang` que está no `<html>` (§8). */
+/** O mesmo `lang` que está no `<html>`. */
 export const LOCALE = 'pt-BR';
 
-/** O que o Open Graph chama de locale — sublinhado, não hífen. */
+/** O que o Open Graph chama de locale — sublinhado, não hífen. Não é o `LOCALE`. */
 export const OG_LOCALE = 'pt_BR';
 
 /**
  * `jobTitle` do JSON-LD e do `title` da home. É a mesma palavra do eyebrow do
- * §4.1 e do `role` da posição atual em `content/experience.ts` — o §4.5 manda o
- * site contar a mesma história com as mesmas palavras em todo lugar, e o
- * cartão do Google é mais um lugar.
+ * hero e do `role` da posição atual em `content/experience.ts`.
  */
 export const JOB_TITLE = 'Desenvolvedor full stack sênior';
 
 /**
- * O `address` que o §8 pede no JSON-LD `Person`: Natal/RN.
- *
- * Cidade e estado, nada abaixo disso. Logradouro e CEP são dado pessoal e a
- * mesma proibição do §4.3 que tirou RG, CPF e data de nascimento do CV vale
- * aqui — a diferença é que este bloco vai para um indexador.
+ * O `address` do JSON-LD `Person`. Cidade e estado, nada abaixo disso:
+ * logradouro e CEP são dado pessoal, e este bloco vai para um indexador.
  */
 export const ADDRESS = {
   locality: 'Natal',
@@ -77,47 +42,25 @@ export const ADDRESS = {
 } as const;
 
 export type RouteMeta = {
-  /** O `<title>` inteiro, sem template. Ver a nota abaixo. */
+  /** O `<title>` inteiro, sem template. */
   readonly title: string;
-  /** A `<meta name="description">`. Escrita à mão, factual (§8). */
+  /** A `<meta name="description">`. Escrita à mão e factual. */
   readonly description: string;
 };
 
 /**
  * O par título/descrição das quatro rotas fixas.
  *
- * ## Sem `title.template`
+ * **Sem `title.template`.** São dois sufixos diferentes (`— Luiz Freitas` nas
+ * páginas do site, `— projeto de Luiz Freitas` nos cases) e a home não tem
+ * nenhum: com template, metade das rotas precisaria de `absolute:` para escapar
+ * dele e nenhum título seria legível neste arquivo.
  *
- * O Next oferece `title: { template: '%s — Luiz Freitas' }` no layout, e seria
- * tentador. Não usamos: o §8 dá **dois** sufixos diferentes
- * (`— Luiz Freitas` para as páginas do site, `— projeto de Luiz Freitas` para
- * os cases) e a home não tem sufixo nenhum. Com template, metade das rotas
- * precisaria de `absolute:` para escapar dele, e o título de cada página
- * deixaria de ser legível neste arquivo — que é justamente o que o §8 quer
- * consertar. Cada título está aqui inteiro, e a comparação entre eles é direta.
- *
- * ## Sobre o tamanho das descrições
- *
- * O Google corta o snippet perto de 155 caracteres e o LinkedIn perto de 200.
- * Nenhuma frase aqui depende do fim para fazer sentido: o dado que carrega cada
- * página está na **primeira** oração, e o corte só tira detalhe. É por isso que
- * `tests/unit/site.test.ts` mede o comprimento — não para caber num limite
- * mágico, mas para que ninguém escreva uma descrição cujo argumento só aparece
- * no caractere 190.
- *
- * NÃO REESCREVA sem ler o §4: primeira pessoa onde couber, específico, sem
- * adjetivo de venda. As palavras proibidas por nome ("soluções", "experiências
- * digitais", "impulsionar", "inovador", "excepcional") estão travadas em teste,
- * junto com a descrição inteira do site antigo, que o §8 manda tirar.
+ * Nenhuma descrição aqui depende do fim para fazer sentido — o dado está na
+ * primeira oração, e o corte do buscador só tira detalhe. É isso que
+ * `tests/unit/site.test.ts` mede, não um limite mágico de caracteres.
  */
 export const META = {
-  /**
-   * Home. O §8 fixa este título literalmente. A descrição é a tese do §4.1 com
-   * o número: "é o dado mais forte do currículo e a única coisa da página que
-   * não pode ser dita por qualquer outro dev". As palavras são as do
-   * `components/Hero.tsx` — "alunos, professores e gestores", os três, como no
-   * §4.3, no §4.5 e no CV.
-   */
   home: {
     title: 'Luiz Freitas — desenvolvedor full stack',
     description:
@@ -125,17 +68,9 @@ export const META = {
   },
 
   /**
-   * `/projetos`. O título é o `<h1>` da página, que cobre as duas seções do
-   * §3.2 — "uma mostra iniciativa, a outra mostra experiência". A descrição diz
-   * a mesma divisão, e os quatro degraus da trajetória são os do §4.3
-   * ("passei por startup, consultoria e educação"), com o IFRN de onde ela sai.
-   *
    * **"desde 2017", nunca uma contagem de anos.** Esta frase vai para o snippet
-   * do Google, que é a superfície que o §1 chama de mais importante do site —
-   * e é o único texto do repo que continua circulando depois de ninguém mais
-   * olhar para ele. Um "nove anos" aqui vira mentira no aniversário seguinte,
-   * dentro de um cache que ninguém revisa (§2, baixa manutenção). A âncora é o
-   * ano de início, que é permanente; quem lê faz a conta com a data de hoje.
+   * do buscador, dentro de um cache que ninguém revisa: um "nove anos" aqui vira
+   * mentira no aniversário seguinte. Há teste.
    */
   projetos: {
     title: 'Projetos e experiência — Luiz Freitas',
@@ -143,10 +78,7 @@ export const META = {
       'Os dois apps que construí por conta própria, Asafe e E aí, fez?, e a trajetória desde 2017: IFRN, startup, consultoria e educação.',
   },
 
-  /**
-   * `/sobre`. Condensa os três parágrafos do §4.3 sem inventar frase: cada
-   * informação daqui está, com estas palavras, em `content/about.ts`.
-   */
+  /** Cada informação daqui está, com estas palavras, em `content/about.ts`. */
   sobre: {
     title: 'Sobre — Luiz Freitas',
     description:
@@ -154,17 +86,9 @@ export const META = {
   },
 
   /**
-   * `/contato`. Os quatro canais que a página de fato mostra, na ordem do §3.4,
-   * e a ausência de formulário, que é decisão e não falta ("some no spam, não
-   * dá confirmação, e precisa de backend").
-   *
-   * A descrição antiga abria com "Dois caminhos, tenho uma vaga ou tenho um
-   * projeto". Ela saiu com a bifurcação (§3.4) — e sairia de qualquer forma
-   * pelo §1: era a única meta description do site que classificava o leitor
-   * antes de lhe dar a informação, que é a forma de venda mais discreta que
-   * existe. Aqui o nome e o cargo entram porque esta é a rota que alguém abre
-   * depois de procurar "Luiz Freitas desenvolvedor" (§1: SEO é o que mais
-   * importa), e o resto é o que a página tem.
+   * O nome e o cargo entram porque esta é a rota que alguém abre depois de
+   * procurar "Luiz Freitas desenvolvedor". O "sem formulário" é decisão, não
+   * falta.
    */
   contato: {
     title: 'Contato — Luiz Freitas',
@@ -174,13 +98,9 @@ export const META = {
 } as const satisfies Record<string, RouteMeta>;
 
 /**
- * O título de um case, a partir do nome no frontmatter (§8:
- * `Asafe — projeto de Luiz Freitas`).
- *
- * É função, e não entrada no `META`, porque o §2 promete que um `.mdx` novo em
- * `content/projects/` vira rota sem tocar em código. Um dicionário com uma
- * chave por case quebraria a promessa no lugar mais silencioso possível: a
- * página nasceria, e só o título ficaria errado.
+ * O título de um case, a partir do nome no frontmatter. É função, e não entrada
+ * no `META`, porque um dicionário com uma chave por case quebraria em silêncio:
+ * o `.mdx` novo nasceria com página e só o título estaria errado.
  */
 export function caseTitle(name: string): string {
   return `${name} — projeto de ${AUTHOR}`;
