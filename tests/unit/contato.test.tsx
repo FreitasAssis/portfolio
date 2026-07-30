@@ -141,7 +141,7 @@ describe('/contato — guardrails do brief', () => {
   it('põe o retrato em versão pequena, ainda como buraco (§6.5)', () => {
     const { container } = renderPagina();
     expect(screen.getByText('{{ retrato }}')).toBeInTheDocument();
-    expect(screen.getByText(/§6\.5 · versão pequena/i)).toBeInTheDocument();
+    expect(screen.getByText(/4:5 · versão pequena/i)).toBeInTheDocument();
     expect(container.querySelectorAll('img')).toHaveLength(0);
   });
 

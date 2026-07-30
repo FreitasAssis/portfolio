@@ -93,10 +93,18 @@ function fail(file: string, message: string): never {
 
 type Data = Record<string, unknown>;
 
+/**
+ * Para onde mandar quem quebrou o build por um campo torto. São os dois lugares
+ * que respondem "como é um frontmatter certo" sem sair do repo — e é o repo que
+ * quem lê a mensagem tem na mão.
+ */
+const REFERENCIA =
+  'o tipo `Project` (lib/projects.ts) lista os campos, e os .mdx em content/projects/ são exemplos que passam';
+
 function str(file: string, data: Data, key: string): string {
   const value = data[key];
   if (typeof value !== 'string' || value.trim() === '') {
-    fail(file, `campo \`${key}\` faltando ou vazio (§5)`);
+    fail(file, `campo \`${key}\` faltando ou vazio — precisa ser texto não vazio; ${REFERENCIA}`);
   }
   return value;
 }
@@ -104,7 +112,7 @@ function str(file: string, data: Data, key: string): string {
 function hex(file: string, data: Data, key: string): string {
   const value = str(file, data, key);
   if (!/^#[0-9A-Fa-f]{6}$/.test(value)) {
-    fail(file, `campo \`${key}\` precisa ser hex de 6 dígitos, veio "${value}" (§6.2)`);
+    fail(file, `campo \`${key}\` precisa ser hex de 6 dígitos com \`#\`, ex.: '#2F3A5E' — veio "${value}"`);
   }
   return value;
 }
@@ -112,7 +120,7 @@ function hex(file: string, data: Data, key: string): string {
 function oneOf<T extends string>(file: string, data: Data, key: string, allowed: readonly T[]): T {
   const value = str(file, data, key);
   if (!allowed.includes(value as T)) {
-    fail(file, `campo \`${key}\` só aceita ${allowed.join(' | ')}, veio "${value}" (§5)`);
+    fail(file, `campo \`${key}\` só aceita ${allowed.join(' | ')}, veio "${value}"`);
   }
   return value as T;
 }
@@ -138,7 +146,7 @@ function description(file: string, data: Data): string {
   if (value.length < DESCRIPTION_MIN || value.length > DESCRIPTION_MAX) {
     fail(
       file,
-      `campo \`description\` tem ${value.length} caracteres — precisa ficar entre ${DESCRIPTION_MIN} e ${DESCRIPTION_MAX} (§8: é a meta description do case, lida fora da página)`,
+      `campo \`description\` tem ${value.length} caracteres — precisa ficar entre ${DESCRIPTION_MIN} e ${DESCRIPTION_MAX}: é a \`<meta name="description">\` do case, lida fora da página, sozinha num resultado de busca`,
     );
   }
   return value;
@@ -147,7 +155,7 @@ function description(file: string, data: Data): string {
 function num(file: string, data: Data, key: string): number {
   const value = data[key];
   if (typeof value !== 'number' || !Number.isFinite(value)) {
-    fail(file, `campo \`${key}\` precisa ser um número (§5)`);
+    fail(file, `campo \`${key}\` precisa ser um número, ex.: \`${key}: 1\``);
   }
   return value;
 }
@@ -155,7 +163,7 @@ function num(file: string, data: Data, key: string): number {
 function list(file: string, data: Data, key: string): unknown[] {
   const value = data[key];
   if (!Array.isArray(value) || value.length === 0) {
-    fail(file, `campo \`${key}\` precisa ser uma lista não vazia (§5)`);
+    fail(file, `campo \`${key}\` precisa ser uma lista não vazia, um \`- \` por item; ${REFERENCIA}`);
   }
   return value;
 }
@@ -190,7 +198,7 @@ function prosa(file: string, item: Data, key: string, where: string): string {
     if (teste.test(value)) {
       fail(
         file,
-        `${where}: \`${key}\` aceita parágrafos e marcação inline (\`code\`, **forte**, [link]) — veio com ${nome} (§3.3)`,
+        `${where}: \`${key}\` aceita parágrafos e marcação inline (\`code\`, **forte**, [link]) — veio com ${nome}`,
       );
     }
   }
@@ -215,7 +223,7 @@ function dimensao(file: string, item: Data, key: string, where: string): number 
   if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
     fail(
       file,
-      `${where}: \`${key}\` precisa ser a medida do arquivo em pixels, inteira e positiva — o §9 exige dimensão declarada em toda imagem`,
+      `${where}: \`${key}\` precisa ser a medida do arquivo em pixels, inteira e positiva — é ela que reserva o espaço no next/image, e tests/unit/projects.test.ts confere o número contra o cabeçalho do .webp`,
     );
   }
   return value;
@@ -223,13 +231,16 @@ function dimensao(file: string, item: Data, key: string, where: string): number 
 
 function shot(file: string, raw: unknown, where: string): Shot {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-    fail(file, `${where}: precisa ser um objeto { src, alt } (§9 exige alt em todo print)`);
+    fail(file, `${where}: precisa ser um objeto { src, alt } — caminho solto não passa, porque nenhum print vai ao ar sem alt`);
   }
   const item = raw as Data;
   const src = field(file, item, 'src', where);
   const alt = field(file, item, 'alt', where);
   if (alt.trim().length <= 20 || ALT_PREGUICOSO.test(alt.trim())) {
-    fail(file, `${where}: \`alt\` precisa descrever a tela, não o suporte — veio "${alt}" (§9)`);
+    fail(
+      file,
+      `${where}: \`alt\` precisa descrever a tela, não o suporte, em mais de 20 caracteres — veio "${alt}". Um que passa: "tela de liturgia do dia do Asafe, com as leituras e as músicas sugeridas"`,
+    );
   }
 
   // Print pendente não tem arquivo, logo não tem medida: um número inventado aqui
@@ -244,7 +255,10 @@ function shot(file: string, raw: unknown, where: string): Shot {
   if (!src.startsWith('/') || !src.endsWith('.webp')) {
     // Absoluto porque é servido de `public/`: um caminho relativo quebraria só nas
     // rotas aninhadas, e não na página que quem editou estava olhando.
-    fail(file, `${where}: \`src\` precisa ser um caminho absoluto \`.webp\` em public/, veio "${src}" (§9)`);
+    fail(
+      file,
+      `${where}: \`src\` precisa ser um caminho absoluto \`.webp\` em public/, ex.: /projects/asafe/cover.webp — veio "${src}"`,
+    );
   }
 
   return {
@@ -262,7 +276,7 @@ function stackItem(file: string, raw: unknown, index: number): StackItem {
     return { name: raw, why: null };
   }
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-    fail(file, `${where}: precisa ser um nome ou { name, why } (§3.3)`);
+    fail(file, `${where}: precisa ser um nome (\`- Next.js\`) ou { name, why }, com \`why\` só na escolha não-óbvia`);
   }
   const item = raw as Data;
   const name = field(file, item, 'name', where);
@@ -273,7 +287,7 @@ function stackItem(file: string, raw: unknown, index: number): StackItem {
 function decision(file: string, raw: unknown, index: number): Decision {
   const where = `decisions[${index}]`;
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-    fail(file, `${where}: precisa ser { chose, insteadOf, because } — "escolhi X em vez de Y, porque Z" (§3.3)`);
+    fail(file, `${where}: precisa ser { chose, insteadOf, because } — "escolhi X em vez de Y, porque Z"`);
   }
   const item = raw as Data;
   return {
@@ -305,9 +319,14 @@ function checkBody(file: string, body: string): void {
   let anteriorNome = '';
   for (const { nome, teste } of SECOES) {
     const match = teste.exec(body);
-    if (match === null) fail(file, `falta a seção \`${nome}\` no corpo (§3.3)`);
+    if (match === null) {
+      fail(file, `falta a seção \`${nome}\` no corpo — a lista e a ordem estão em \`SECOES\`, em lib/projects.ts`);
+    }
     if (match.index < anterior) {
-      fail(file, `\`${nome}\` aparece antes de \`${anteriorNome}\` — a ordem do §3.3 é fixa`);
+      fail(
+        file,
+        `\`${nome}\` aparece antes de \`${anteriorNome}\` — a ordem das seções é fixa e está em \`SECOES\`, em lib/projects.ts`,
+      );
     }
     anterior = match.index;
     anteriorNome = nome;
@@ -332,23 +351,29 @@ export function parseProject(source: string, file: string): Project {
   if (!ACCENTS.includes(slug as Accent)) {
     fail(
       file,
-      `o slug "${slug}" não tem cor: falta o bloco \`[data-accent='${slug}']\` em app/globals.css e a entrada em ACCENTS (§6.2)`,
+      `o slug "${slug}" não tem cor: falta o bloco \`[data-accent='${slug}']\` em app/globals.css e a entrada em \`ACCENTS\`, em components/AccentZone.tsx`,
     );
   }
 
   const repoUrl = 'repoUrl' in frontmatter ? frontmatter.repoUrl : undefined;
   if (repoUrl === undefined) {
-    fail(file, 'campo `repoUrl` faltando — use `repoUrl: null` quando o repo for privado (§4.6)');
+    fail(
+      file,
+      'campo `repoUrl` faltando — a URL https quando o repo for público, `repoUrl: null` quando for privado; a ausência é esquecimento, e vira um botão que some sozinho',
+    );
   }
 
   const decisions = list(file, frontmatter, 'decisions').map((raw, i) => decision(file, raw, i));
   if (decisions.length < 3 || decisions.length > 5) {
-    fail(file, `\`decisions\` precisa ter de 3 a 5 itens (§3.3), veio com ${decisions.length}`);
+    fail(file, `\`decisions\` precisa ter de 3 a 5 itens, veio com ${decisions.length}`);
   }
 
   const shots = list(file, frontmatter, 'shots').map((raw, i) => shot(file, raw, `shots[${i}]`));
   if (shots.length > 3) {
-    fail(file, `\`shots\` aceita no máximo 3 além da capa (§4.7), veio com ${shots.length}`);
+    fail(
+      file,
+      `\`shots\` aceita no máximo 3 além da capa, veio com ${shots.length} — o quinto print é sempre o mais fraco e puxa a percepção do conjunto para baixo`,
+    );
   }
 
   checkBody(file, content);
@@ -392,7 +417,9 @@ export async function getAllProjects(): Promise<Project[]> {
   // Ordem empatada é ordem indefinida, e a ordem é conteúdo aqui.
   const orders = new Set(projects.map((p) => p.order));
   if (orders.size !== projects.length) {
-    throw new Error('content/projects: dois projetos com o mesmo `order` (§4.6 fixa a ordem)');
+    throw new Error(
+      'content/projects: dois projetos com o mesmo `order` — troque o de um deles (tests/unit/projects.test.ts fixa o Asafe em primeiro)',
+    );
   }
 
   return projects.sort((a, b) => a.order - b.order);

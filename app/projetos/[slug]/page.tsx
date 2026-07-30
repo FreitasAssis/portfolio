@@ -106,7 +106,7 @@ function Shot({
       {isShotPending(shot) ? (
         <AssetPlaceholder
           label={`print: ${shot.alt}`}
-          spec="390–430pt · 2x/3x · WebP (§4.7)"
+          spec="390–430pt · 2x/3x · WebP"
           aspect="aspect-[390/844]"
           width="max-w-[15rem]"
         />

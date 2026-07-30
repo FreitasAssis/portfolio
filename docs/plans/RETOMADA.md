@@ -153,6 +153,35 @@ mudarem juntos; pertence à Task 11.
 
 ---
 
+## O que as mensagens de erro deixaram de citar
+
+`lib/projects.ts` e os buracos de imagem citavam seções do brief (`§5`, `§4.7`, `§9`) dentro
+de strings que o build cospe e a página mostra — e o brief está **fora do git**. As mensagens
+agora dizem a substância ou apontam para dentro do repo: o tipo `Project`, a constante
+`SECOES`, `app/globals.css`, `components/AccentZone.tsx`, `tests/unit/projects.test.ts`. O que
+não cabia numa mensagem ficou aqui.
+
+- **Spec de captura (§4.7).** O buraco do print diz `390–430pt · 2x/3x · WebP`, que é o que
+  quem vai capturar precisa na hora. O resto da regra não cabe na caixa: **todo print ilustra
+  uma decisão do texto** (imagem que não sustenta decisão é decoração e sai); **capa + 3 por
+  projeto**, porque além disso ninguém olha e o quinto print é sempre o mais fraco — é ele que
+  puxa a percepção do conjunto para baixo (esse porquê está na mensagem do build, que é onde
+  ele morde); **sem moldura de celular**, que envelheceu mal e encolhe justamente o conteúdo;
+  **dados reais, nunca lorem**; tema consistente dentro de cada projeto (o Asafe é escuro nos
+  quatro); **nunca** capturar login, splash ou estado vazio; nome real de pessoa, paróquia ou
+  grupo trocado por dado de demonstração, o mesmo conjunto fictício em todas as telas.
+- **Ordem dos cases (§4.6).** `order: 1` no Asafe não é arbitrário e a mensagem de `order`
+  duplicado não tem como explicar: o Asafe é o case com mais intenção do Luiz e o único que
+  costura com o `/sobre` — a mesma pessoa em duas páginas —, e esse fio só funciona com ele
+  em primeiro. O "E aí, fez?" em segundo não é diminuído: para leitor técnico é o case que
+  mais impressiona. Travado em `tests/unit/projects.test.ts`, `tests/unit/projetos.test.tsx`
+  e `tests/unit/home.test.tsx`.
+- **Retrato pequeno (§6.5).** A caixa do `/contato` tem 160px e o briefing inteiro viraria
+  seis linhas dentro dela, então ela mostra só `4:5 · versão pequena`. O briefing completo
+  mora na constante `BRIEFING` de `components/Portrait.tsx`, que é a caixa grande do `/sobre`.
+
+---
+
 ## Armadilhas já encontradas — não reintroduzir
 
 1. **Seletor de acento duplicado** em `globals.css`. `AccentTracker` põe `data-accent` no

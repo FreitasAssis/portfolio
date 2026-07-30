@@ -18,7 +18,7 @@ export function Portrait({
 }) {
   return size === 'page' ? (
     <AssetPlaceholder
-      label="retrato do Luiz (§6.5)"
+      label="retrato do Luiz"
       spec={BRIEFING}
       aspect="aspect-[4/5]"
       width="max-w-[16rem]"
@@ -28,7 +28,7 @@ export function Portrait({
     // inteiro viraria seis linhas empilhadas dentro dela.
     <AssetPlaceholder
       label="retrato"
-      spec="§6.5 · versão pequena"
+      spec="4:5 · versão pequena"
       aspect="aspect-[4/5]"
       width="max-w-[10rem]"
     />
