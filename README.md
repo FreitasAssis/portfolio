@@ -58,3 +58,38 @@ Os testes de ponta a ponta rodam contra o `out/`, que é o artefato que vai ao a
 o servidor de desenvolvimento. O que só existe lá é layout de verdade: a cobertura de viewport
 que dispara o acento, a ausência de rolagem horizontal em 360px e a medida de leitura são
 medidas em pixel, e o jsdom não faz layout.
+
+---
+
+## Publicando
+
+Cloudflare Pages, conectado a este repositório:
+
+| campo | valor |
+|---|---|
+| Framework preset | None |
+| Build command | `npm run build` |
+| Build output directory | `out` |
+| Node version | 22 |
+
+Nenhuma variável de ambiente: não há chave, banco nem serviço externo.
+
+Dois arquivos em `public/` governam a hospedagem e chegam à raiz do output:
+
+- **`_redirects`** — os 301 das rotas do site anterior. `redirects()` do `next.config` não
+  roda sob `output: 'export'`, e não avisa: é este arquivo ou nada.
+- **`_headers`** — o `Content-Type` das OG images, que o export escreve sem extensão, e o
+  `Cache-Control: immutable` dos assets com hash.
+
+`tests/e2e/deploy.spec.ts` confere que ambos sobrevivem ao build, que todo redirect é 301 e que
+todo destino existe de fato como página.
+
+### Depois do primeiro deploy
+
+```bash
+curl -sI https://<host>/projects            | grep -iE 'HTTP/|location'   # 301 → /projetos
+curl -sI https://<host>/projetos/asafe/opengraph-image | grep -i content-type   # image/png
+```
+
+O `Content-Type` é o que decide se o cartão do LinkedIn aparece ou quebra, e é a única regra
+cuja aplicação depende do host — vale conferir antes de apontar o domínio.

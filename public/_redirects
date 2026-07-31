@@ -1,0 +1,19 @@
+# Rotas do site anterior, que estão no índice do Google e em links já
+# compartilhados. Sem estas linhas viram 404, e quem guardou
+# luizfreitas.com.br/projects fecha a aba em vez de deduzir que agora é /projetos.
+#
+# 301, nunca 302: o 302 é temporário, funciona igual no navegador e NÃO transfere
+# a reputação da URL antiga. É o erro silencioso típico aqui.
+#
+# Não existe alternativa em next.config: `redirects()` não roda sob
+# output: 'export' — não avisa, só não existe no build.
+#
+# /testimonials não tem equivalente (a página de depoimentos foi descontinuada
+# sem substituto), então vai para a home: redirect para conteúdo não equivalente
+# é pior em teoria e muito melhor que uma parede de 404.
+#
+# tests/e2e/deploy.spec.ts confere que as três chegam ao `out/`.
+
+/about          /sobre      301
+/projects       /projetos   301
+/testimonials   /           301
