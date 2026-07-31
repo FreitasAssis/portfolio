@@ -8,13 +8,14 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
 
 # next.js
 /.next/
 /out/
-
-# production
-/build
 
 # misc
 .DS_Store
@@ -29,9 +30,10 @@ yarn-error.log*
 .env*.local
 .env
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# material de trabalho - nao vai para o repo publico
+/docs/private/
+/.wrangler/

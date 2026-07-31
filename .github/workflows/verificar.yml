@@ -1,0 +1,61 @@
+name: Verificar
+
+# A `main` publica sozinha na Cloudflare. Sem este workflow, os 281 testes
+# unitários e os 133 de ponta a ponta só rodariam na máquina de quem editou — o
+# que não protege nada assim que o deploy é automático.
+#
+# Roda no pull request (que é onde ele bloqueia, via regra de proteção da branch)
+# e no push para a `main` (rede de segurança para push direto, que não bloqueia
+# mas avisa).
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Push novo na mesma referência cancela a execução anterior: o que importa é o
+# último commit, e não a fila.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `ci` e não `install`: falha se o package-lock estiver dessincronizado,
+      # em vez de resolver por conta própria e testar árvore diferente da que
+      # vai ao ar.
+      - run: npm ci
+
+      # typecheck + lint + 281 unitários + build.
+      - run: npm run verify
+
+      # Só o Chromium: é o único projeto declarado no playwright.config.ts.
+      # `--with-deps` traz as bibliotecas de sistema que faltam no runner.
+      - run: npx playwright install --with-deps chromium
+
+      # O `webServer` do Playwright reconstrói e serve o `out/` — é o artefato
+      # que vai ao ar, e não o dev server.
+      - run: npm run test:e2e
+
+      # Só quando quebra, e é o que permite ver o traço de um teste que falhou
+      # sem reproduzir na mão.
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

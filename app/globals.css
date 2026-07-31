@@ -1,33 +1,140 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/* Redefinido para ler `data-theme`: o `dark:` de fábrica do Tailwind lê
+   `prefers-color-scheme` e discordaria do toggle manual para quem escolheu o
+   contrário do sistema. A primeira forma casa o próprio <html>, a segunda os
+   descendentes. */
+@custom-variant dark (&:where(:root[data-theme='dark'], :root[data-theme='dark'] *));
+
+@theme {
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-newsreader), ui-serif, Georgia, serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  /* escala 1.250 — major third, corpo em 18px */
+  --text-xs: 0.72rem;
+  --text-sm: 0.9rem;
+  --text-base: 1.125rem;
+  --text-lg: 1.406rem;
+  --text-xl: 1.758rem;
+  --text-2xl: 2.197rem;
+  --text-3xl: 2.746rem;
+  --text-4xl: 3.433rem;
+}
+
+/* `inline` é obrigatório: sem ele o Tailwind resolve o valor no :root e os
+   utilitários herdam o literal, então um `[data-accent]` mais abaixo na árvore
+   não troca mais nada e a injeção de acento morre em silêncio. */
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-text: var(--accent-text);
+}
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --ink: #14161a;
+  --ink-2: #5a616b;
+  --paper: #fafafa;
+  --paper-2: #f1f2f4;
+  --rule: #e2e4e8;
+
+  /* Acento sem valor próprio: o projeto injeta. Enquanto ele é um par que vira
+     com o tema, continua legível nos dois; um [data-accent] que injete hex fixo
+     precisa fixar --accent-ink junto, senão o tema escuro joga um quase-preto
+     sobre a cor da marca. */
+  --accent: var(--ink);
+  --accent-ink: var(--paper);
+  --accent-text: var(--ink);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+:root[data-theme='dark'] {
+  --ink: #edeef0;
+  --ink-2: #9aa1ac;
+  --paper: #0e1013;
+  --paper-2: #191c21;
+  --rule: #2a2e35;
+  color-scheme: dark;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+/* --accent-ink é fixado por acento, e NÃO derivado de --paper: o preenchimento é
+   a cor da marca e não vira com o tema, então o texto em cima dele também não
+   pode virar.
+
+   O `--accent` do "E aí, fez?" NÃO é o #c8506a da marca, e a diferença é o
+   inteiro ponto: o botão "Abrir o app" é preenchido com --accent e escrito em
+   --accent-ink a 16.2px de peso normal, que a WCAG conta como texto de tamanho
+   normal e cobra 4.5:1. #fafafa sobre #c8506a mede 4.18. O hex aqui é a variante
+   escurecida que a paleta já declarava em --accent-text, e é o mesmo valor que o
+   frontmatter do case precisa carregar — tests/unit/projects.test.ts compara os
+   dois, e é por ele que o card de OG acompanha. Medido em
+   tests/unit/contrast.test.ts. */
+[data-accent='asafe'] {
+  --accent: #2f3a5e;
+  --accent-text: #2f3a5e;
+  --accent-ink: #fafafa;
+}
+[data-accent='eaifez'] {
+  --accent: #a83c55;
+  --accent-text: #a83c55;
+  --accent-ink: #fafafa;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+/* O seletor duplo não é redundância: o AccentTracker escreve `data-accent` no
+   PRÓPRIO <html>, e um elemento não é descendente de si mesmo. Colapsar na forma
+   descendente faz o override escuro nunca disparar — --accent-text fica no valor
+   do tema claro (1.71:1 asafe, 3.12:1 eaifez sobre papel escuro), sem sintoma
+   visível no código. */
+:root[data-theme='dark'][data-accent='asafe'],
+:root[data-theme='dark'] [data-accent='asafe'] {
+  --accent-text: #8e9ac4;
+}
+:root[data-theme='dark'][data-accent='eaifez'],
+:root[data-theme='dark'] [data-accent='eaifez'] {
+  --accent-text: #e88ba0;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  /* Não é redundante com --paper: é o que faz a barra de rolagem, o realce de
+     seleção e a tela em branco antes da primeira pintura nascerem escuros. Sem
+     isso o tema escuro abre com uma faixa clara na lateral. */
+  color-scheme: light;
+  font-family: var(--font-body);
+  font-size: 18px;
+
+  /* A troca de acento no scroll: o AccentTracker escreve data-accent aqui, então
+     é aqui que a cor vira. Desligado pelo bloco de prefers-reduced-motion. */
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+/* O anel usa --accent-text, e não --accent: --accent é o hex cru da marca e não
+   se adapta ao tema, então no escuro o anel do Asafe fica #2f3a5e sobre #0e1013
+   — 1.713:1, invisível. --accent-text mede 5.84 no pior par, acima do 3:1 da
+   WCAG 1.4.11. */
+:where(a, button, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* medida de leitura, 65–75 caracteres */
+.prose-measure {
+  max-width: 68ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

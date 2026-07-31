@@ -1,42 +1,46 @@
-import styles from './page.module.css';
-import skills from './lib/skills.jsx';
-import Header from "./components/header/Header";
-import Footer from "./components/footer/Footer";
-import Icon from './components/icon/Icon';
+import type { Metadata } from 'next';
 
-export default function Home() {
-  const totalSkills = skills.length;
-  const radius = 250;
-  const center = { x: 150, y: 150 };
-  
-  const getSkillPosition = (index: number) => {
-    const angle = (index / totalSkills) * 2 * Math.PI;
-    const x = center.x + radius * Math.cos(angle);
-    const y = center.y + radius * Math.sin(angle);
-    return { x, y };
-  };
+import { ContactBlock } from '@/components/ContactBlock';
+import { Container } from '@/components/Container';
+import { EndNav } from '@/components/EndNav';
+import { Hero } from '@/components/Hero';
+import { HowIWork } from '@/components/HowIWork';
+import { PersonJsonLd } from '@/components/JsonLd';
+import { ProjectCard } from '@/components/ProjectCard';
+import { TimelineCondensed } from '@/components/TimelineCondensed';
+import { META } from '@/content/site';
+import { getAllProjects } from '@/lib/projects';
+import { pageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = pageMetadata({ meta: META.home, path: '/' });
+
+export default async function Page() {
+  const projects = await getAllProjects();
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-10">
-      <Header />
-      <div className={styles.skillsContainer}>
-        <div className={`${styles.skillsCircle} hidden lg:block`}>
-          <div className={styles.skills}>
-            {skills.map((skill, index) => {
-              const { x, y } = getSkillPosition(index);
-              return (
-                <div
-                  key={index}
-                  className="absolute flex items-center justify-center"
-                  style={{ top: `${y}px`, left: `${x}px` }}
-                >
-                  <Icon key={index} icon={skill.path} />
-                </div>
-              );
-            })}
-          </div>
+    <>
+      <PersonJsonLd />
+
+      <Hero />
+
+      <Container as="section" width="wide" className="py-4">
+        <h2 className="font-display text-xl font-bold tracking-tight">Projetos próprios</h2>
+        {/* Nenhum card com `priority` aqui, ao contrário do /projetos: o hero
+            vem antes e empurra o primeiro print para 1023px em 412×823 e 1103px
+            em 360×640, sempre abaixo da dobra. O preload disputaria banda com as
+            fontes de que o h1 — que é o elemento de LCP medido — precisa. */}
+        <div className="mt-8">
+          {projects.map((project) => (
+            <ProjectCard key={project.slug} project={project} />
+          ))}
         </div>
-      </div>
-      <Footer />
-    </main>
+      </Container>
+
+      <TimelineCondensed />
+      <HowIWork />
+      <ContactBlock />
+
+      <EndNav />
+    </>
   );
 }

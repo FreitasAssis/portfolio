@@ -1,0 +1,24 @@
+# Tipo das OG images.
+#
+# O export estático escreve cada card em `<rota>/opengraph-image`, sem extensão,
+# e hospedagem estática deduz o Content-Type do nome do arquivo: sem estas duas
+# regras eles saem como application/octet-stream e o crawler do LinkedIn recusa
+# a imagem. O `*` casa qualquer coisa, barra inclusive, então a segunda regra
+# cobre tanto /sobre/opengraph-image quanto /projetos/asafe/opengraph-image.
+#
+# tests/e2e/seo.spec.ts confere que toda OG image do `out/` cai numa das regras.
+
+/opengraph-image
+  Content-Type: image/png
+
+/*/opengraph-image
+  Content-Type: image/png
+
+# Cache dos assets com hash no nome.
+#
+# Tudo sob /_next/static/ carrega o hash do conteúdo no próprio nome, então o
+# arquivo nunca muda de conteúdo sem mudar de URL — é o caso exato para que
+# `immutable` existe. Sem esta regra o navegador revalida bundle e fonte a cada
+# visita, e a segunda visita paga de novo o que já tinha baixado.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable

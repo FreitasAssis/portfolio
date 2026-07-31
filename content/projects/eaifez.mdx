@@ -1,0 +1,190 @@
+---
+slug: eaifez
+name: 'E aí, fez?'
+tagline: Desafios entre amigos com prenda semanal.
+# A meta description, lida fora da página. Não é a tagline.
+description: Um PWA de desafio semanal entre amigos, com prenda não-monetária. Por que a unidade de 1 a N membros é quem compete, e Cloudflare Workers em vez de Vercel.
+kind: own
+status: live
+liveUrl: https://eaifez.com.br
+repoUrl: null
+accent: '#A83C55'
+accentDark: '#E88BA0'
+order: 2
+stack:
+  - Next.js
+  - TypeScript
+  - name: Supabase
+    why: Postgres, Auth (link mágico e Google) e Storage num serviço só. O RLS é a barreira de autorização; o `service role` só aparece no cron de fechamento e no seed.
+  - name: Cloudflare Workers
+    why: hospedagem e o cron horário que fecha as rodadas no mesmo lugar, num plano gratuito que permite uso comercial. O porquê inteiro está nas Decisões.
+cover:
+  src: /projects/eaifez/cover.webp
+  width: 1200
+  height: 630
+  alt: 'card compartilhável do E aí, fez? com o resultado da semana, o único elemento feito para ser visto fora do app'
+# A capa é paisagem, e o card exige retrato — daí este campo. `alt` próprio
+# porque no card a imagem aparece sozinha, sem a galeria em volta.
+cardShot:
+  src: /projects/eaifez/02.webp
+  width: 1290
+  height: 2796
+  alt: 'placar da semana do E aí, fez?, com as unidades competindo em pontos'
+shots:
+  - src: /projects/eaifez/01.webp
+    width: 1290
+    height: 2796
+    alt: 'sentença de fim de semana do E aí, fez?, com o resultado da disputa e a prenda da rodada'
+  - src: /projects/eaifez/02.webp
+    width: 1290
+    height: 2796
+    alt: 'placar do E aí, fez? com as unidades competindo, casais e turmas no mesmo formato'
+  - src: /projects/eaifez/03.webp
+    width: 1290
+    height: 2796
+    alt: 'configuração de privacidade do E aí, fez?, separando desafio privado de desafio de mostrar'
+decisions:
+  - chose: a unidade de 1 a N membros como quem compete
+    insteadOf: pontuar no nível da pessoa
+    because: |-
+      No schema, a entidade que compete numa rodada não é a pessoa: é a `unit`
+      — dupla, trio ou indivíduo. Quem dá check-in é a pessoa
+      (`checkins.user_id`), mas quem ganha ou perde é a unidade
+      (`rounds.loser_unit_ids`, o placar da temporada, o troféu).
+
+      **Um motor, N formatos.** `UNIT_SIZE = 2` é só o teto do pack de casais,
+      não uma trava do schema. Como a abstração é 1..N, o mesmo motor de rodada,
+      veredito e prenda serve pack solo (unidade de um), casais (dois) e futuros
+      packs de time, sem um único `if (é_casais)`. O pack define o tamanho da
+      unidade; o motor é agnóstico. É o que torna "arquitetado para mais packs"
+      barato de verdade — a unidade é a costura.
+
+      **Check-in individual, resultado coletivo.** Desacoplar "quem marca" de
+      "quem vence" transforma um checkbox solitário num ritual de
+      responsabilidade compartilhada: o dia só conta para a unidade se **todos
+      os membros atuais** marcarem "fiz". Se um marca "fiz" e o outro "não fiz",
+      o estado vira `diverged` — que é socialmente significativo, alguém está
+      devendo para o outro. A confirmação mútua não foi um requisito, ela
+      emergiu de graça da abstração.
+
+      **Robusto a mudança de elenco.** A pontuação usa os membros atuais: marca
+      de ex-membro é ignorada, e perdedor que saiu da turma some da nomeação. A
+      abstração aguenta a turma mudar no meio da temporada.
+  - chose: separar, no schema, o desafio privado do desafio de mostrar
+    insteadOf: exigir prova em todo desafio
+    because: |-
+      Todo desafio carrega um modo, no enum `challenge_mode`. O privado ("só
+      entre vocês, ninguém mais vê") é íntimo, na base da confiança: você marca
+      que fez, sem plateia e sem prova. O de mostrar ("rende post") é feito para
+      ser exibido — habilita prova, link ou foto, e alimenta o card
+      compartilhável.
+
+      **Nem todo desafio quer plateia.** Num app de casais isso é crítico:
+      forçar "mostre/prove" em tudo mataria justamente os desafios que
+      reaproximam — um abraço de trinta segundos, sem pressa. O eixo
+      privado/mostrar deixa um só produto abrigar o íntimo e o exibível sem que
+      um contamine o outro.
+
+      **O modelo de confiança é explícito.** O default é confiar: marcou, tá
+      valendo, sem vigilância. A prova só entra onde o ponto é mostrar. É uma
+      postura de produto — o app não trata o usuário como suspeito — virada
+      design de dados. O que segura a mentira fácil é social, não técnico: a
+      confirmação mútua da unidade.
+
+      E o mesmo enum é, ao mesmo tempo, controle de privacidade e alavanca de
+      crescimento. Os desafios de mostrar são exatamente os que geram artefato
+      compartilhável, que puxa aquisição; os privados protegem a intimidade que
+      sustenta a retenção.
+  - chose: Cloudflare Workers
+    insteadOf: Vercel
+    because: |-
+      O plano Hobby da Vercel proíbe uso comercial, e o grátis da Cloudflare
+      não. Hospedar na Vercel amarraria o projeto a um plano pago antes de
+      existir qualquer receita. Junto vem o Cron Trigger que fecha as rodadas de
+      hora em hora, no mesmo Worker, sem serviço à parte.
+
+      O caminho é o `@opennextjs/cloudflare` — o `next-on-pages`, de Cloudflare
+      Pages, foi descontinuado pela própria Cloudflare. O custo é sair do
+      caminho feliz do Next: o adapter anda atrás do framework, então convenção
+      nova demora a chegar. O `proxy.ts` do Next 16 ainda não roda ali, e o app
+      fica no `middleware.ts`.
+  - chose: card de sentença como template do next/og
+    insteadOf: gerar o card com IA
+    because: |-
+      O card é o clímax do produto e é também a imagem OG das páginas públicas
+      da rodada: quando o link cai no WhatsApp, o preview é o card. Ele é
+      montado com `next/og` a partir dos dados da rodada e da skin do pack —
+      renderiza no edge, cacheia e custa zero. Gerar por IA acrescentaria custo
+      por card e variação, justamente onde o que se quer é uma peça reconhecível
+      toda semana, com a voz do pack.
+  - chose: sorteio diário determinístico, por hash
+    insteadOf: sortear com random() e gravar o resultado para estabilizar
+    because: |-
+      `order by md5(rid || target_day || c.id) limit 1`: mesmo input, mesmo
+      resultado. Determinismo é idempotência de graça — a página chama o sorteio
+      a cada render e sempre chega no mesmo desafio, sem precisar gravar para
+      estabilizar. Aleatório só seria estável se gravasse, e gravar é justamente
+      o que abre corrida.
+
+      `ON CONFLICT (round_id, day)` cobre a corrida do **mesmo dia**: duas
+      pessoas abrindo o app no mesmo segundo computam o mesmo md5, e se as duas
+      tentarem inserir, o conflito resolve.
+
+      `pg_advisory_xact_lock(hashtext(rid))` cobre a corrida **entre dias**, que
+      é a sutileza fácil de perder: como o md5 inclui o dia, dois dias sorteados
+      em paralelo — o catch-up de ontem na virada da meia-noite — poderiam
+      escolher o mesmo desafio sem se enxergarem, e o `ON CONFLICT (round_id,
+      day)` não pega colisão entre dias. O lock serializa os sorteios do mesmo
+      round. O `unique (round_id, challenge_id)` é o cinto no dado: com o lock
+      ele nunca dispara, e existe para o caso de o lock falhar.
+
+      A exclusão histórica degrada com elegância: exclui o que já saiu em
+      qualquer rodada da turma e, com o pool esgotado, volta para "só não repete
+      nesta rodada" — nunca falha em sortear.
+
+      O trade-off é honesto: md5 não é aleatoriedade uniforme, é pseudo-sorteio
+      determinístico. Para "qual diário sai terça?" isso é irrelevante — não é
+      jogo de azar e não há aposta. Dá para prever amanhã, se souber a fórmula;
+      mas a RPC recusa sortear o futuro (`target_day > today_sp` é erro), então
+      não dá para espiar pelo app.
+---
+
+## O problema
+
+Grupo de amigos combina de se ver mais e a semana passa igual. Casal diz que vai fazer alguma
+coisa diferente e não faz. O que move essas turmas não é lembrete nem meta de app de
+produtividade — é a brincadeira de prenda: alguém vacila e paga um mico que o grupo escolhe.
+
+Sem dinheiro e sem humilhação. A prenda é a desculpa; o que se quer de verdade é o encontro.
+
+## O que é
+
+Um PWA de desafio semanal entre amigos, com prenda não-monetária. A turma cria um grupo,
+escolhe o pack e o nível de ousadia, e abre uma rodada de 3 a 14 dias: um desafio único da
+janela, escolhido ou sorteado, e um desafio diário que o app revela a cada dia, igual para
+todas as duplas.
+
+Cada pessoa marca "fiz" ou "vacilei", na confiança. Quando a rodada fecha, sai a sentença: o
+app apura quem vacilou mais, sorteia a prenda e gera o card compartilhável. Empate perfeito
+vira celebração, com opção de desempate em morte súbita. O placar da temporada guarda quem
+está voando e quem carrega o troféu.
+
+A primeira versão é o pack de casais. Pack é skin: cor, voz e baralho de desafios próprios,
+sobre o mesmo motor.
+
+<Decisoes />
+
+<Stack />
+
+## Estado
+
+No ar desde julho de 2026, com o pack de casais. Estão de pé o grupo com link de convite, a
+rodada com desafio único e diários, o check-in por pessoa com confirmação mútua e a apuração.
+A sentença é automática: um cron horário fecha as rodadas vencidas, e quem abrir uma rodada já
+vencida a fecha na hora. Também estão no ar o desempate em morte súbita, a prenda sorteada, o
+placar da temporada e as páginas públicas da rodada com imagem OG dinâmica. É PWA instalável,
+com notificação push, e prova por foto é apagada sete dias depois do fim da rodada.
+
+O que vem depois são os outros packs — amigos, família e igreja já estão no radar, mas não deve parar por aí. A arquitetura está pronta para
+eles: é para isso que a unidade é 1..N e que o pack é skin. O código é fechado, então o que dá
+para auditar aqui é o app no ar, não o repo.

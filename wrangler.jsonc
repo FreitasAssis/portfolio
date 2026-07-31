@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "portfolio",
+  "compatibility_date": "2026-07-31",
+
+  // Worker só de assets: não há `main`, então nenhum código roda por requisição.
+  // O site é export estático e o Worker existe só para servir `out/`, com o
+  // `_headers` e o `_redirects` que moram lá dentro.
+  "assets": {
+    "directory": "./out",
+
+    // O export escreve `sobre.html`, não `sobre/index.html`. Sem esta regra
+    // `/sobre` não resolve para arquivo nenhum.
+    "html_handling": "auto-trailing-slash",
+
+    // Sem isto, caminho inexistente devolve resposta vazia em vez da 404 que o
+    // build gera.
+    "not_found_handling": "404-page"
+  }
+}
