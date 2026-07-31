@@ -13,3 +13,12 @@
 
 /*/opengraph-image
   Content-Type: image/png
+
+# Cache dos assets com hash no nome.
+#
+# Tudo sob /_next/static/ carrega o hash do conteúdo no próprio nome, então o
+# arquivo nunca muda de conteúdo sem mudar de URL — é o caso exato para que
+# `immutable` existe. Sem esta regra o navegador revalida bundle e fonte a cada
+# visita, e a segunda visita paga de novo o que já tinha baixado.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable

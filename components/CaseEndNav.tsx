@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/components/Link';
 
 import { EndNav } from '@/components/EndNav';
 import type { Project } from '@/lib/projects';

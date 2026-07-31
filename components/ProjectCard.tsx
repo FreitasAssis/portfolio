@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import Link from 'next/link';
+import { Link } from '@/components/Link';
 
 import { AccentZone } from '@/components/AccentZone';
 import { AssetPlaceholder } from '@/components/AssetPlaceholder';
@@ -17,8 +17,8 @@ export function ProjectCard({
   priority = false,
 }: {
   project: Project;
-  /** Só no primeiro card da página, que é o LCP: nos demais o preload disputaria
-   *  banda com o que está na dobra. */
+  /** Só onde o print de fato nasce acima da dobra — ver a chamada em
+   *  app/projetos/page.tsx e a ausência dela em app/page.tsx. */
   priority?: boolean;
 }) {
   const shot = project.cardShot;
@@ -46,6 +46,12 @@ export function ProjectCard({
             // a imagem mede 0×0 até o byte chegar.
             className="h-auto w-full max-w-[15rem] rounded-md ring-1 ring-rule"
             priority={priority}
+            // `lazy` sozinho não segura: a margem do lazy-loading do Chrome é
+            // maior que a distância até este print, então ele é buscado no
+            // primeiro instante mesmo abaixo da dobra — e são ~145KB disputando
+            // banda com as fontes de que o elemento de LCP depende. A prioridade
+            // baixa não adia a busca, só a põe atrás delas na fila.
+            fetchPriority={priority ? undefined : 'low'}
           />
         )}
 

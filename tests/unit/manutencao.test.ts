@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -107,6 +107,34 @@ describe('§2 — nenhuma contagem de anos escrita à mão', () => {
     // perderia o dado.
     expect(ABOUT_PARAGRAPHS[1]).toContain('desde 2017');
     expect(META.projetos.description).toContain('desde 2017');
+  });
+});
+
+describe('o prefetch continua desligado em todo link interno', () => {
+  /**
+   * A mesma família de falha silenciosa: importar `next/link` direto funciona,
+   * não quebra nada visível, e devolve o prefetch de viewport que
+   * `components/Link.tsx` desligou de propósito. O sintoma seria uma perda de
+   * ~900ms de LCP na home e no `/projetos` — invisível na máquina de quem
+   * escreveu, porque só aparece com banda estreita.
+   */
+  function fontes(dir: string): string[] {
+    return readdirSync(join(process.cwd(), dir), { withFileTypes: true }).flatMap((entrada) =>
+      entrada.isDirectory()
+        ? fontes(join(dir, entrada.name))
+        : entrada.name.endsWith('.tsx')
+          ? [join(dir, entrada.name)]
+          : [],
+    );
+  }
+
+  it('só o wrapper importa next/link', () => {
+    const cruas = ['app', 'components']
+      .flatMap(fontes)
+      .filter((file) => readFileSync(join(process.cwd(), file), 'utf8').includes("from 'next/link'"))
+      .filter((file) => file !== join('components', 'Link.tsx'));
+
+    expect(cruas, `importe { Link } de @/components/Link em: ${cruas.join(', ')}`).toEqual([]);
   });
 });
 

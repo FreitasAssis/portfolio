@@ -17,11 +17,22 @@
  * extensão, e sem essa segunda camada elas seriam servidas aqui como
  * `application/octet-stream` — que é justamente o defeito que o `_headers`
  * existe para corrigir no ar.
+ *
+ * E pelo mesmo motivo ele comprime texto. Isso não é otimização do teste: toda
+ * hospedagem estática comprime HTML, CSS e JS por padrão, e sem `gzip` aqui uma
+ * medição de performance mede um servidor que ninguém publica — o `out/` tem
+ * ~650KB de JS que viram ~200KB no ar. `Accept-Encoding` é respeitado, então
+ * quem não pedir compressão continua recebendo o byte cru.
  */
+import { gzipSync } from 'node:zlib';
+
 import { readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+/** Os tipos que ganham compressão. Imagem e PDF já chegam comprimidos. */
+const COMPRESSIVEL = /^(text\/|application\/(json|xml)|image\/svg)/;
 
 const ROOT = fileURLToPath(new URL('../../out/', import.meta.url));
 const PORT = Number(process.env.PORT ?? 4321);
@@ -96,11 +107,21 @@ createServer(async (req, res) => {
 
   const ext = file.slice(file.lastIndexOf('.'));
   const extras = HEADER_RULES.filter(([padrao]) => padrao.test(pathname)).map(([, h]) => h);
-  res.writeHead(status, {
+  const cabecalhos = {
     'content-type': TYPES[ext] ?? 'application/octet-stream',
     ...Object.assign({}, ...extras),
-  });
-  res.end(await readFile(file));
+  };
+
+  let corpo = await readFile(file);
+  const aceita = (req.headers['accept-encoding'] ?? '').includes('gzip');
+  if (aceita && COMPRESSIVEL.test(cabecalhos['content-type'])) {
+    corpo = gzipSync(corpo);
+    cabecalhos['content-encoding'] = 'gzip';
+    cabecalhos.vary = 'Accept-Encoding';
+  }
+
+  res.writeHead(status, { ...cabecalhos, 'content-length': corpo.length });
+  res.end(corpo);
 }).listen(PORT, '127.0.0.1', () => {
   process.stdout.write(`static server em http://127.0.0.1:${PORT} servindo ${ROOT}\n`);
 });

@@ -54,7 +54,7 @@ test('o case empresta a cor ao site inteiro (§6.1)', async ({ page }) => {
 
   await page.goto('/projetos/eaifez');
   await expect(page.locator('html')).toHaveAttribute('data-accent', 'eaifez');
-  expect(await accentVar(page)).toBe('#c8506a');
+  expect(await accentVar(page)).toBe('#a83c55');
 });
 
 test('a linha do corpo fica na faixa de 65–75 caracteres (§6.3)', async ({ page }) => {
@@ -249,7 +249,7 @@ test('o acento não se apaga no fim do case (§6.1, §6.4)', async ({ page }) =>
   // fim do case, que é movimento novo no lugar mais silencioso possível.
   for (const [slug, hex] of [
     ['asafe', '#2f3a5e'],
-    ['eaifez', '#c8506a'],
+    ['eaifez', '#a83c55'],
   ] as const) {
     await page.goto(`/projetos/${slug}`);
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));

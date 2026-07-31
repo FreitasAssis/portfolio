@@ -58,18 +58,28 @@
   --paper: #0e1013;
   --paper-2: #191c21;
   --rule: #2a2e35;
+  color-scheme: dark;
 }
 
 /* --accent-ink é fixado por acento, e NÃO derivado de --paper: o preenchimento é
    a cor da marca e não vira com o tema, então o texto em cima dele também não
-   pode virar. */
+   pode virar.
+
+   O `--accent` do "E aí, fez?" NÃO é o #c8506a da marca, e a diferença é o
+   inteiro ponto: o botão "Abrir o app" é preenchido com --accent e escrito em
+   --accent-ink a 16.2px de peso normal, que a WCAG conta como texto de tamanho
+   normal e cobra 4.5:1. #fafafa sobre #c8506a mede 4.18. O hex aqui é a variante
+   escurecida que a paleta já declarava em --accent-text, e é o mesmo valor que o
+   frontmatter do case precisa carregar — tests/unit/projects.test.ts compara os
+   dois, e é por ele que o card de OG acompanha. Medido em
+   tests/unit/contrast.test.ts. */
 [data-accent='asafe'] {
   --accent: #2f3a5e;
   --accent-text: #2f3a5e;
   --accent-ink: #fafafa;
 }
 [data-accent='eaifez'] {
-  --accent: #c8506a;
+  --accent: #a83c55;
   --accent-text: #a83c55;
   --accent-ink: #fafafa;
 }
@@ -91,6 +101,10 @@
 html {
   background: var(--paper);
   color: var(--ink);
+  /* Não é redundante com --paper: é o que faz a barra de rolagem, o realce de
+     seleção e a tela em branco antes da primeira pintura nascerem escuros. Sem
+     isso o tema escuro abre com uma faixa clara na lateral. */
+  color-scheme: light;
   font-family: var(--font-body);
   font-size: 18px;
 

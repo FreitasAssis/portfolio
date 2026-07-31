@@ -37,10 +37,10 @@ Contrato: `docs/private/PORTFOLIO-BRIEF.md` (fora do git — repo é público).
 | 8 | `/sobre`, `/contato`, CV | ✅ |
 | 9 | SEO e metadados por rota | ✅ |
 | 10 | OG images (começa por spike de viabilidade) | ✅ |
-| 11 | Piso de qualidade — a11y, 360px, Lighthouse | ⬜ próxima |
-| 12 | Deploy na Cloudflare + redirects 301 | ⬜ |
+| 11 | Piso de qualidade — a11y, 360px, Lighthouse | ✅ |
+| 12 | Deploy na Cloudflare + redirects 301 | ⬜ próxima |
 
-Gates ao fim da sessão: `npm run verify` exit 0 · unit **273 passed | 0 todo** · e2e **88 passed**.
+Gates ao fim da sessão: `npm run verify` exit 0 · unit **275 passed | 0 todo** · e2e **126 passed**.
 
 **Fim do conteúdo (fora da tabela de tasks).** O pedido era um "voltar ao topo".
 O botão flutuante está descartado pelo §6.4 (movimento novo, componente de
@@ -90,6 +90,59 @@ Duas consequências que valem lembrar:
   servidor estático dos testes passou a ler para exercitar o mesmo mapeamento do deploy.
   O `generateImageMetadata`, que poria `.png` na URL, é incompatível com segmento dinâmico
   sob `output: 'export'`; o porquê está em `lib/og.tsx`.
+
+**Como a Task 11 terminou.** O piso virou varredura: `tests/e2e/piso.spec.ts` roda as **seis
+rotas × dois temas** para 360px, foco de teclado e axe — 38 testes onde antes havia um teste
+de 360px por rota, quase sempre só no claro. Rota nova entra na lista e ganha as três medidas
+sem que ninguém precise lembrar de copiar teste.
+
+O axe entrou como `@axe-core/playwright` (devDependency). É o mesmo motor da categoria de
+acessibilidade do Lighthouse, e rodando aqui ele diz **qual regra** quebrou em vez de "97" —
+sem prender o repo a um Lighthouse de CI. Conferido que ele falha de verdade: reverter o
+`--accent` para `#C8506A` reprova as seis combinações afetadas nomeando o elemento.
+
+**Números do Lighthouse, no `out/` servido por HTTP, mediana de três execuções:**
+
+| rota | perf (h2) | perf (http/1.1) | a11y |
+|---|---|---|---|
+| `/` | 98 | 94 | 100 |
+| `/projetos` | 97 | 93 | 100 |
+| `/projetos/asafe` | 97 | 94 | 100 |
+| `/projetos/eaifez` | 98 | 95 | 100 |
+| `/sobre` | 98 | 95 | 100 |
+| `/contato` | 98 | 95 | 100 |
+
+**As duas colunas medem o mesmo `out/`; o que muda é o protocolo do servidor.** O
+`tests/e2e/static-server.mjs` fala HTTP/1.1, e com ~35 requisições isso custa contenção de
+conexão que hospedagem nenhuma cobra: são ~700ms de LCP e quatro pontos. Servido por HTTP/2 —
+que é o que Cloudflare Pages faz — o mesmo build dá 97–98. O servidor do teste não virou HTTP/2
+porque isso pediria TLS, e chave privada não entra em repo público; ele **passou a comprimir**,
+que era a distorção grande (650KB de JS viram ~200KB, e sem isso as notas ficavam em 77–81).
+
+Três mudanças reais de performance saíram daí, todas medidas:
+
+- **`components/Link.tsx`** — um `next/link` com `prefetch={false}`. O padrão busca o payload de
+  toda rota cujo link esteja na viewport, e o cabeçalho está sempre na viewport: a home e a
+  `/projetos` baixavam os dois cases, que são os documentos mais pesados. 3180ms → 2280ms de
+  LCP. O hover e o touchstart continuam prefetchando. `tests/unit/manutencao.test.ts` recusa um
+  `next/link` cru fora do wrapper.
+- **A home não passa mais `priority` ao primeiro card.** O comentário dizia que o print era o
+  LCP; o Lighthouse diz que o LCP é a **h1**, e o print nasce em 1023px (412×823) e 1103px
+  (360×640) — sempre abaixo da dobra. O preload disputava banda com as fontes de que a h1
+  precisa. Na `/projetos` o print está em 449px e é mesmo o LCP: lá o `priority` ficou.
+- **`fetchPriority="low"` nos prints sem `priority`.** `loading="lazy"` não segura: a margem do
+  lazy-loading do Chrome é maior que a distância até eles, e eles são buscados no primeiro
+  instante mesmo abaixo da dobra.
+
+E `public/_headers` ganhou `Cache-Control: immutable` para `/_next/static/*`, que é o caso
+exato para que `immutable` existe — o hash do conteúdo já está no nome do arquivo.
+
+O resto do §9 foi **verificado, não presumido**, e estava certo: o anel de foco alcança os 22
+elementos interativos da home e os 9–14 das outras cinco rotas, nos dois temas e nas duas
+larguras; `prefers-reduced-motion` zera a transição de acento (0.2s → 1e-05s, medido no
+`<html>`, que é onde ela mora); os nove `alt` descrevem a decisão que o print ilustra; os oito
+prints são `.webp` por `next/image` com `width`/`height` declarados. A única correção de tema
+escuro foi `color-scheme`, que faltava — sem ele a barra de rolagem abria clara no escuro.
 
 ---
 
@@ -156,11 +209,27 @@ camada 1 no `/sobre` é agora a do CV, letra por letra. Justificativa completa e
 Não foram importados `MySQL`, `Nuxt` e `Sidekiq`, que existem no CV e não no
 §4.4: encurtar uma lista não conta história errada; mover um item de camada, sim.
 
-### 6. Contraste de `--accent-ink` em texto pequeno
+### 6. Contraste de `--accent-ink` em texto pequeno — resolvido na Task 11
 
-`#FAFAFA` sobre `#C8506A` mede **4.18:1** — passa AA Large, reprova AA normal. Afeta o botão
-"Abrir o E aí, fez?" na home e o CTA primário do case. A correção é no token para os dois
-mudarem juntos; pertence à Task 11.
+O `--accent` do "E aí, fez?" deixou de ser o `#C8506A` da marca e passou a ser **`#A83C55`**,
+que é a variante escurecida que a paleta já declarava em `--accent-text`. O par com
+`#FAFAFA` sai de 4.18:1 para **5.84:1**.
+
+O que decidiu foi a medida, não o gosto: os três botões que usam o par (`Abrir o app` na home,
+na `/projetos` e no case) computam **16.2px de peso normal** no browser — `text-sm` × os 18px
+da raiz. A WCAG só afrouxa para 3:1 a partir de 24px (ou 18.7px em negrito), então o piso ali
+é 4.5:1 e o hex da marca reprovava. O 16.2px agora sai do próprio CSS num teste, em vez de
+viver num comentário.
+
+**O card de OG acompanhou sozinho, e não por acaso.** `tests/unit/projects.test.ts` já
+exigia que o `accent` do frontmatter fosse igual ao `--accent` do CSS, e `lib/og.tsx` enche o
+card a partir do frontmatter — as duas superfícies não têm como divergir sem quebrar teste.
+Mudar o token obrigou a mudar o `.mdx`, e o card seguiu. Não havia decisão a tomar; havia uma
+trava a respeitar.
+
+**O §6.2 do brief ficou desatualizado** (ele lista `--accent: #C8506A`), como o §4.2 no item 1:
+é o brief que se atualiza. O aviso do próprio §6.2 — "meça os quatro pares antes de fechar" —
+foi o que apontou para cá.
 
 ---
 
@@ -243,7 +312,17 @@ não cabia numa mensagem ficou aqui.
     posição é ter internalizado um app que estava com fornecedor terceirizado e a integração
     com o Nota Potiguar, sistema de governo estadual. É a única posição em que o §4.5 pede
     escopo sem métrica. Travado em `tests/unit/experience.test.ts`.
-14. **`Git` na stack do IFRN não contradiz o `LAYER_3_NEVER` de `content/tech.ts`.** Stack de
+14. **O anel de foco é desenhado FORA da caixa** (`outline-offset: 3px`), então o fundo que
+    importa é o do elemento **pai**, não o preenchimento do próprio elemento. Medir contra o
+    próprio elemento acusa 1.00:1 nos botões `bg-accent` — um falso positivo convincente, que
+    parece exatamente o defeito da armadilha 1. `tests/e2e/piso.spec.ts` sobe um nível antes de
+    medir, e diz por quê.
+15. **Tema claro é a AUSÊNCIA de `data-theme`**, não `data-theme="light"`. O script anti-flash
+    do `app/layout.tsx` só escreve quando o resultado é escuro. Um teste que espere
+    `toHaveAttribute('data-theme', 'light')` reprova nas seis rotas de uma vez.
+16. **`test.use({ reducedMotion })` não tipa** na versão do Playwright do repo. Quem funciona é
+    `page.emulateMedia({ reducedMotion: 'reduce' })`, antes do `goto`.
+17. **`Git` na stack do IFRN não contradiz o `LAYER_3_NEVER` de `content/tech.ts`.** Stack de
     posição é registro do que foi usado, e o §4.5 lista assim. A regra do §4.4 que manda não
     listar Git ("é como um chef listar 'sei usar faca'") é sobre a vitrine de tecnologias do
     `/sobre`, que é outra seção. Tirar `Git` do IFRN para "resolver" a contradição não quebra

@@ -34,6 +34,28 @@ export function bodiesFor(selector: string): string[] {
   return bodies;
 }
 
+/**
+ * Valor cru de uma declaração qualquer — inclusive as que não são custom
+ * property, que `resolveTokens` ignora por só varrer `--*`.
+ */
+export function declaration(selector: string, property: string): string {
+  const rule = /([^{}]+)\{([^{}]*)\}/g;
+  let match: RegExpExecArray | null;
+  while ((match = rule.exec(CSS)) !== null) {
+    // Casar pelo FIM, e não por igualdade como `bodiesFor`: o que vem antes da
+    // chave de uma at-rule pode incluir o que sobrou desde o `}` anterior (o
+    // `@import` e o `@custom-variant` grudam no `@theme`, que não tem seletor
+    // próprio para o parser de vírgulas separar).
+    const casa = match[1]
+      .split(',')
+      .some((s) => s.trim().replace(/\s+/g, ' ').endsWith(selector));
+    if (!casa) continue;
+    const achado = new RegExp(`(?:^|;)\\s*${property}\\s*:\\s*([^;]+)`).exec(match[2]);
+    if (achado) return achado[1].trim();
+  }
+  throw new Error(`${selector} não declara ${property}`);
+}
+
 export type Theme = 'claro' | 'escuro';
 
 /**

@@ -33,10 +33,10 @@ export const OG_NEUTRAL = { fill: '#14161A', ink: '#FAFAFA' } as const;
 /**
  * O menor corpo de texto do card, em pixels.
  *
- * `#FAFAFA` sobre o `#C8506A` do "E aí, fez?" mede 4.18:1 — acima do piso de
- * 3:1 que a WCAG dá a texto grande (24px), abaixo do 4.5:1 do texto normal.
- * Baixar este número reprova o card de um projeto só, e no olho ninguém vê.
- * `tests/unit/og.test.ts` mede os dois lados.
+ * Mantê-lo acima de 24px é o que deixa o piso de contraste do card ser o 3:1 da
+ * WCAG para texto grande, e não o 4.5:1 do texto normal — o preenchimento vem do
+ * `accent` do frontmatter, que é um hex de marca e pode chegar mais claro que os
+ * dois de hoje. `tests/unit/og.test.ts` mede os dois lados.
  */
 export const OG_MIN_FONT_SIZE = 26;
 

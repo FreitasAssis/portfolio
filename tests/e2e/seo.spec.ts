@@ -270,7 +270,7 @@ test.describe('OG image por rota', () => {
     // A mecânica de cor emprestada saindo do site: o preenchimento do card é o
     // mesmo `accent` do frontmatter, e não uma cor escrita à mão aqui.
     expect(png(arquivoDaImagem('projetos/asafe.html')).fill).toBe('#2F3A5E');
-    expect(png(arquivoDaImagem('projetos/eaifez.html')).fill).toBe('#C8506A');
+    expect(png(arquivoDaImagem('projetos/eaifez.html')).fill).toBe('#A83C55');
   });
 
   test('as quatro rotas sem projeto ficam na base neutra', () => {

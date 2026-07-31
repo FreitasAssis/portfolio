@@ -89,8 +89,11 @@ describe('contraste do texto sobre o preenchimento', () => {
   });
 
   it('cada acento emprestado sustenta o texto do card', async () => {
-    // O `#C8506A` do "E aí, fez?" mede 4.18:1 com `#FAFAFA`: passa aqui e
-    // reprovaria em texto de corpo. É o motivo de o card não ter texto pequeno.
+    // O piso é o de texto grande porque o card não tem texto pequeno. Os dois
+    // acentos de hoje sobram: são os mesmos hex que `--accent` carrega em
+    // app/globals.css, e lá o par precisa aguentar 4.5:1 por causa do botão
+    // "Abrir o app" — quem trava a igualdade entre os dois lados é
+    // tests/unit/projects.test.ts.
     for (const project of await getAllProjects()) {
       const ratio = contrastRatio('#FAFAFA', project.accent);
       expect(ratio, `${project.slug}: ${ratio.toFixed(2)}:1 sobre ${project.accent}`)

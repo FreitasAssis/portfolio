@@ -94,7 +94,7 @@ test('o acento dispara de verdade nos dois cards (§6.1)', async ({ page }) => {
 
   for (const [slug, hex] of [
     ['asafe', '#2f3a5e'],
-    ['eaifez', '#c8506a'],
+    ['eaifez', '#a83c55'],
   ] as const) {
     // `div[...]`: o próprio <html> ganha o atributo assim que o tracker o
     // elege, e um seletor solto casaria com os dois.

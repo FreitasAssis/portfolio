@@ -60,7 +60,7 @@ test('o acento troca conforme o projeto na tela (§6.1)', async ({ page }) => {
 
   await page.locator('[data-accent="eaifez"]').scrollIntoViewIfNeeded();
   await expect(html).toHaveAttribute('data-accent', 'eaifez');
-  expect(await accentVar(page)).toBe('#c8506a');
+  expect(await accentVar(page)).toBe('#a83c55');
 });
 
 test('a base volta a ser neutra fora dos projetos (§6.1)', async ({ page }) => {

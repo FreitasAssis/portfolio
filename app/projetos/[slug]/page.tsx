@@ -36,12 +36,6 @@ export async function generateMetadata({
   });
 }
 
-/**
- * Nada de texto pequeno sobre o preenchimento `--accent`: o par
- * `--accent-ink`/`--accent` do "E aí, fez?" mede 4.18:1, que passa o piso de 3:1
- * da WCAG para texto grande e reprova o 4.5:1 do texto normal. Rótulo miúdo vai
- * fora da faixa, sobre o papel.
- */
 function Cover({ project }: { project: Project }) {
   return (
     <div className="bg-accent text-accent-ink">

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { contrastRatio } from '@/lib/contrast';
 import {
   accentSlugsInCss,
+  declaration,
   focusOutlineToken,
   resolveTokens,
   type Theme,
@@ -83,13 +84,35 @@ describe('CSS real: --accent-text bate com os hex travados no §6.2', () => {
   });
 });
 
-describe('CSS real: --accent-ink sobre o preenchimento --accent passa AA Large', () => {
-  // §6.2 restringe --accent a capa de case, borda ativa e foco — texto em
-  // tamanho de display. O piso é 3:1. O caso escuro é o que estava quebrado.
+describe('CSS real: --accent-ink sobre o preenchimento --accent passa AA cheio', () => {
+  // 4.5:1, e não os 3:1 de texto grande: o par não vive só na capa do case. O
+  // botão "Abrir o app" (components/ProjectCard.tsx e a rota do case) é
+  // preenchido com --accent e escrito em --accent-ink a `font-mono text-sm`, que
+  // resolve para 16.2px de peso normal — abaixo dos 24px (ou 18.7px em negrito)
+  // a partir dos quais a WCAG afrouxa para 3:1. Foi este piso que tirou o
+  // #c8506a de --accent: com ele o par media 4.18.
   it.each(COMBOS)('$accent / $theme', ({ theme, accent }) => {
     const tokens = resolveTokens(theme, accent);
     const ratio = contrastRatio(token(tokens, '--accent-ink'), token(tokens, '--accent'));
-    expect(ratio).toBeGreaterThanOrEqual(3);
+    expect(ratio).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe('CSS real: o corpo do botão de acento é texto de tamanho normal', () => {
+  /**
+   * O que justifica o 4.5:1 do bloco acima, lido do próprio CSS em vez de
+   * afirmado num comentário. A WCAG só afrouxa para 3:1 a partir de 24px (ou
+   * 18.7px em negrito); o botão "Abrir o app" é `font-mono text-sm` de peso
+   * normal. Se um dia a escala mudar e `text-sm` passar dos 24px, este teste
+   * falha e avisa que o piso do par --accent-ink/--accent pode ser revisto —
+   * afrouxar aquele número sem passar por aqui é que não pode.
+   */
+  const WCAG_TEXTO_GRANDE_PX = 24;
+
+  it('text-sm resolve abaixo do limite de texto grande', () => {
+    const raiz = Number.parseFloat(declaration('html', 'font-size'));
+    const px = Number.parseFloat(declaration('@theme', '--text-sm')) * raiz;
+    expect(px).toBeLessThan(WCAG_TEXTO_GRANDE_PX);
   });
 });
 
