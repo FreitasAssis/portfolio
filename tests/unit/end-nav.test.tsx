@@ -12,16 +12,12 @@ import type { Project } from '@/lib/projects';
 import { CSS } from '../helpers/globals-css';
 
 /**
- * O bloco de fim de conteúdo (§6.4, §9), na forma compartilhada por quatro rotas.
- *
- * Ele nasceu só nos cases (8,8 telas em 1440×900 e 19,1 em 360×740, no Asafe) e
- * passou a valer também para a home, a `/projetos` e o `/sobre`: a decisão de
- * racioná-lo tinha sido tomada medindo altura de desktop, e o mesmo conteúdo num
- * celular é duas a três vezes mais alto. Como a solução é uma âncora estática —
- * zero JavaScript, zero movimento novo — não havia o que economizar.
+ * O bloco de fim de conteúdo, na forma compartilhada por quatro rotas: a home,
+ * a `/projetos`, o `/sobre` e os dois cases. O `/contato` fica de fora, e a
+ * razão está em `tests/unit/contato.test.tsx`.
  *
  * O que estes testes protegem é o **idioma único**: a mesma âncora, o mesmo
- * texto, o mesmo tratamento tipográfico, nas quatro rotas. Quatro variações do
+ * texto, o mesmo tratamento tipográfico, em todas elas. Quatro variações do
  * mesmo link seria o resultado natural de resolver isso página por página.
  */
 
@@ -43,25 +39,25 @@ describe('fim do conteúdo — a âncora do topo', () => {
   });
 
   it('é âncora pura — nada de botão, nada de handler', () => {
-    // O bloco é estático de propósito (§6.4): zero JavaScript, nenhum movimento
+    // O bloco é estático de propósito: zero JavaScript, nenhum movimento
     // novo, e o foco de teclado vem de graça porque é um `<a href>`.
     const { container } = render(<EndNav />);
     expect(container.querySelectorAll('button')).toHaveLength(0);
     expect(topo().tagName).toBe('A');
   });
 
-  it('não pede scroll suave em lugar nenhum (§6.4)', () => {
+  it('não pede scroll suave em lugar nenhum', () => {
     // `scroll-behavior: smooth` seria movimento novo e brigaria com
-    // `prefers-reduced-motion`, que o §9 manda respeitar. A âncora salta.
+    // `prefers-reduced-motion`, que o site respeita. A âncora salta.
     const { container } = render(<EndNav />);
     expect(container.innerHTML).not.toMatch(/scroll-smooth|scroll-behavior/);
     expect(CSS).not.toMatch(/scroll-behavior\s*:\s*smooth/);
   });
 
   it('sozinho, é o único link do bloco — sem corrente de "próximo"', () => {
-    // A home, a `/projetos` e o `/sobre` não têm sequência natural. O §4.6
-    // argumenta uma para os cases (Asafe → E aí, fez? → /projetos) e é só lá que
-    // ela existe; um "próxima página" nas outras três seria menu inventado.
+    // A home, a `/projetos` e o `/sobre` não têm sequência natural. Os cases
+    // têm (Asafe → E aí, fez? → /projetos), e é só lá que ela existe; um
+    // "próxima página" nas outras três seria menu inventado.
     render(<EndNav />);
     const links = screen.getAllByRole('link');
     expect(links).toHaveLength(1);
@@ -86,7 +82,7 @@ describe('fim do conteúdo — um idioma, não quatro', () => {
     doCase.unmount();
   });
 
-  it('a landmark tem nome próprio, distinto do cabeçalho (§9)', () => {
+  it('a landmark tem nome próprio, distinto do cabeçalho', () => {
     // O cabeçalho já tem `aria-label="Principal"`; duas landmarks do mesmo tipo
     // sem nomes distintos não são escolhíveis numa lista de landmarks.
     const { unmount } = render(<EndNav />);
@@ -97,9 +93,9 @@ describe('fim do conteúdo — um idioma, não quatro', () => {
     expect(screen.getByRole('navigation', { name: 'Fim do case' })).toBeInTheDocument();
   });
 
-  it('é texto e uma régua — sem caixa, sem ícone (§6.4)', () => {
-    // O §6.4 já gastou o único gesto de layout do site na quebra de grade dos
-    // cards. Aqui não entra caixa fechada, fundo, sombra nem SVG.
+  it('é texto e uma régua — sem caixa, sem ícone', () => {
+    // O site já gastou o único gesto de layout que se permite na quebra de
+    // grade dos cards. Aqui não entra caixa fechada, fundo, sombra nem SVG.
     const { container } = render(<EndNav />);
     const nav = screen.getByRole('navigation');
     // Uma régua no topo, e só. `border` sozinho seria caixa fechada nos quatro
@@ -111,15 +107,15 @@ describe('fim do conteúdo — um idioma, não quatro', () => {
     expect(container.querySelectorAll('svg, img')).toHaveLength(0);
   });
 
-  it('não é sticky nem fixed — nada flutua sobre o conteúdo (§6.4, §9)', () => {
+  it('não é sticky nem fixed — nada flutua sobre o conteúdo', () => {
     // A alternativa descartada era o botão que aparece no scroll. Ele voltaria
-    // por aqui: uma classe de posicionamento no bloco e o §6.4 vai embora sem
+    // por aqui: uma classe de posicionamento no bloco e a regra vai embora sem
     // ninguém notar, porque a página continua funcionando.
     const { container } = render(<EndNav />);
     expect(container.innerHTML).not.toMatch(/\b(sticky|fixed|absolute|z-\d)\b/);
   });
 
-  it('põe a navegação em mono, como o resto do metadado (§6.3)', () => {
+  it('põe a navegação em mono, como o resto do metadado', () => {
     // Mesma família das datas da timeline, do cabeçalho e do "Ver detalhe de
     // cada posição" — não é um quarto tratamento tipográfico.
     render(<EndNav />);
@@ -150,14 +146,14 @@ describe('fim do conteúdo — o case acrescenta, não substitui', () => {
       '/projetos/eaifez',
     );
     // O nome do projeto entra no rótulo: "próximo" sozinho não diz o que vem, e
-    // o §4.6 quer que o segundo case seja oferecido "sem diminuir".
+    // o segundo case tem que ser oferecido sem diminuir.
     expect(screen.getByRole('link', { name: /próximo case/i })).toHaveTextContent('E aí, fez?');
   });
 
   it('no último case, oferece a /projetos em vez de fechar um laço', () => {
     // Voltar ao primeiro devolveria ao leitor um case que ele acabou de passar.
     // A /projetos é a rota pai e tem a experiência profissional, que é a única
-    // coisa que ainda não foi lida por quem chegou até aqui (§3.2).
+    // coisa que ainda não foi lida por quem chegou até aqui.
     render(<CaseEndNav next={null} />);
     expect(screen.getAllByRole('link').map((a) => [a.textContent, a.getAttribute('href')])).toEqual([
       ['Ver todos os projetos', '/projetos'],
@@ -166,7 +162,7 @@ describe('fim do conteúdo — o case acrescenta, não substitui', () => {
     expect(screen.queryByText(/próximo case/i)).toBeNull();
   });
 
-  it('os dois links do case têm nomes acessíveis distinguíveis (§9)', () => {
+  it('os dois links do case têm nomes acessíveis distinguíveis', () => {
     // Dois links no mesmo bloco com destinos diferentes: se o nome acessível
     // coincidir, quem navega por lista de links tem duas entradas iguais.
     for (const next of [fake('eaifez', 'E aí, fez?'), null]) {

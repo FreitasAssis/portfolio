@@ -9,22 +9,18 @@ import { LAYER_1, LAYER_2, LAYER_2_CAVEAT, LAYER_3_NEVER } from '@/content/tech'
 import { caminhoDoArquivo } from '../helpers/next-image';
 
 /**
- * `/sobre` (§3.4, §4.3, §4.4).
+ * `/sobre`.
  *
- * O teste mais importante deste arquivo é o segundo: os **cinco** parágrafos do
- * §4.3 estão escritos aqui por extenso, e não importados de `content/about.ts`.
- * Importar deixaria o teste concordar com qualquer coisa que alguém escrevesse
- * lá. Copiado à mão, o texto do §4.3 fica travado nos dois sentidos: reescrever
- * quebra, acrescentar quebra.
+ * O teste mais importante deste arquivo é o segundo: os **cinco** parágrafos da
+ * página estão escritos aqui por extenso, e não importados de
+ * `content/about.ts`. Importar deixaria o teste concordar com qualquer coisa
+ * que alguém escrevesse lá. Copiados à mão, eles ficam travados nos dois
+ * sentidos: reescrever quebra, acrescentar quebra.
  *
- * Eram três, e o guarda existia para impedir que o parágrafo final fosse
- * **gerado** — o §4.3 dizia "Não gerar" em letras maiúsculas. O Luiz escreveu os
- * dois últimos e o §12 fechou com "todo o texto do site está escrito", então a
- * trava mudou de alvo sem mudar de força: agora ela impede reescrita e adição
- * a um texto declarado terminado. O último parágrafo em especial tem calibragem
- * anotada no §4.3 ("porta encostada, não trancada nem escancarada"), e um
- * ajuste de temperatura feito de boa-fé é exatamente o tipo de mudança que este
- * teste precisa pegar.
+ * O texto do site está declarado terminado, então é reescrita — e não geração —
+ * o que a trava pega hoje. O último parágrafo em especial é calibrado ("porta
+ * encostada, não trancada nem escancarada"), e um ajuste de temperatura feito
+ * de boa-fé é exatamente o tipo de mudança que este teste precisa pegar.
  *
  * É a mesma disciplina de `tests/unit/experience.test.ts`, e ela nasceu de um
  * erro real neste repo: uma frase escrita ao lado de texto curado achatou "três
@@ -32,8 +28,8 @@ import { caminhoDoArquivo } from '../helpers/next-image';
  */
 const renderPagina = () => render(<SobrePage />);
 
-/** §4.3, literal. Não conserte a pontuação; não "melhore o ritmo". */
-const PARAGRAFOS_DO_BRIEF = [
+/** O texto curado, literal. Não conserte a pontuação; não "melhore o ritmo". */
+const PARAGRAFOS_CURADOS = [
   'Sou santista — nascido em Santos e torcedor do Peixe — e nordestino de coração: moro em Natal, no Rio Grande do Norte. Casado, e músico nas horas vagas.',
   'Programo profissionalmente desde 2017, quando comecei desenvolvendo web no IFRN, como bolsista no campus de Educação a Distância. De lá pra cá passei por startup, consultoria e educação, e hoje sou desenvolvedor full stack sênior na Analytica Ensino — onde acompanho, desde a concepção, uma plataforma educacional usada por cerca de 400 mil alunos, professores e gestores da rede pública do Paraná.',
   'A parte de músico não é hobby desencontrado do resto, já tocava na igreja antes mesmo de programar, inclusive o Asafe veio daqui. Passei anos organizando repertório de Missa em drive, planilha e caderno, e resolvi construir a ferramenta que eu queria ter há tempos, a que torna prático esse trabalho e que se tornou o meu xodó.',
@@ -50,7 +46,7 @@ const secaoDoTexto = (container: HTMLElement) =>
     (s) => s.querySelector('h2') === null,
   )!;
 
-describe('/sobre — o texto do §4.3', () => {
+describe('/sobre — os parágrafos curados', () => {
   it('tem um h1 só', () => {
     renderPagina();
     const h1 = screen.getAllByRole('heading', { level: 1 });
@@ -58,37 +54,36 @@ describe('/sobre — o texto do §4.3', () => {
     expect(h1[0]).toHaveTextContent('Sobre');
   });
 
-  it('traz os cinco parágrafos do brief, verbatim — e nada além', () => {
+  it('traz os cinco parágrafos curados, verbatim — e nada além', () => {
     const { container } = renderPagina();
     const paragrafos = Array.from(secaoDoTexto(container).querySelectorAll('p')).map(
       (p) => p.textContent,
     );
 
     // Cinco, exatamente, e cada um comparado inteiro. Um sexto parágrafo, uma
-    // vírgula trocada ou um "porta escancarada" no lugar do condicional do §4.3
-    // falham aqui — que é o ponto: o §12 declara o texto do site terminado, e
-    // texto terminado não se "melhora" em passagem.
+    // vírgula trocada ou um "porta escancarada" no lugar do condicional falham
+    // aqui — que é o ponto: texto terminado não se "melhora" em passagem.
     //
-    // O retrato passou a morar DENTRO desta seção, entre os parágrafos, então a
-    // contagem virou também a trava contra legenda: uma linha de texto sob a
-    // foto entra aqui como sexto parágrafo e reprova.
-    expect(paragrafos).toEqual(PARAGRAFOS_DO_BRIEF);
+    // O retrato mora DENTRO desta seção, entre os parágrafos, então a contagem
+    // virou também a trava contra legenda: uma linha de texto sob a foto entra
+    // aqui como sexto parágrafo e reprova.
+    expect(paragrafos).toEqual(PARAGRAFOS_CURADOS);
   });
 
-  it('o último parágrafo mantém a calibragem do §4.3 — porta encostada', () => {
+  it('o último parágrafo deixa a porta encostada: nem disponível, nem indisponível', () => {
     const { container } = renderPagina();
     const texto = container.textContent ?? '';
-    // O §4.3 anexa uma nota a este parágrafo: ele "não declara disponibilidade
-    // NEM indisponibilidade". As duas formas de quebrá-lo têm sinais opostos e
-    // são fáceis de escrever sem perceber, então as duas estão travadas.
+    // O parágrafo não declara disponibilidade NEM indisponibilidade. As duas
+    // formas de quebrá-lo têm sinais opostos e são fáceis de escrever sem
+    // perceber, então as duas estão travadas.
     //
-    // Quente demais — vira "disponível para oportunidades", proibido pelo nome
-    // no §1:
+    // Quente demais — vira "disponível para oportunidades", que é a linguagem
+    // de venda que o site não usa:
     expect(texto).not.toMatch(/dispon[íi]vel (para|a)/i);
     expect(texto).not.toMatch(/aberto a (propostas|oportunidades)/i);
     expect(texto).not.toMatch(/procurando (vaga|oportunidade)/i);
     // Frio demais — se o site disser que ele não sai de lá, ninguém o guarda, e
-    // ser guardado é a função da página (§1).
+    // ser guardado é a função da página.
     expect(texto).not.toMatch(/não pretendo sair|não estou (procurando|disponível)/i);
     // E o condicional que sustenta as duas coisas continua escrito.
     expect(texto).toContain('Se um dia aparecer um próximo desafio');
@@ -96,15 +91,14 @@ describe('/sobre — o texto do §4.3', () => {
 
   it('não sobrou placeholder nenhum na página', () => {
     const { container } = renderPagina();
-    // O retrato era o último buraco aberto do site; com a foto no lugar, a
-    // contagem de `{{ }}` aqui é ZERO, e não mais "um, o do retrato".
+    // `{{ }}` é a marca de asset que ainda não chegou. Nenhuma sobra aqui.
     const texto = container.textContent ?? '';
     expect(texto).not.toMatch(/\bem breve\b/i);
     expect(texto).not.toMatch(/lorem ipsum/i);
     expect(texto.match(/\{\{[^}]*\}\}/g) ?? []).toEqual([]);
   });
 
-  it('não escreve adjetivo de venda (§4)', () => {
+  it('não escreve adjetivo de venda', () => {
     const { container } = renderPagina();
     const texto = container.textContent ?? '';
     for (const proibido of [/soluç(ão|ões)/i, /experiências digitais/i, /impulsionar/i]) {
@@ -113,7 +107,7 @@ describe('/sobre — o texto do §4.3', () => {
   });
 });
 
-describe('/sobre — as camadas de tecnologia (§4.4)', () => {
+describe('/sobre — as camadas de tecnologia', () => {
   it('a camada 1 aparece item a item, com destaque', () => {
     renderPagina();
     const tecnologia = secao(/tecnologia/i);
@@ -123,18 +117,18 @@ describe('/sobre — as camadas de tecnologia (§4.4)', () => {
     expect(itens).toEqual([...LAYER_1]);
   });
 
-  it('a camada 1 inclui React Native / Expo, como o CV (§4.5)', () => {
-    // A divergência herdada da Task 4: o §4.4 punha React Native na camada 2, o
-    // CV põe em "Uso hoje". Ganhou o CV — o §4.5 manda os dois contarem a mesma
-    // história com as mesmas palavras, e o dado do próprio site (a stack da
-    // Analytica em content/experience.ts, o Expo no frontmatter do Asafe) já
-    // dizia "uso hoje". A justificativa inteira está em content/tech.ts.
+  it('a camada 1 inclui React Native / Expo, como o CV', () => {
+    // React Native / Expo fica na camada 1, e não na 2: é onde o CV o põe, e o
+    // site e o CV contam a mesma história com as mesmas palavras. O dado do
+    // próprio site já dizia "uso hoje" — a stack da Analytica em
+    // content/experience.ts, o Expo no frontmatter do Asafe. A justificativa
+    // inteira está em content/tech.ts.
     renderPagina();
     const tecnologia = secao(/tecnologia/i);
     expect(within(tecnologia).getByText('React Native / Expo').tagName).toBe('LI');
   });
 
-  it('a camada 2 é um parágrafo só, com a frase de honestidade do brief', () => {
+  it('a camada 2 é um parágrafo só, com a frase de honestidade', () => {
     renderPagina();
     const tecnologia = secao(/tecnologia/i);
     const paragrafo = within(tecnologia)
@@ -150,7 +144,7 @@ describe('/sobre — as camadas de tecnologia (§4.4)', () => {
     expect(paragrafo.querySelector('ul')).toBeNull();
   });
 
-  it('a camada 3 não se lista (§4.4)', () => {
+  it('a camada 3 não se lista', () => {
     const { container } = renderPagina();
     const texto = container.textContent ?? '';
     // "É como um chef listar 'sei usar faca'." `Git` com fronteira de palavra,
@@ -160,11 +154,11 @@ describe('/sobre — as camadas de tecnologia (§4.4)', () => {
     }
   });
 
-  it('nenhuma camada usa ícone (§4.4, §6.5)', () => {
+  it('nenhuma camada usa ícone', () => {
     renderPagina();
     const tecnologia = secao(/tecnologia/i);
-    // "Texto e tipografia bastam, e ficam melhor" — e o §6.5 só admite duas
-    // fontes de imagem no site, nenhuma delas logotipo de linguagem.
+    // Texto e tipografia bastam, e ficam melhor. Só existem duas fontes de
+    // imagem no site, e nenhuma delas é logotipo de linguagem.
     expect(tecnologia.querySelectorAll('svg')).toHaveLength(0);
     expect(tecnologia.querySelectorAll('img')).toHaveLength(0);
   });
@@ -222,8 +216,8 @@ describe('/sobre — retrato e formação', () => {
     // tela ouve, e ela continua certa se alguém trocar o CSS por grade ou
     // `order`. O teste em pixel que confere a centralização é o de e2e — aqui
     // o jsdom não faz layout nenhum.
-    const terceiro = screen.getByText(PARAGRAFOS_DO_BRIEF[2]);
-    const quarto = screen.getByText(PARAGRAFOS_DO_BRIEF[3]);
+    const terceiro = screen.getByText(PARAGRAFOS_CURADOS[2]);
+    const quarto = screen.getByText(PARAGRAFOS_CURADOS[3]);
     expect(
       terceiro.compareDocumentPosition(retrato!) & Node.DOCUMENT_POSITION_FOLLOWING,
       'o retrato não vem depois do terceiro parágrafo',
@@ -261,19 +255,20 @@ describe('/sobre — retrato e formação', () => {
     expect(existsSync(join(process.cwd(), 'public', src))).toBe(true);
   });
 
-  it('mostra a formação sem nenhum dado de documento (§4.3)', () => {
+  it('mostra a formação sem nenhum dado de documento', () => {
     const { container } = renderPagina();
     const formacao = secao(/formação/i);
     expect(formacao.textContent).toContain('Tecnólogo em Análise e Desenvolvimento de Sistemas');
     expect(formacao.textContent).toContain('Universidade Potiguar (UnP)');
     expect(formacao.textContent).toContain('conclusão em dezembro de 2022');
 
-    // "Sem foto de documento, sem data de nascimento, sem RG" — vale para a
+    // Sem foto de documento, sem data de nascimento, sem RG — vale para a
     // página tanto quanto para o CV.
     //
-    // O padrão NÃO pode ser `nascid`: o §4.3 abre com "nascido em Santos", que
-    // é biografia e não documento. O que não pode aparecer é data — de
-    // nascimento ou em qualquer outro lugar da página — e número de documento.
+    // O padrão NÃO pode ser `nascid`: o primeiro parágrafo abre com "nascido em
+    // Santos", que é biografia e não documento. O que não pode aparecer é data
+    // — de nascimento ou em qualquer outro lugar da página — e número de
+    // documento.
     const texto = container.textContent ?? '';
     expect(texto).not.toMatch(/\bRG\b|\bCPF\b/);
     expect(texto).not.toMatch(/data de nascimento|nascid[oa] em \d/i);
@@ -282,21 +277,21 @@ describe('/sobre — retrato e formação', () => {
   });
 });
 
-describe('/sobre — guardrails do brief', () => {
-  it('põe pessoa antes de tecnologia (§3.4)', () => {
+describe('/sobre — guardrails de conteúdo', () => {
+  it('põe pessoa antes de tecnologia', () => {
     renderPagina();
     const h2 = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
     expect(h2).toEqual(['Tecnologia', 'Formação']);
-    // E o texto do §4.3 vem antes do primeiro h2 — "pessoa primeiro,
-    // tecnologia depois" é a ordem da página, não uma intenção.
+    // E o texto vem antes do primeiro h2 — "pessoa primeiro, tecnologia depois"
+    // é a ordem da página, não uma intenção.
     const primeiroH2 = screen.getByRole('heading', { level: 2, name: /tecnologia/i });
-    const primeiroParagrafo = screen.getByText(PARAGRAFOS_DO_BRIEF[0]);
+    const primeiroParagrafo = screen.getByText(PARAGRAFOS_CURADOS[0]);
     expect(
       primeiroParagrafo.compareDocumentPosition(primeiroH2) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 
-  it('não existe seção sobre IA (§4.2.1)', () => {
+  it('não existe seção sobre IA', () => {
     const { container } = renderPagina();
     const titulos = screen.getAllByRole('heading').map((h) => h.textContent ?? '');
     expect(titulos.filter((t) => /^ia\b|intelig[êe]ncia artificial/i.test(t))).toEqual([]);
@@ -309,7 +304,7 @@ describe('/sobre — guardrails do brief', () => {
   });
 });
 
-describe('/sobre — fim da página (§6.4, §9)', () => {
+describe('/sobre — fim da página', () => {
   it('fecha com o "voltar ao topo", no mesmo idioma dos cases', () => {
     // 2,1 telas em 1440×900 — a mais curta das três que ganharam o bloco, e
     // ainda assim cinco parágrafos, o retrato, duas camadas de tecnologia e a
@@ -320,7 +315,7 @@ describe('/sobre — fim da página (§6.4, §9)', () => {
     expect(screen.getByRole('navigation', { name: 'Fim da página' })).toContainElement(topo);
   });
 
-  it('não inventa um "próximo" — o bloco leva só a âncora (§4.6)', () => {
+  it('não inventa um "próximo" — o bloco leva só a âncora', () => {
     renderPagina();
     const bloco = screen.getByRole('navigation', { name: 'Fim da página' });
     expect(within(bloco).getAllByRole('link')).toHaveLength(1);

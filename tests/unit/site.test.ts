@@ -9,7 +9,8 @@ import robots from '@/app/robots';
 import sitemap, { STATIC_ROUTES } from '@/app/sitemap';
 
 /**
- * §8, na origem: o par título/descrição de cada rota, antes de virar HTML.
+ * Os metadados na origem: o par título/descrição de cada rota, antes de virar
+ * HTML.
  *
  * O teste que prova que isso chegou ao artefato publicado é
  * `tests/e2e/seo.spec.ts`, que lê o `out/`. Os dois existem e não se
@@ -33,7 +34,7 @@ async function todasAsRotas(): Promise<{ path: string; title: string; descriptio
   ];
 }
 
-describe('dicionário de metadados (§8)', () => {
+describe('dicionário de metadados', () => {
   it('cobre as seis rotas do site', async () => {
     expect((await todasAsRotas()).map((r) => r.path)).toEqual([
       '/',
@@ -55,14 +56,14 @@ describe('dicionário de metadados (§8)', () => {
     expect(new Set(descriptions).size).toBe(descriptions.length);
   });
 
-  it('segue os três padrões de título do §8', async () => {
+  it('segue os três padrões de título: home, página fixa e case', async () => {
     expect(META.home.title).toBe('Luiz Freitas — desenvolvedor full stack');
     expect(META.sobre.title).toBe('Sobre — Luiz Freitas');
     expect(caseTitle('Asafe')).toBe('Asafe — projeto de Luiz Freitas');
   });
 
   it('o título do case sai do nome do projeto, não de uma lista', async () => {
-    // A promessa do §2: um `.mdx` novo nasce com título correto sem código.
+    // A promessa: um `.mdx` novo nasce com título correto sem tocar em código.
     for (const project of await getAllProjects()) {
       expect(caseTitle(project.name)).toContain(project.name);
       expect(caseTitle(project.name)).toContain(AUTHOR);
@@ -70,9 +71,8 @@ describe('dicionário de metadados (§8)', () => {
   });
 
   /**
-   * O §8 manda a descrição do site antigo sair inteira, e o §4 fixa o registro.
-   * A lista é a do brief, palavra por palavra, mais os dois fragmentos da
-   * descrição antiga que a identificam sem ambiguidade.
+   * O vocabulário de venda que o site antigo usava, palavra por palavra, mais
+   * os dois fragmentos da descrição antiga que a identificam sem ambiguidade.
    */
   const PROIBIDAS = [
     'soluções',
@@ -85,7 +85,7 @@ describe('dicionário de metadados (§8)', () => {
     'transformando ideias',
   ];
 
-  it.each(PROIBIDAS)('nenhuma descrição usa "%s" (§4, §8)', async (palavra) => {
+  it.each(PROIBIDAS)('nenhuma descrição usa "%s"', async (palavra) => {
     for (const { path, description } of await todasAsRotas()) {
       expect(description.toLowerCase(), `em ${path}`).not.toContain(palavra);
     }
@@ -100,7 +100,7 @@ describe('dicionário de metadados (§8)', () => {
     }
   });
 
-  it('a descrição da home carrega o dado do §4.1', async () => {
+  it('a descrição da home carrega os 400 mil e a Analytica', async () => {
     // "o dado mais forte do currículo e a única coisa da página que não pode
     // ser dita por qualquer outro dev".
     expect(META.home.description).toContain('400 mil');
@@ -108,7 +108,7 @@ describe('dicionário de metadados (§8)', () => {
   });
 });
 
-describe('metadata por rota (§8)', () => {
+describe('metadata por rota', () => {
   it('tem canonical relativo à raiz — o Next resolve contra o metadataBase', () => {
     const meta = pageMetadata({ meta: META.sobre, path: '/sobre' });
     expect(meta.alternates?.canonical).toBe('/sobre');
@@ -132,7 +132,7 @@ describe('metadata por rota (§8)', () => {
   });
 });
 
-describe('sitemap (§8)', () => {
+describe('sitemap', () => {
   it('lista as seis rotas, em URL absoluta sob o domínio', async () => {
     expect((await sitemap()).map((entry) => entry.url)).toEqual([
       'https://luizfreitas.com.br',
@@ -151,7 +151,7 @@ describe('sitemap (§8)', () => {
     }
   });
 
-  it('as rotas fixas batem com as chaves do dicionário do §8', () => {
+  it('as rotas fixas do sitemap batem com as chaves do dicionário de metadados', () => {
     // Se nascer uma página nova com metadado e ninguém a puser no sitemap — ou
     // o contrário — a divergência falha aqui, e não em produção.
     const doDicionario = ['/', '/projetos', '/sobre', '/contato'];
@@ -166,7 +166,7 @@ describe('sitemap (§8)', () => {
   });
 });
 
-describe('robots (§8)', () => {
+describe('robots', () => {
   it('libera o site inteiro e aponta o sitemap em URL absoluta', () => {
     const r = robots();
     expect(r.rules).toEqual([{ userAgent: '*', allow: '/' }]);
@@ -174,12 +174,12 @@ describe('robots (§8)', () => {
   });
 });
 
-describe('JSON-LD Person (§8)', () => {
+describe('JSON-LD Person', () => {
   it('serializa para JSON válido', () => {
     expect(() => JSON.parse(JSON.stringify(PERSON))).not.toThrow();
   });
 
-  it('tem os cinco campos que o §8 nomeia', () => {
+  it('carrega nome, cargo, URL, sameAs e endereço', () => {
     expect(PERSON['@type']).toBe('Person');
     expect(PERSON.name).toBe(AUTHOR);
     expect(PERSON.jobTitle).toBe(JOB_TITLE);

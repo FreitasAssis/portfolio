@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * `/contato` (§3.4) contra o export estático.
+ * `/contato` contra o export estático.
  *
  * O teste que só existe aqui é o do CV: um `href` correto no HTML não prova que
  * o arquivo foi publicado. O `next build` não confere `/public`, e um PDF que
@@ -11,18 +11,17 @@ import { expect, test } from '@playwright/test';
 
 const CV = '/cv/luiz-freitas-2026-07.pdf';
 
-test('a página é uma lista de canais, sem triagem (§3.4)', async ({ page }) => {
+test('a página é uma lista de canais, sem triagem', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 800 });
   await page.goto('/contato');
 
-  // Havia aqui um teste que media a igualdade das duas caixas ("Tenho uma
-  // vaga" / "Tenho um projeto") em pixel. O §3.4 tirou os dois caminhos —
-  // "pressupunham venda ativa" — e o §1 explicou por quê: o site não existe
-  // para converter. O que sobrou a medir é que a bifurcação não voltou.
+  // Os dois caminhos ("Tenho uma vaga" / "Tenho um projeto") saíram porque
+  // pressupunham venda ativa: o site existe para ser alcançável, não para
+  // converter. O que se mede aqui é que a bifurcação não voltou.
   const corpo = await page.locator('body').innerText();
   expect(corpo).not.toMatch(/Tenho uma vaga|Tenho um projeto|Escolha o caminho/i);
 
-  // Os quatro canais do §3.4, na ordem do brief. Escopo no `main`: o rodapé
+  // Os quatro canais, na ordem. Escopo no `main`: o rodapé
   // repete e-mail, GitHub e LinkedIn em toda página, e o que se mede aqui é o
   // conteúdo da rota.
   const canais = page.locator('main a');
@@ -35,7 +34,7 @@ test('a página é uma lista de canais, sem triagem (§3.4)', async ({ page }) =
   ]);
 });
 
-test('o CV está publicado e responde 200 (§7)', async ({ page, request }) => {
+test('o CV está publicado e responde 200', async ({ page, request }) => {
   await page.goto('/contato');
   const link = page.getByRole('link', { name: 'Baixar o CV em PDF' });
   await expect(link).toHaveAttribute('href', CV);
@@ -80,30 +79,30 @@ test('o retrato vai ao ar, no recorte quadrado', async ({ page }) => {
   await expect(retrato).not.toHaveAttribute('loading', 'lazy');
 });
 
-test('o e-mail está escrito por extenso, sem botão de copiar (§3.4)', async ({ page }) => {
+test('o e-mail está escrito por extenso, sem botão de copiar', async ({ page }) => {
   await page.goto('/contato');
   const email = page.getByRole('link', { name: 'luiz_dev@outlook.com' });
   await expect(email.first()).toBeVisible();
   await expect(email.first()).toHaveAttribute('href', 'mailto:luiz_dev@outlook.com');
   // Sem botão: o gesto de copiar já existe no sistema operacional em cima de um
-  // link mailto:, e um botão custaria JS, estado e região aria-live (§9).
+  // link mailto:, e um botão custaria JS, estado e uma região aria-live.
   await expect(page.getByRole('button', { name: /copiar/i })).toHaveCount(0);
 });
 
-test('não há formulário de contato (§3.4, §11)', async ({ page }) => {
+test('não há formulário de contato', async ({ page }) => {
   await page.goto('/contato');
   await expect(page.locator('form')).toHaveCount(0);
   await expect(page.locator('input, textarea')).toHaveCount(0);
 });
 
-test('o foco de teclado é visível nos links (§9)', async ({ page }) => {
+test('o foco de teclado é visível nos links', async ({ page }) => {
   await page.goto('/contato');
   const cv = page.getByRole('link', { name: 'Baixar o CV em PDF' });
   await cv.focus();
   expect(await cv.evaluate((el) => getComputedStyle(el).outlineWidth)).not.toBe('0px');
 });
 
-test('cabe em 360px sem rolagem horizontal, nos dois temas (§9)', async ({ page }) => {
+test('cabe em 360px sem rolagem horizontal, nos dois temas', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
 
   for (const tema of ['light', 'dark'] as const) {
@@ -121,14 +120,14 @@ test('cabe em 360px sem rolagem horizontal, nos dois temas (§9)', async ({ page
   }
 });
 
-test('não tem "voltar ao topo" — a página cabe numa tela (§3.4)', async ({ page }) => {
+test('não tem "voltar ao topo" — a página cabe numa tela', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto('/contato');
 
   // A exclusão é decisão registrada, não esquecimento. As outras três rotas de
   // conteúdo fecham com o bloco de `components/EndNav.tsx`; esta não, porque o
-  // §3.4 a encolheu a um título, uma linha e quatro links — um atalho para o topo
-  // numa página que cabe numa tela é ruído.
+  // página é um título, uma linha e quatro links — um atalho para o topo numa
+  // página que cabe numa tela é ruído.
   //
   // É também o teste que impede a "simplificação" de mover o bloco para o
   // rodapé: lá ele apareceria nas seis rotas de uma vez, inclusive aqui.

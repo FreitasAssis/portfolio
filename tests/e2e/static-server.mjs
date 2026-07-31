@@ -43,7 +43,7 @@ const TYPES = {
   '.ico': 'image/x-icon',
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
-  // O CV (§7). Sem esta linha o arquivo ainda seria servido, mas como
+  // O CV. Sem esta linha o arquivo ainda seria servido, mas como
   // application/octet-stream — e o teste que confere o download do /contato
   // passaria a medir o fallback em vez do tipo real.
   '.pdf': 'application/pdf',

@@ -5,7 +5,7 @@ import { inflateSync } from 'node:zlib';
 import { expect, test } from '@playwright/test';
 
 /**
- * §8 contra o artefato publicado.
+ * Os metadados contra o artefato publicado.
  *
  * ## Por que aqui, e não num teste unitário
  *
@@ -38,7 +38,7 @@ const OUT = fileURLToPath(new URL('../../out/', import.meta.url));
  */
 const SITE = 'https://luizfreitas.com.br';
 
-/** As seis rotas do §8, com o arquivo que cada uma produz no export. */
+/** As seis rotas do site, com o arquivo que cada uma produz no export. */
 const ROTAS = [
   { path: '/', file: 'index.html' },
   { path: '/projetos', file: 'projetos.html' },
@@ -85,7 +85,7 @@ function descriptions(): string[] {
   return ROTAS.map(({ file }) => metaContent(html(file), 'description'));
 }
 
-test.describe('metadados por rota (§8)', () => {
+test.describe('metadados por rota', () => {
   test('nenhuma das seis rotas fica sem title', () => {
     for (const [i, title] of titles().entries()) {
       expect(title, `sem <title> em ${ROTAS[i].path}`).not.toBe('');
@@ -108,7 +108,7 @@ test.describe('metadados por rota (§8)', () => {
     }
   });
 
-  test('a description do site antigo não sobreviveu em lugar nenhum (§8)', () => {
+  test('a description do site antigo não sobreviveu em lugar nenhum', () => {
     for (const { path, file } of ROTAS) {
       const source = html(file).toLowerCase();
       expect(source, `em ${path}`).not.toContain('transformando ideias');
@@ -130,7 +130,7 @@ test.describe('metadados por rota (§8)', () => {
     }
   });
 
-  test('o título do case sai do nome no frontmatter (§2 + §8)', () => {
+  test('o título do case sai do nome no frontmatter', () => {
     const lista = titles();
     expect(lista[ROTAS.findIndex((r) => r.path === '/projetos/asafe')]).toBe(
       'Asafe — projeto de Luiz Freitas',
@@ -150,14 +150,14 @@ test.describe('metadados por rota (§8)', () => {
     }
   });
 
-  test('o lang do §8 sobreviveu em toda rota', () => {
+  test('o lang="pt-BR" sobreviveu em toda rota', () => {
     for (const { path, file } of ROTAS) {
       expect(html(file), `em ${path}`).toContain('lang="pt-BR"');
     }
   });
 });
 
-test.describe('§2 — baixa manutenção, no artefato publicado', () => {
+test.describe('baixa manutenção, no artefato publicado', () => {
   /**
    * A contagem de anos escrita à mão, varrida do HTML que vai ao ar.
    *
@@ -180,24 +180,24 @@ test.describe('§2 — baixa manutenção, no artefato publicado', () => {
       const achado = CONTAGEM_DE_ANOS.exec(html(file));
       expect(
         achado?.[0],
-        `${path} publica "${achado?.[0]}" — o §2 proíbe contagem de anos à mão, ` +
+        `${path} publica "${achado?.[0]}" — contagem de anos à mão não é permitida, ` +
           'porque ela erra sozinha e ninguém percebe. Ancore no ano ("desde 2017").',
       ).toBeUndefined();
     }
   });
 
   test('"nove anos" não sobreviveu em canto nenhum do export', () => {
-    // O caso concreto que originou a regra, nomeado no §2 e no §4.1. Vale para
-    // o sitemap e o robots também: eles saem do mesmo dicionário.
+    // O caso concreto que originou a regra. Vale para o sitemap e o robots
+    // também: eles saem do mesmo dicionário.
     for (const file of [...ROTAS.map((r) => r.file), 'sitemap.xml', 'robots.txt']) {
       expect(html(file).toLowerCase(), `em ${file}`).not.toContain('nove anos');
     }
   });
 
-  test('a âncora do §4.1 chegou à home e ao /projetos', () => {
+  test('o "desde 2017" chegou à home e ao /projetos', () => {
     // A proibição não pode ser cumprida apagando o dado. "Desde 2017" é o que
-    // fica no lugar da contagem, e o §1 põe a description entre as coisas mais
-    // importantes do site.
+    // fica no lugar da contagem, e a description é uma das coisas mais lidas do
+    // site: ela é o que o Google mostra.
     expect(html('index.html')).toContain('Construo software desde 2017');
     expect(metaContent(html('projetos.html'), 'description')).toContain('desde 2017');
   });
@@ -312,7 +312,7 @@ test.describe('OG image por rota', () => {
   });
 });
 
-test.describe('sitemap e robots (§8)', () => {
+test.describe('sitemap e robots', () => {
   test('o export estático emite os dois arquivos', () => {
     expect(() => html('sitemap.xml')).not.toThrow();
     expect(() => html('robots.txt')).not.toThrow();
@@ -353,7 +353,7 @@ test.describe('sitemap e robots (§8)', () => {
   });
 });
 
-test.describe('JSON-LD Person (§8)', () => {
+test.describe('JSON-LD Person', () => {
   /** O bloco da home, extraído do HTML publicado. */
   function blocos(file: string): string[] {
     return [
@@ -370,7 +370,7 @@ test.describe('JSON-LD Person (§8)', () => {
     }
   });
 
-  test('o bloco faz parse e carrega os campos do §8', () => {
+  test('o bloco faz parse e carrega nome, cargo, URL, sameAs e endereço', () => {
     const person = JSON.parse(blocos('index.html')[0]);
     expect(person['@context']).toBe('https://schema.org');
     expect(person['@type']).toBe('Person');

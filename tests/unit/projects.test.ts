@@ -25,7 +25,7 @@ describe('carregador de projetos', () => {
     expect(all.map((p) => p.slug)).toContain('asafe');
   });
 
-  it('ordena pelo campo order — o Asafe abre a seção (§4.6)', async () => {
+  it('ordena pelo campo order — o Asafe abre a seção', async () => {
     const all = await getAllProjects();
     expect(all[0].slug).toBe('asafe');
   });
@@ -39,18 +39,18 @@ describe('carregador de projetos', () => {
     expect(p.accent).toMatch(/^#[0-9A-Fa-f]{6}$/);
   });
 
-  it('traz os dois cases do §4.6, e só eles', async () => {
+  it('traz os dois cases publicados, e só eles', async () => {
     const all = await getAllProjects();
     expect(all.map((p) => p.slug)).toEqual(['asafe', 'eaifez']);
   });
 
-  it('o repo do "E aí, fez?" é privado — repoUrl vem nulo (§4.6)', async () => {
+  it('o repo do "E aí, fez?" é privado — repoUrl vem nulo', async () => {
     // O template não pode renderizar um botão morto para o GitHub.
     expect((await getProject('eaifez')).repoUrl).toBeNull();
     expect((await getProject('asafe')).repoUrl).toBe('https://github.com/FreitasAssis/Asafe');
   });
 
-  it('todo projeto aponta para um app no ar (§4.6)', async () => {
+  it('todo projeto aponta para um app no ar', async () => {
     for (const p of await getAllProjects()) {
       expect(p.liveUrl).toMatch(/^https:\/\//);
       expect(p.status).toBe('live');
@@ -59,7 +59,7 @@ describe('carregador de projetos', () => {
 });
 
 /* ------------------------------------------------------------------------- *
- * `nextProject` — o encadeamento do fim do case (§4.6).
+ * `nextProject` — o encadeamento do fim do case.
  *
  * O ponto destes testes é provar DERIVAÇÃO, não o par que existe hoje. Um
  * `slug === 'asafe' ? 'eaifez' : null` escrito à mão passaria em qualquer
@@ -67,7 +67,7 @@ describe('carregador de projetos', () => {
  * com slugs que não existem no repo e em ordem embaralhada.
  * ------------------------------------------------------------------------- */
 
-describe('próximo case (§4.6)', () => {
+describe('próximo case', () => {
   /** Só os dois campos que a função lê. O resto do `Project` é irrelevante. */
   const fake = (slug: string, order: number) => ({ slug, order, name: slug }) as unknown as Project;
 
@@ -82,9 +82,9 @@ describe('próximo case (§4.6)', () => {
     expect(nextProject(lista, 'terceiro')).toBeNull();
   });
 
-  it('um case novo entre os dois entra na corrente sozinho (§2)', () => {
-    // A promessa do §2 é "projeto novo = um arquivo, zero mexida em código".
-    // Aqui ela é medida: os mesmos dois slugs de hoje, um terceiro no meio da
+  it('um case novo entre os dois entra na corrente sozinho', () => {
+    // A promessa é "projeto novo = um arquivo, zero mexida em código". Aqui ela
+    // é medida: os mesmos dois slugs de hoje, um terceiro no meio da
     // ordem, e o encadeamento se reorganiza sem nenhuma linha de código.
     // Um par escrito à mão continuaria mandando o Asafe direto ao "E aí, fez?"
     // e pularia o case novo, sem erro nenhum.
@@ -181,7 +181,7 @@ function sem(campo: string): string {
   return VALIDO.replace(new RegExp(`^${campo}:.*\\n`, 'm'), '');
 }
 
-describe('validação do frontmatter (§5)', () => {
+describe('validação do frontmatter', () => {
   it('aceita o arquivo bem formado', () => {
     const p = parseProject(VALIDO, 'asafe.mdx');
     expect(p.name).toBe('Asafe');
@@ -204,10 +204,10 @@ describe('validação do frontmatter (§5)', () => {
     );
   });
 
-  // §8: a descrição do case é o que o Google e o LinkedIn mostram sozinho, sem
-  // nada da página em volta. Curta demais não diz o que o projeto é; longa
-  // demais aposta num fim de frase que ninguém lê.
-  it('rejeita description fora da faixa de 60 a 200 caracteres (§8)', () => {
+  // A descrição do case é o que o Google e o LinkedIn mostram sozinho, sem nada
+  // da página em volta. Curta demais não diz o que o projeto é; longa demais
+  // aposta num fim de frase que ninguém lê.
+  it('rejeita description fora da faixa de 60 a 200 caracteres', () => {
     const curta = VALIDO.replace(/^description:.*$/m, 'description: Um app.');
     expect(() => parseProject(curta, 'asafe.mdx')).toThrow(/description.*7 caracteres/);
 
@@ -231,7 +231,7 @@ describe('validação do frontmatter (§5)', () => {
     );
   });
 
-  it('rejeita kind e status fora do vocabulário do §5', () => {
+  it('rejeita kind e status fora do vocabulário do frontmatter', () => {
     expect(() => parseProject(VALIDO.replace('kind: own', 'kind: pessoal'), 'asafe.mdx')).toThrow(
       /kind/,
     );
@@ -245,20 +245,20 @@ describe('validação do frontmatter (§5)', () => {
   });
 
   it('rejeita slug sem bloco [data-accent] correspondente no CSS', () => {
-    // A cor injetada mora no globals.css (§6.2). Um case cujo slug não tem
+    // A cor injetada mora no app/globals.css. Um case cujo slug não tem
     // bloco lá renderiza a capa em cinza e o texto em cinza, sem erro nenhum.
     const outro = VALIDO.replace('slug: asafe', 'slug: novoapp');
     expect(() => parseProject(outro, 'novoapp.mdx')).toThrow(/data-accent/);
   });
 
-  it('rejeita stack vazia — a stack é legenda do projeto (§2)', () => {
+  it('rejeita stack vazia — a stack é legenda do projeto', () => {
     expect(() => parseProject(VALIDO.replace(/stack:\n(  - .*\n|    .*\n)+/, 'stack: []\n'), 'asafe.mdx')).toThrow(
       /stack/,
     );
   });
 });
 
-describe('validação do corpo — o template do §3.3 é fixo', () => {
+describe('validação do corpo — o template do case é fixo', () => {
   it('cobra a seção que faltar', () => {
     expect(() => parseProject(VALIDO.replace('## Estado', '## Situação'), 'asafe.mdx')).toThrow(
       /asafe\.mdx.*Estado/,
@@ -272,7 +272,7 @@ describe('validação do corpo — o template do §3.3 é fixo', () => {
     expect(() => parseProject(VALIDO.replace('<Stack />', ''), 'asafe.mdx')).toThrow(/Stack/);
   });
 
-  it('cobra a ordem do §3.3, não só a presença', () => {
+  it('cobra a ordem das seções, não só a presença', () => {
     // Decisões depois de Estado é um case que vira vitrine com apêndice.
     const trocado = FRONTMATTER + BODY.replace('<Decisoes />\n\n<Stack />\n\n## Estado', '## Estado\n\n<Decisoes />\n\n<Stack />');
     expect(() => parseProject(trocado, 'asafe.mdx')).toThrow(/ordem/i);
@@ -280,11 +280,11 @@ describe('validação do corpo — o template do §3.3 é fixo', () => {
 });
 
 /* ------------------------------------------------------------------------- *
- * Decisões — o ativo principal do site (§2). O formato é o que prova
- * senioridade; se ele derreter em prosa solta, o case vira vitrine (§3.3).
+ * Decisões — o ativo principal do site. O formato é o que prova senioridade;
+ * se ele derreter em prosa solta, o case vira vitrine.
  * ------------------------------------------------------------------------- */
 
-describe('decisões (§3.3)', () => {
+describe('decisões', () => {
   it('cada case traz de 3 a 5 decisões', async () => {
     for (const p of await getAllProjects()) {
       expect(p.decisions.length).toBeGreaterThanOrEqual(3);
@@ -309,7 +309,7 @@ describe('decisões (§3.3)', () => {
     expect(() => parseProject(semPorque, 'asafe.mdx')).toThrow(/because/);
   });
 
-  it('rejeita menos de 3 decisões — o §3.3 não deixa o case ficar raso', () => {
+  it('rejeita menos de 3 decisões — menos que isso deixa o case raso', () => {
     const duas = VALIDO.replace(
       "  - chose: licença de uso\n    insteadOf: cessão de direitos\n    because: '{{ }}'\n",
       '',
@@ -322,7 +322,7 @@ describe('decisões (§3.3)', () => {
  * `because` e `why` são compilados como MDX, para que a decisão respire em
  * parágrafos e chame `song_content` de `song_content`. O preço disso é que MDX
  * aceita qualquer coisa: um `##` aqui dentro entra na lista de `<h2>` da página
- * e quebra o índice fixo do §3.3, sem erro nenhum. Estes testes são a porta
+ * e quebra o índice fixo do case, sem erro nenhum. Estes testes são a porta
  * fechada — o mapa restrito de componentes só estiliza o que passar por aqui.
  * ------------------------------------------------------------------------- */
 
@@ -365,7 +365,7 @@ describe('prosa do frontmatter', () => {
     //
     // O teto é por PARÁGRAFO, não pelo campo — o campo pode (e deve) ser longo
     // quando a decisão é densa; o que não pode é não respirar. 90 palavras já
-    // são ~9 linhas na coluna de 68 caracteres do §6.3.
+    // são ~9 linhas na coluna de 68 caracteres do site.
     //
     // Isto também pega o erro de YAML mais fácil de cometer aqui: escrever o
     // campo com `>-` em vez de `|-`. O escalar dobrado transforma linha em
@@ -383,12 +383,12 @@ describe('prosa do frontmatter', () => {
 });
 
 /* ------------------------------------------------------------------------- *
- * Prints (§4.7 e §9)
+ * Prints
  * ------------------------------------------------------------------------- */
 
 const ALT_PREGUIÇOSO = /^(print|screenshot|imagem|foto|captura)$/i;
 
-describe('prints (§9)', () => {
+describe('prints', () => {
   it('todo print tem alt descritivo, não "print"', async () => {
     for (const p of await getAllProjects()) {
       for (const shot of [p.cover, ...p.shots]) {
@@ -408,7 +408,7 @@ describe('prints (§9)', () => {
     expect(() => parseProject(generico, 'asafe.mdx')).toThrow(/alt/);
   });
 
-  it('a capa também é um print, e também precisa de alt (§4.7)', async () => {
+  it('a capa também é um print, e também precisa de alt', async () => {
     const p = await getProject('asafe');
     expect(p.cover.alt.length).toBeGreaterThan(20);
   });
@@ -418,7 +418,7 @@ describe('prints (§9)', () => {
    *
    * As duas capas têm orientações diferentes, e de propósito: a do Asafe é
    * retrato (uma tela de repertório) e a do "E aí, fez?" é a imagem OG do app,
-   * 1200×630, "o único elemento projetado para ser visto fora do app" (§4.7).
+   * 1200×630 — o único elemento do app projetado para ser visto fora dele.
    * Nas páginas de case isso é certo e fica. No card, não: ali os dois são
    * vistos no mesmo instante oferecendo a mesma coisa, e um celular alto ao
    * lado de um cartão largo faz o olho ler duas CATEGORIAS de coisa em vez de
@@ -460,7 +460,7 @@ describe('prints (§9)', () => {
     expect(() => parseProject(paisagem, 'asafe.mdx')).toThrow(/asafe\.mdx.*cardShot.*retrato/);
   });
 
-  it('o cardShot declarado passa pelas mesmas regras de print (§9)', () => {
+  it('o cardShot declarado passa pelas mesmas regras de print', () => {
     const comCard = (campos: string) =>
       VALIDO.replace('shots:', `cardShot:\n${campos}\nshots:`);
     // alt preguiçoso
@@ -481,7 +481,7 @@ describe('prints (§9)', () => {
     ).toThrow(/cardShot.*width/);
   });
 
-  it('no máximo 3 prints além da capa (§4.7)', async () => {
+  it('no máximo 3 prints além da capa', async () => {
     for (const p of await getAllProjects()) {
       expect(p.shots.length).toBeGreaterThanOrEqual(1);
       expect(p.shots.length).toBeLessThanOrEqual(3);
@@ -490,8 +490,8 @@ describe('prints (§9)', () => {
 });
 
 /* ------------------------------------------------------------------------- *
- * Dimensão declarada (§9: "Imagens em .webp, com next/image e dimensões
- * declaradas").
+ * Dimensão declarada — imagens em `.webp`, com `next/image` e `width`/`height`
+ * no atributo.
  *
  * O número mora no frontmatter porque `parseProject` é puro e não lê disco. O
  * preço disso é que ele pode mentir sobre o arquivo — e dimensão errada é pior
@@ -540,7 +540,7 @@ function todosOsPrints(p: Awaited<ReturnType<typeof getProject>>) {
   return [p.cover, p.cardShot, ...p.shots];
 }
 
-describe('dimensão dos prints (§9)', () => {
+describe('dimensão dos prints', () => {
   it('a medida declarada é a medida do arquivo', async () => {
     let conferidos = 0;
     for (const p of await getAllProjects()) {
@@ -560,10 +560,9 @@ describe('dimensão dos prints (§9)', () => {
     expect(conferidos).toBe(10);
   });
 
-  it('nenhum print pendente sobrou (§0)', async () => {
-    // Os dois cases estão capturados. Enquanto um deles não estava, este teste
-    // afirmava a convivência dos dois estados; agora afirma o fim dela. A regra
-    // por print continua sendo a mesma, e é ela que segura um projeto novo.
+  it('nenhum print pendente sobrou', async () => {
+    // Os dois cases estão capturados. A regra por print continua valendo mesmo
+    // assim, e é ela que segura o próximo projeto.
     for (const p of await getAllProjects()) {
       for (const shot of todosOsPrints(p)) {
         expect(isShotPending(shot), `${p.slug}: ${shot.alt} ainda é {{ }}`).toBe(false);
@@ -575,7 +574,7 @@ describe('dimensão dos prints (§9)', () => {
 
   it('o caminho do print pendente continua de pé para o próximo projeto', () => {
     // Nenhum conteúdo real exercita mais o `{{ }}`, então quem mantém esse
-    // ramo vivo é este teste sintético. Sem ele, o placeholder do §0 apodrece
+    // ramo vivo é este teste sintético. Sem ele, o placeholder apodrece
     // sem ninguém notar — e ele é o que segura o próximo case a ir ao ar com
     // buraco visível em vez de imagem quebrada.
     const p = parseProject(VALIDO, 'asafe.mdx');
@@ -610,7 +609,7 @@ describe('dimensão dos prints (§9)', () => {
     );
   });
 
-  it('recusa src que não é .webp em public/ (§9)', () => {
+  it('recusa src que não é .webp em public/', () => {
     const png = VALIDO.replace(
       "cover:\n  src: '{{ }}'",
       'cover:\n  src: /projects/asafe/cover.png\n  width: 1200\n  height: 630',
@@ -626,7 +625,7 @@ describe('dimensão dos prints (§9)', () => {
  * derruba o build quando um slug novo não tem cor definida.
  * ------------------------------------------------------------------------- */
 
-describe('acento (§6.1)', () => {
+describe('acento', () => {
   it('os slugs do conteúdo, a união Accent e o CSS falam dos mesmos acentos', async () => {
     const doConteudo = (await getAllProjects()).map((p) => p.slug).sort();
     expect([...ACCENTS].sort()).toEqual(doConteudo);
@@ -645,17 +644,17 @@ describe('acento (§6.1)', () => {
 });
 
 /* ------------------------------------------------------------------------- *
- * Stack (§3.3: "com o porquê de cada escolha não-óbvia")
+ * Stack — com o porquê de cada escolha não-óbvia
  * ------------------------------------------------------------------------- */
 
 describe('stack', () => {
-  it('aceita o item simples do §5 e o item com porquê', () => {
+  it('aceita a stack como nome solto e como nome com porquê', () => {
     const p = parseProject(VALIDO, 'asafe.mdx');
     expect(p.stack[0]).toEqual({ name: 'Next.js', why: null });
     expect(p.stack[1]).toEqual({ name: 'Supabase', why: 'banco, auth e RLS num serviço só' });
   });
 
-  it('a stack do Asafe é a mesma do CV (§4.5: as mesmas palavras)', async () => {
+  it('a stack do Asafe usa as mesmas palavras que o CV', async () => {
     const p = await getProject('asafe');
     expect(p.stack.map((s) => s.name)).toEqual([
       'Next.js',

@@ -8,16 +8,15 @@ import { experience } from '@/content/experience';
 import { getAllProjects } from '@/lib/projects';
 
 /**
- * `/projetos` (§3.2). Quatro exigências desta página nasceram como `it.todo` em
- * tests/unit/home.test.tsx, quando a trajetória da home foi condensada para
- * cinco linhas e o conteúdo por posição mudou de endereço:
+ * `/projetos` — a página que carrega o conteúdo por posição, enquanto a
+ * trajetória da home fica em cinco linhas de índice.
  *
- *   - rotular "em paralelo" toda posição sobreposta (§4.5);
- *   - marcar o fio contínuo **sinalizando** o `impact`, sem frase nova (§4.5);
- *   - distinguir sobreposição de fio contínuo sem depender de cor (§4.5, §9);
- *   - mostrar `built`, `impact` e `stack` por posição (§3.2, §4.5).
+ * O que esta página garante, e a home de propósito não:
  *
- * As quatro estão aqui, com o mesmo nome.
+ *   - rotular "em paralelo" toda posição sobreposta;
+ *   - marcar o fio contínuo **sinalizando** o `impact`, sem frase nova;
+ *   - distinguir sobreposição de fio contínuo sem depender de cor;
+ *   - mostrar `built`, `impact` e `stack` por posição.
  */
 
 /** A página é um Server Component assíncrono: lê `content/projects/*.mdx`. */
@@ -42,8 +41,8 @@ const ROTULOS = {
   separator: ' · ',
 } as const;
 
-describe('/projetos — as duas seções (§3.2)', () => {
-  it('rotula as duas explicitamente, e na ordem do §3.2', async () => {
+describe('/projetos — as duas seções', () => {
+  it('rotula as duas seções, projetos próprios antes da experiência', async () => {
     await renderPagina();
     expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
       'Projetos próprios',
@@ -59,8 +58,8 @@ describe('/projetos — as duas seções (§3.2)', () => {
   });
 
   it('não mistura: iniciativa de um lado, experiência do outro', async () => {
-    // "uma mostra iniciativa, a outra mostra experiência" — se as duas se
-    // contaminarem, a distinção que o §3.2 chama de importante deixa de existir.
+    // Uma seção mostra iniciativa, a outra mostra experiência: se as duas se
+    // contaminarem, a distinção deixa de existir.
     await renderPagina();
     const proprios = secao(/projetos próprios/i).textContent ?? '';
     const trabalho = secao(/experiência profissional/i).textContent ?? '';
@@ -82,8 +81,8 @@ describe('/projetos — as duas seções (§3.2)', () => {
   });
 });
 
-describe('/projetos — projetos próprios (§3.2, §4.6)', () => {
-  it('o Asafe abre a seção (§4.6)', async () => {
+describe('/projetos — projetos próprios', () => {
+  it('o Asafe abre a seção', async () => {
     await renderPagina();
     const nomes = within(secao(/projetos próprios/i))
       .getAllByRole('heading', { level: 3 })
@@ -91,7 +90,7 @@ describe('/projetos — projetos próprios (§3.2, §4.6)', () => {
     expect(nomes).toEqual(['Asafe', 'E aí, fez?']);
   });
 
-  it('cada card leva ao app e ao case, e empresta a própria cor (§3.2, §6.1)', async () => {
+  it('cada card leva ao app e ao case, e empresta a própria cor', async () => {
     const { container } = await renderPagina();
     const cards = secao(/projetos próprios/i);
 
@@ -131,7 +130,7 @@ describe('/projetos — projetos próprios (§3.2, §4.6)', () => {
     }
   });
 
-  it('a stack do card sai do conteúdo, grudada no projeto (§2)', async () => {
+  it('a stack do card sai do conteúdo, grudada no projeto', async () => {
     await renderPagina();
     const asafe = screen.getByRole('heading', { level: 3, name: 'Asafe' }).closest('article')!;
     const doConteudo = (await getAllProjects())[0].stack.map((s) => s.name);
@@ -144,16 +143,16 @@ describe('/projetos — projetos próprios (§3.2, §4.6)', () => {
 });
 
 /* ------------------------------------------------------------------------- *
- * Experiência profissional — as quatro herdadas.
+ * Experiência profissional
  * ------------------------------------------------------------------------- */
 
-describe('/projetos — experiência profissional (§4.5)', () => {
+describe('/projetos — experiência profissional', () => {
   const renderTimeline = () => render(<Timeline />);
 
   const entrada = (company: string) =>
     screen.getByRole('heading', { level: 3, name: new RegExp(company) }).closest('li')!;
 
-  it('/projetos mostra built, impact e stack por posição (§3.2, §4.5)', () => {
+  it('/projetos mostra built, impact e stack por posição', () => {
     renderTimeline();
     const linhas = screen.getAllByRole('listitem').filter((li) => li.querySelector('h3'));
     expect(linhas).toHaveLength(experience.length);
@@ -170,7 +169,7 @@ describe('/projetos — experiência profissional (§4.5)', () => {
     }
   });
 
-  it('/projetos rotula "em paralelo" toda posição sobreposta (§4.5)', () => {
+  it('/projetos rotula "em paralelo" toda posição sobreposta', () => {
     // O conjunto vem do dado — `parallel` é derivado de `start`/`end` e travado
     // em tests/unit/experience.test.ts. Aqui o que se verifica é que TODA
     // posição rotulada no dado aparece rotulada na tela, e nenhuma outra.
@@ -193,7 +192,7 @@ describe('/projetos — experiência profissional (§4.5)', () => {
     }
   });
 
-  it('/projetos marca o fio contínuo SINALIZANDO o impact, sem frase nova (§4.5)', () => {
+  it('/projetos marca o fio contínuo SINALIZANDO o impact, sem frase nova', () => {
     renderTimeline();
     const comFio = experience.filter((e) => e.thread);
     expect(comFio.map((e) => e.company)).toEqual(['Analytica Ensino', 'Opah IT']);
@@ -220,11 +219,12 @@ describe('/projetos — experiência profissional (§4.5)', () => {
     expect(ROTULOS.thread).not.toMatch(/[.!?]/);
   });
 
-  it('/projetos distingue sobreposição de fio contínuo sem depender de cor (§4.5, §9)', () => {
+  it('/projetos distingue sobreposição de fio contínuo sem depender de cor', () => {
     // As duas ideias são opostas — simultaneidade × continuidade — e se
     // encontram na Opah IT, que carrega as duas. Se usarem a mesma linguagem
     // visual, os dois melhores argumentos da timeline se anulam. A distinção
-    // não pode ser cor (§9) nem movimento (§6.4): é forma, eixo e lugar.
+    // não pode ser cor — que morre em daltonismo, tema escuro e impressão — nem
+    // movimento: é forma, eixo e lugar.
     renderTimeline();
     const opah = entrada('Opah IT');
     const sobreposicao = within(opah).getByText(new RegExp(ROTULOS.parallel, 'i')).closest('p')!;
@@ -259,7 +259,7 @@ describe('/projetos — experiência profissional (§4.5)', () => {
     }
   });
 
-  it('põe as datas em mono (§6.3)', () => {
+  it('põe as datas em mono', () => {
     renderTimeline();
     for (const item of experience) {
       const data = within(entrada(item.company)).getByText(
@@ -269,7 +269,7 @@ describe('/projetos — experiência profissional (§4.5)', () => {
     }
   });
 
-  it('não tem uma palavra sobre a experiência que não venha do dado (§4.5)', () => {
+  it('não tem uma palavra sobre a experiência que não venha do dado', () => {
     // O mesmo teste que guarda a trajetória da home, agora no /projetos — que é
     // onde o conteúdo de verdade mora. A seção inteira é remontada a partir de
     // `experience` mais os três rótulos de interface acima, e comparada letra a
@@ -297,7 +297,7 @@ describe('/projetos — experiência profissional (§4.5)', () => {
 
 const byCompany = (company: string) => experience.find((e) => e.company === company)!;
 
-describe('/projetos — fim da página (§6.4, §9)', () => {
+describe('/projetos — fim da página', () => {
   it('fecha com o "voltar ao topo", no mesmo idioma dos cases', async () => {
     // A página mais alta do site fora dos cases: dois cards grandes e cinco
     // posições com `built`, `impact` e `stack` — 4,9 telas em 1440×900, e em
@@ -308,7 +308,7 @@ describe('/projetos — fim da página (§6.4, §9)', () => {
     expect(screen.getByRole('navigation', { name: 'Fim da página' })).toContainElement(topo);
   });
 
-  it('não inventa um "próximo" — o bloco leva só a âncora (§4.6)', async () => {
+  it('não inventa um "próximo" — o bloco leva só a âncora', async () => {
     await renderPagina();
     const bloco = screen.getByRole('navigation', { name: 'Fim da página' });
     expect(within(bloco).getAllByRole('link')).toHaveLength(1);

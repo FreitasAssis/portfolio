@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * `/sobre` (§4.3, §4.4) contra o export estático, que é o artefato que vai ao ar.
+ * `/sobre` contra o export estático, que é o artefato que vai ao ar.
  *
  * O que só existe aqui, e não no teste unitário: layout de verdade. A medida de
  * leitura e a ausência de rolagem em 360px são medidas em pixel — o jsdom não
@@ -22,27 +22,27 @@ async function medidas(locator: import('@playwright/test').Locator) {
   );
 }
 
-test('a página abre com a pessoa e fecha com a tecnologia (§3.4)', async ({ page }) => {
+test('a página abre com a pessoa e fecha com a tecnologia', async ({ page }) => {
   await page.goto('/sobre');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sobre');
   await expect(page.getByRole('heading', { level: 2 })).toHaveText(['Tecnologia', 'Formação']);
   await expect(page.getByText(/Sou santista/)).toBeVisible();
 });
 
-test('são os cinco parágrafos do §4.3, e nenhum a mais', async ({ page }) => {
+test('são os cinco parágrafos curados, e nenhum a mais', async ({ page }) => {
   await page.goto('/sobre');
-  // Eram três, e o teste guardava a ausência do final — o §4.3 dizia "não
-  // gerar". O Luiz escreveu os dois últimos e o §12 fechou: "todo o texto do
-  // site está escrito". Cinco é o número; seis significa que alguém escreveu
-  // por conta própria, e quatro que alguém apagou.
+  // Cinco é o número: seis significa que alguém escreveu um parágrafo por
+  // conta própria, e quatro que alguém apagou um. O texto do site está
+  // declarado terminado.
   const secao = page.locator('section').filter({ hasText: 'Sou santista' });
   await expect(secao.locator('p')).toHaveCount(5);
   await expect(page.getByText(/em breve|lorem ipsum/i)).toHaveCount(0);
-  // O fecho do §4.3 chegou ao artefato publicado, com o condicional intacto.
+  // O fecho chegou ao artefato publicado, com o condicional intacto — é ele
+  // que deixa a porta encostada em vez de trancada ou escancarada.
   await expect(page.getByText(/Se um dia aparecer um próximo desafio/)).toBeVisible();
 });
 
-test('a prosa fica na faixa de 65–75 caracteres (§6.3)', async ({ page }) => {
+test('a prosa fica na faixa de 65–75 caracteres', async ({ page }) => {
   await page.goto('/sobre');
   // Piso E teto: a coluna já esteve em 56,5 caracteres neste repo porque só o
   // teto era verificado. E o parágrafo da camada 2 fica de fora de propósito —
@@ -67,7 +67,7 @@ test('a prosa fica na faixa de 65–75 caracteres (§6.3)', async ({ page }) => 
   }
 });
 
-test('o retrato fica centrado entre o terceiro e o quarto parágrafo (§6.3)', async ({ page }) => {
+test('o retrato fica centrado entre o terceiro e o quarto parágrafo', async ({ page }) => {
   // A posição virou argumento: a foto é dele tocando na igreja, e o terceiro
   // parágrafo é o que diz que ele já tocava na igreja antes de programar. Antes
   // ela vinha depois dos cinco, sozinha, com um vazio enorme ao lado.
@@ -101,7 +101,7 @@ test('o retrato fica centrado entre o terceiro e o quarto parágrafo (§6.3)', a
   }
 });
 
-test('as camadas de tecnologia se distinguem sem cor e sem ícone (§4.4, §9)', async ({ page }) => {
+test('as camadas de tecnologia se distinguem sem cor e sem ícone', async ({ page }) => {
   await page.goto('/sobre');
   const tecnologia = page
     .locator('section')
@@ -122,7 +122,7 @@ test('as camadas de tecnologia se distinguem sem cor e sem ícone (§4.4, §9)',
   expect(camada2).toBeLessThan(camada1);
 });
 
-test('a camada 3 não aparece em lugar nenhum (§4.4)', async ({ page }) => {
+test('a camada 3 não aparece em lugar nenhum', async ({ page }) => {
   await page.goto('/sobre');
   // `innerText` e não `textContent`: o export estático embute o payload do RSC
   // em `<script>`, e lá dentro existe literalmente `dangerouslySetInnerHTML` —
@@ -136,7 +136,7 @@ test('a camada 3 não aparece em lugar nenhum (§4.4)', async ({ page }) => {
   expect(texto).not.toMatch(/\bGit\b/);
 });
 
-test('cabe em 360px sem rolagem horizontal (§9)', async ({ page }) => {
+test('cabe em 360px sem rolagem horizontal', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto('/sobre');
   const overflow = await page.evaluate(
@@ -179,7 +179,7 @@ test('o retrato vai ao ar como imagem, não como buraco', async ({ page }) => {
   expect(alt.length).toBeGreaterThan(20);
 });
 
-test('o tema escuro não quebra a página (§9)', async ({ page }) => {
+test('o tema escuro não quebra a página', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('theme', 'dark'));
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto('/sobre');
@@ -198,7 +198,7 @@ test('o tema escuro não quebra a página (§9)', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
 
-test('o "voltar ao topo" do /sobre leva ao topo de verdade, nos dois temas (§9)', async ({
+test('o "voltar ao topo" do /sobre leva ao topo de verdade, nos dois temas', async ({
   page,
 }) => {
   // `href` para fragmento inexistente é falha silenciosa. Este teste clica e
@@ -224,12 +224,12 @@ test('o "voltar ao topo" do /sobre leva ao topo de verdade, nos dois temas (§9)
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
     expect(overflow, tema).toBeLessThanOrEqual(0);
-    // Um link só: o /sobre não tem "próximo" a oferecer (§4.6).
+    // Um link só: o /sobre não tem "próximo" a oferecer.
     await expect(bloco.getByRole('link')).toHaveCount(1);
   }
 });
 
-test('a régua do fim não encosta no texto da formação (§6.4)', async ({ page }) => {
+test('a régua do fim não encosta no texto da formação', async ({ page }) => {
   // A seção "Formação" era a última da página e por isso só tinha `pt-16`. Sem
   // um `pb`, a régua do bloco novo colaria no parágrafo do diploma — o `EndNav`
   // não traz margem de cima nenhuma, por decisão: cada seção paga o próprio

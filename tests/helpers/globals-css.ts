@@ -1,10 +1,8 @@
 /**
  * Leitor de cascata do `app/globals.css`, compartilhado pelos testes.
  *
- * Nasceu dentro de `tests/unit/contrast.test.ts` (Task 2) e saiu para cá na
- * Task 5, quando `projects.test.ts` passou a precisar do mesmo resolvedor para
- * conferir se o hex do frontmatter bate com o hex do CSS. Duas cópias do
- * resolvedor seria o pior dos mundos: as duas concordariam entre si e poderiam
+ * Um resolvedor só, compartilhado por `contrast.test.ts` e `projects.test.ts`,
+ * e não uma cópia em cada um: duas cópias concordariam entre si e poderiam
  * discordar do browser juntas.
  *
  * Não é um parser de CSS — é o mínimo para modelar a cascata que este arquivo

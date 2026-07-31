@@ -13,7 +13,7 @@ describe('Header', () => {
     route.current = '/';
   });
 
-  it('leva às três rotas do §3, em português', () => {
+  it('leva às três rotas do site, em português', () => {
     render(<Header />);
     const links = within(nav())
       .getAllByRole('link')
@@ -31,7 +31,7 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: 'Luiz Freitas' })).toHaveAttribute('href', '/');
   });
 
-  it('não linka /notas — o blog está fora de escopo (§11)', () => {
+  it('não linka /notas — o blog está fora de escopo', () => {
     render(<Header />);
     const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
     expect(hrefs).not.toContain('/notas');

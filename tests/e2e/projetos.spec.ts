@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * `/projetos` (§3.2) contra o export estático, que é o artefato que vai ao ar.
+ * `/projetos` contra o export estático, que é o artefato que vai ao ar.
  *
  * O que só existe aqui, e não no teste unitário: layout de verdade. A cobertura
  * de viewport que dispara o acento, a ausência de rolagem horizontal em 360px e
@@ -11,7 +11,7 @@ import { expect, test } from '@playwright/test';
 const secao = (page: import('@playwright/test').Page, nome: string) =>
   page.locator('section').filter({ has: page.getByRole('heading', { name: nome, exact: true }) });
 
-test('as duas seções são distinguíveis (§3.2)', async ({ page }) => {
+test('as duas seções são distinguíveis', async ({ page }) => {
   await page.goto('/projetos');
   await expect(page.getByRole('heading', { name: 'Projetos próprios' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Experiência profissional' })).toBeVisible();
@@ -40,7 +40,7 @@ test('a âncora da home cai na experiência, não no topo', async ({ page }) => 
   expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
 });
 
-test('a sobreposição está rotulada, não escondida (§4.5)', async ({ page }) => {
+test('a sobreposição está rotulada, não escondida', async ({ page }) => {
   await page.goto('/projetos');
   // Três posições se sobrepõem no tempo: Boomer corre junto da ez.devs e, logo
   // em seguida, da Opah IT. O conjunto é derivado das datas em
@@ -49,7 +49,7 @@ test('a sobreposição está rotulada, não escondida (§4.5)', async ({ page })
   await expect(page.getByText(/em paralelo/i).first()).toBeVisible();
 });
 
-test('o fio contínuo está marcado nas duas pontas (§4.5)', async ({ page }) => {
+test('o fio contínuo está marcado nas duas pontas', async ({ page }) => {
   await page.goto('/projetos');
   const marcas = page.getByText(/fio contínuo/i);
   await expect(marcas).toHaveCount(2);
@@ -59,7 +59,7 @@ test('o fio contínuo está marcado nas duas pontas (§4.5)', async ({ page }) =
   await expect(marcas.last()).toContainText('↑');
 });
 
-test('as duas marcas da Opah IT não se parecem (§4.5, §9)', async ({ page }) => {
+test('as duas marcas da Opah IT não se parecem', async ({ page }) => {
   await page.goto('/projetos');
   const opah = page.locator('li').filter({ hasText: 'Opah IT' }).first();
 
@@ -87,7 +87,7 @@ test('as duas marcas da Opah IT não se parecem (§4.5, §9)', async ({ page }) 
   expect(larguraDoFio).toEqual(['0px', '0px', '0px', '2px']);
 });
 
-test('o acento dispara de verdade nos dois cards (§6.1)', async ({ page }) => {
+test('o acento dispara de verdade nos dois cards', async ({ page }) => {
   await page.setViewportSize({ width: 1512, height: 900 });
   await page.goto('/projetos');
   const html = page.locator('html');
@@ -121,13 +121,13 @@ test('o acento dispara de verdade nos dois cards (§6.1)', async ({ page }) => {
     expect(cobertura, slug).toBeGreaterThan(0.35);
   }
 
-  // Fora dos cards a base volta a ser neutra (§6.1): a experiência profissional
-  // não empresta cor nenhuma.
+  // Fora dos cards a base volta a ser neutra: a experiência profissional não
+  // empresta cor nenhuma.
   await page.getByRole('heading', { level: 3, name: /IFRN/ }).scrollIntoViewIfNeeded();
   await expect(html).not.toHaveAttribute('data-accent', /.*/);
 });
 
-test('cabe em 360px sem rolagem horizontal (§9)', async ({ page }) => {
+test('cabe em 360px sem rolagem horizontal', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto('/projetos');
   const overflow = await page.evaluate(
@@ -141,7 +141,7 @@ test('cabe em 360px sem rolagem horizontal (§9)', async ({ page }) => {
   await expect(page.getByText(/fio contínuo/i).first()).toBeVisible();
 });
 
-test('o texto da experiência fica na faixa de 65–75 caracteres (§6.3)', async ({ page }) => {
+test('o texto da experiência fica na faixa de 65–75 caracteres', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/projetos');
   const medidas = await secao(page, 'Experiência profissional')
@@ -165,7 +165,7 @@ test('o texto da experiência fica na faixa de 65–75 caracteres (§6.3)', asyn
   }
 });
 
-test('o card leva ao app e ao case (§3.2)', async ({ page }) => {
+test('o card leva ao app e ao case', async ({ page }) => {
   await page.goto('/projetos');
   await expect(page.getByRole('link', { name: 'Abrir o Asafe' })).toHaveAttribute(
     'href',
@@ -183,7 +183,7 @@ test('o card leva ao app e ao case (§3.2)', async ({ page }) => {
   expect(formatos).toEqual([true, true]);
 });
 
-test('o "voltar ao topo" da /projetos leva ao topo de verdade (§9)', async ({ page }) => {
+test('o "voltar ao topo" da /projetos leva ao topo de verdade', async ({ page }) => {
   // A página mais alta do site fora dos cases: dois cards grandes e cinco
   // posições com `built`, `impact` e `stack`. Medido em 360px, que é onde o
   // atalho importa — e onde o Android não tem o gesto de barra de status do iOS.
@@ -200,13 +200,13 @@ test('o "voltar ao topo" da /projetos leva ao topo de verdade (§9)', async ({ p
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
   expect(await page.locator('#topo').evaluate((el) => el.tagName)).toBe('HEADER');
 
-  // Um link só, e ele não estoura a viewport estreita (§4.6, §9).
+  // Um link só, e ele não estoura a viewport estreita.
   await expect(bloco.getByRole('link')).toHaveCount(1);
   const caixa = (await topo.boundingBox())!;
   expect(caixa.x + caixa.width).toBeLessThanOrEqual(360);
 });
 
-test('a régua do fim é mais estreita que a do rodapé (§6.4)', async ({ page }) => {
+test('a régua do fim é mais estreita que a do rodapé', async ({ page }) => {
   // Duas réguas da mesma largura a 96px de distância leriam como dois rodapés. A
   // de cima fica na coluna de leitura, a do rodapé em `wide`.
   await page.setViewportSize({ width: 1440, height: 900 });

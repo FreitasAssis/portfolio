@@ -16,7 +16,7 @@ async function renderHome() {
 const section = (name: RegExp | string) =>
   screen.getByRole('heading', { level: 2, name }).closest('section')!;
 
-describe('Home — hero (§4.1)', () => {
+describe('Home — hero', () => {
   it('abre com a tese, em um h1 só', async () => {
     await renderHome();
     const h1 = screen.getAllByRole('heading', { level: 1 });
@@ -33,15 +33,14 @@ describe('Home — hero (§4.1)', () => {
 
   it('põe os 400 mil no subhead — é o dado mais forte do currículo', async () => {
     await renderHome();
-    // "alunos, professores e gestores": o §4.1 dizia só "alunos e professores",
-    // mas §4.3, §4.5 e o CV dizem os três — e o §4.5 manda site e CV usarem as
-    // mesmas palavras.
+    // Os três substantivos, e não dois: é assim que o CV escreve, e o site e o
+    // CV contam a mesma história com as mesmas palavras.
     expect(
       screen.getByText(/cerca de 400 mil alunos, professores e gestores/i),
     ).toBeInTheDocument();
   });
 
-  it('oferece os dois CTAs do §4.1', async () => {
+  it('oferece os dois CTAs do hero', async () => {
     await renderHome();
     expect(screen.getByRole('link', { name: 'Ver os projetos' })).toHaveAttribute(
       'href',
@@ -50,12 +49,13 @@ describe('Home — hero (§4.1)', () => {
     expect(screen.getByRole('link', { name: 'Falar comigo' })).toHaveAttribute('href', '/contato');
   });
 
-  it('não põe imagem no hero — ele pertence à tese (§6.5)', async () => {
+  it('não põe imagem no hero — ele pertence à tese', async () => {
     const { container } = await renderHome();
     const hero = screen.getByRole('heading', { level: 1 }).closest('section')!;
     expect(hero.querySelector('img')).toBeNull();
-    // §6.5: só existem duas fontes de imagem no site, e nenhuma delas é
-    // decoração. Na home, as únicas imagens são os prints dos dois cards.
+    // Só existem duas fontes de imagem no site — prints de projeto e o retrato
+    // —, e nenhuma delas é decoração. Na home, as únicas imagens são os prints
+    // dos dois cards.
     const imagens = Array.from(container.querySelectorAll('img'));
     expect(imagens).toHaveLength(2);
     for (const img of imagens) {
@@ -64,8 +64,8 @@ describe('Home — hero (§4.1)', () => {
   });
 });
 
-describe('Home — projetos próprios (§3.1, §4.6)', () => {
-  it('o Asafe abre a seção (§4.6)', async () => {
+describe('Home — projetos próprios', () => {
+  it('o Asafe abre a seção', async () => {
     await renderHome();
     const nomes = within(section(/projetos próprios/i))
       .getAllByRole('heading', { level: 3 })
@@ -73,7 +73,7 @@ describe('Home — projetos próprios (§3.1, §4.6)', () => {
     expect(nomes).toEqual(['Asafe', 'E aí, fez?']);
   });
 
-  it('o link principal leva ao app no ar, não ao case (§3.1)', async () => {
+  it('o link principal leva ao app no ar, não ao case', async () => {
     await renderHome();
     const cards = section(/projetos próprios/i);
     expect(within(cards).getByRole('link', { name: /abrir o asafe/i })).toHaveAttribute(
@@ -99,7 +99,7 @@ describe('Home — projetos próprios (§3.1, §4.6)', () => {
     );
   });
 
-  it('cada card empresta a própria cor ao site (§6.1)', async () => {
+  it('cada card empresta a própria cor ao site', async () => {
     const { container } = await renderHome();
     const zonas = Array.from(container.querySelectorAll('[data-accent]'));
     expect(zonas.map((z) => z.getAttribute('data-accent'))).toEqual(['asafe', 'eaifez']);
@@ -108,7 +108,7 @@ describe('Home — projetos próprios (§3.1, §4.6)', () => {
     );
   });
 
-  it('a stack aparece grudada no projeto, nunca solta (§2)', async () => {
+  it('a stack aparece grudada no projeto, nunca solta', async () => {
     await renderHome();
     const asafe = screen.getByRole('heading', { level: 3, name: 'Asafe' }).closest('article')!;
     expect(within(asafe).getByText('Next.js')).toBeInTheDocument();
@@ -133,12 +133,12 @@ describe('Home — projetos próprios (§3.1, §4.6)', () => {
         Number(img.getAttribute('width')),
       );
     }
-    // E os buracos do §0 sumiram junto — o print chegou.
+    // `{{ }}` é a marca de asset que ainda não chegou; nenhuma sobrou.
     expect(container.textContent).not.toMatch(/\{\{ *print/i);
   });
 });
 
-describe('Home — trajetória condensada (§3.1)', () => {
+describe('Home — trajetória condensada', () => {
   it('lista as cinco posições, na ordem do dado', async () => {
     await renderHome();
     const linhas = within(section(/trajetória/i)).getAllByRole('listitem');
@@ -149,11 +149,10 @@ describe('Home — trajetória condensada (§3.1)', () => {
     });
   });
 
-  it('cabe em uma linha por posição — é índice, não conteúdo (§3.1)', async () => {
-    // O §3.1 é literal: "TRAJETÓRIA (condensada, 5 linhas)". Este bloco fica
-    // entre os cards de projeto e o "Como eu trabalho", e o papel dele na página
-    // é ser respiro entre dois blocos densos. Cada <li> carrega período,
-    // empresa e cargo — e nada além disso.
+  it('cabe em uma linha por posição — é índice, não conteúdo', async () => {
+    // Cinco linhas, uma por posição. O bloco fica entre os cards de projeto e o
+    // "Como eu trabalho", e o papel dele na página é ser respiro entre dois
+    // blocos densos: cada <li> carrega período, empresa e cargo, e nada além.
     await renderHome();
     const traj = section(/trajetória/i);
 
@@ -161,9 +160,9 @@ describe('Home — trajetória condensada (§3.1)', () => {
       expect(li.querySelectorAll('p')).toHaveLength(2);
     }
 
-    // O conteúdo rico do §4.5 é do /projetos (§3.2). Se vazar para cá, o bloco
-    // deixa de ser índice — foi o que aconteceu antes, com três linhas e uma
-    // régua vertical por posição.
+    // O conteúdo por posição — `built`, `impact`, `stack` — mora no /projetos.
+    // Se vazar para cá, o bloco deixa de ser índice: já aconteceu, com três
+    // linhas e uma régua vertical por posição.
     const texto = traj.textContent ?? '';
     expect(texto).not.toMatch(/em paralelo/i);
     expect(texto).not.toMatch(/\bRemoto\b/);
@@ -174,7 +173,7 @@ describe('Home — trajetória condensada (§3.1)', () => {
     }
   });
 
-  it('não tem uma palavra sobre a experiência que não venha do dado (§4.5)', async () => {
+  it('não tem uma palavra sobre a experiência que não venha do dado', async () => {
     // O texto da seção é remontado a partir de `experience` e comparado inteiro.
     // Qualquer frase escrita à mão sobre a carreira — por mais bem-intencionada
     // que seja — quebra aqui.
@@ -182,7 +181,8 @@ describe('Home — trajetória condensada (§3.1)', () => {
     // Não é purismo: foi assim que a imprecisão entrou. Uma nota inventada para
     // sinalizar o fio contínuo ("a plataforma da Analytica nasceu na Opah IT")
     // lia como se a Opah tivesse sido só a Analytica, quando foram três projetos
-    // em times distintos. O §4.5 já traz o texto certo; o site não reescreve.
+    // em times distintos. O texto certo já está em `content/experience.ts`; o
+    // site não reescreve.
     await renderHome();
     const esperado = [
       'Trajetória',
@@ -192,7 +192,7 @@ describe('Home — trajetória condensada (§3.1)', () => {
     expect(section(/trajetória/i).textContent).toBe(esperado);
   });
 
-  it('põe as datas em mono (§6.3)', async () => {
+  it('põe as datas em mono', async () => {
     await renderHome();
     const traj = section(/trajetória/i);
     const data = within(traj).getByText(/^mar\/2023 — atual$/);
@@ -200,22 +200,13 @@ describe('Home — trajetória condensada (§3.1)', () => {
     expect(within(traj).getByText(/^set\/2021 — mar\/2023$/)).toBeInTheDocument();
   });
 
-  /* ----------------------------------------------------------------------- *
-   * As quatro exigências que estavam aqui como `it.todo` — etiqueta
-   * "em paralelo", marcador do fio contínuo, a distinção entre os dois sem
-   * depender de cor, e `built`/`impact`/`stack` por posição — mudaram de
-   * endereço junto com o conteúdo que elas guardam: o §3.1 quer a trajetória
-   * condensada como índice, e o conteúdo por posição é do §3.2/§4.5, no
-   * `/projetos`. Elas são testes de verdade em tests/unit/projetos.test.tsx.
-   * O dado que as sustenta continua travado em tests/unit/experience.test.ts.
-   * ----------------------------------------------------------------------- */
-
   /* Âncora, não o topo. O link promete "detalhe de cada posição", e o topo do
      /projetos é a seção de projetos próprios — cair lá obrigaria a rolar
      passando por dois cards grandes até achar o que foi prometido. O alvo
      `#experiencia` vive em components/Timeline.tsx; um e2e confere que ele
      existe de fato na página construída, porque href apontando para âncora
-     inexistente é falha silenciosa. */
+     inexistente é falha silenciosa: o navegador não reclama, só não sai do
+     lugar. */
   it('leva ao detalhe na âncora da experiência em /projetos', async () => {
     await renderHome();
     expect(within(section(/trajetória/i)).getByRole('link', { name: /ver detalhe/i })).toHaveAttribute(
@@ -225,7 +216,7 @@ describe('Home — trajetória condensada (§3.1)', () => {
   });
 });
 
-describe('Home — como eu trabalho (§4.2)', () => {
+describe('Home — como eu trabalho', () => {
   it('traz os três blocos, sem ícone', async () => {
     await renderHome();
     const titulos = within(section(/como eu trabalho/i))
@@ -239,14 +230,15 @@ describe('Home — como eu trabalho (§4.2)', () => {
     expect(section(/como eu trabalho/i).querySelectorAll('svg')).toHaveLength(0);
   });
 
-  it('linka os dois documentos de decisão do Asafe (§4.2, §4.2.1)', async () => {
-    // §4.2.1: é o link que substitui qualquer declaração sobre método — "documento
-    // de decisão é o trabalho que a IA não faz no seu lugar". Precisa existir e
-    // abrir, senão a alegação fica sem o convite de auditoria que a sustenta.
+  it('linka os dois documentos de decisão do Asafe', async () => {
+    // O link é o que substitui qualquer declaração sobre método: documento de
+    // decisão é o trabalho que a ferramenta não faz no seu lugar. Precisa
+    // existir e abrir, senão a alegação fica sem o convite de auditoria que a
+    // sustenta.
     //
-    // São dois porque dois é o que o repo público versiona, e porque um
+    // São dois porque dois é o que o repo público do Asafe versiona, e porque um
     // documento pode ser acidente enquanto dois, em eixos diferentes do mesmo
-    // projeto, são hábito — que é justamente o que o §4.2.1 quer provar.
+    // projeto, são hábito — que é o que se quer provar.
     await renderHome();
     const bloco = within(section(/como eu trabalho/i));
     expect(bloco.getByRole('link', { name: 'DESIGN.md' })).toHaveAttribute(
@@ -259,7 +251,7 @@ describe('Home — como eu trabalho (§4.2)', () => {
     );
   });
 
-  it('apresenta os documentos como convite, e não como fileira de links (§4.2.1)', async () => {
+  it('apresenta os documentos como convite, e não como fileira de links', async () => {
     await renderHome();
     const bloco = section(/como eu trabalho/i);
     // Os dois links moram na MESMA frase — "no repo público do Asafe: X e Y" —,
@@ -272,29 +264,29 @@ describe('Home — como eu trabalho (§4.2)', () => {
     expect(bloco.querySelectorAll('li')).toHaveLength(0);
   });
 
-  it('o primeiro bloco diz o §4.2 sem cláusula acrescentada', async () => {
+  it('o primeiro bloco não ganha cláusula além de "o que fica de fora, e por quê"', async () => {
     await renderHome();
     const texto = section(/como eu trabalho/i).textContent ?? '';
-    // §4.2, verbatim: "o que vai ser construído, o que fica de fora, e por quê".
-    // O "e de que forma" que estava aqui trocava justificativa por execução, e o
-    // bloco se chama "decido com justificativa".
+    // A frase é "o que vai ser construído, o que fica de fora, e por quê". Um
+    // "e de que forma" já entrou aqui na escrita, e ele troca justificativa por
+    // execução — no bloco que se chama "Decido com justificativa".
     expect(texto).toContain('o que vai ser construído, o que fica de fora, e por quê.');
     expect(texto).not.toMatch(/de que forma/i);
   });
 
-  it('não sobrou placeholder onde o documento já existe (§0)', async () => {
+  it('não sobrou placeholder onde o documento já existe', async () => {
     const { container } = await renderHome();
     expect(container.textContent).not.toMatch(/URL do documento de decisões/i);
-    // E não nomeia arquivo que não está no repo: o §4.2.1 cita `PLANNING.md`,
-    // `IDENTIDADE-VISUAL.md` e `REVISAO.md`, e nenhum dos três é versionado no
-    // Asafe. Link de auditoria que dá 404 desfaz o convite que ele faz.
+    // E não nomeia arquivo que não está no repo: `PLANNING.md` e `REVISAO.md`
+    // não são versionados no Asafe. Link de auditoria que dá 404 desfaz o
+    // convite que ele faz.
     expect(container.textContent).not.toMatch(/PLANNING\.md/i);
     expect(container.textContent).not.toMatch(/REVISAO\.md/i);
   });
 });
 
-describe('Home — contato (§3.4)', () => {
-  it('lista os quatro canais do §3.4, na ordem do brief', async () => {
+describe('Home — contato', () => {
+  it('lista os quatro canais na ordem: e-mail, LinkedIn, GitHub, CV', async () => {
     await renderHome();
     const hrefs = within(section(/contato/i))
       .getAllByRole('link')
@@ -307,18 +299,17 @@ describe('Home — contato (§3.4)', () => {
     ]);
   });
 
-  it('não bifurca mais em "tenho uma vaga" / "tenho um projeto" (§3.4)', async () => {
-    // §3.4: os dois caminhos saíram porque "pressupunham venda ativa", e o §1
-    // fez disso regra de propósito — o site existe para ser alcançável, não
-    // para converter. Um h3 novo aqui seria a triagem voltando pela porta dos
-    // fundos.
+  it('não bifurca mais em "tenho uma vaga" / "tenho um projeto"', async () => {
+    // Os dois caminhos saíram porque pressupunham venda ativa: o site existe
+    // para ser alcançável, não para converter. Um h3 novo aqui seria a triagem
+    // voltando pela porta dos fundos.
     await renderHome();
     const contato = section(/contato/i);
     expect(within(contato).queryAllByRole('heading', { level: 3 })).toEqual([]);
     expect(contato.textContent).not.toMatch(/tenho uma vaga|tenho um projeto/i);
   });
 
-  it('dá o e-mail copiável uma vez, por extenso (§3.4)', async () => {
+  it('dá o e-mail copiável uma vez, por extenso', async () => {
     await renderHome();
     const emails = within(section(/contato/i)).getAllByRole('link', {
       name: 'luiz_dev@outlook.com',
@@ -329,16 +320,16 @@ describe('Home — contato (§3.4)', () => {
     emails.forEach((a) => expect(a).toHaveAttribute('href', 'mailto:luiz_dev@outlook.com'));
   });
 
-  it('não tem formulário (§3.4, §11)', async () => {
+  it('não tem formulário', async () => {
     const { container } = await renderHome();
     expect(container.querySelector('form')).toBeNull();
     expect(container.querySelector('input')).toBeNull();
   });
 
-  it('baixa o CV, com a data no nome do arquivo (§7)', async () => {
-    // Até a Task 8 este teste exigia o contrário: um `{{ CV em PDF }}` visível,
-    // porque o arquivo ainda não estava no repo e link quebrado no bloco de
-    // contato é pior que a ausência dele. O arquivo chegou.
+  it('baixa o CV, com a data no nome do arquivo', async () => {
+    // A data mora no nome do arquivo porque é o único dos dois lugares (nome ou
+    // rodapé do PDF) que o visitante vê antes de abrir — e porque o arquivo
+    // continua datado na pasta de Downloads de quem recebeu.
     await renderHome();
     const contato = section(/contato/i);
     expect(within(contato).queryByText(/\{\{ *CV em PDF/i)).toBeNull();
@@ -348,11 +339,10 @@ describe('Home — contato (§3.4)', () => {
   });
 
   it('não publica telefone nem WhatsApp', async () => {
-    // O §12 não lista mais "decidir se expõe WhatsApp" como pendência, e a
-    // constante `WHATSAPP` saiu de content/contact.ts junto com o caminho que a
-    // hospedaria. O que este teste protege continua valendo sem pendência
-    // aberta: publicar um número é irreversível — sai de indexador, de print, de
-    // encaminhamento.
+    // Publicar um número é irreversível: ele sai de indexador, de print, de
+    // encaminhamento. Por isso a varredura olha o que a PÁGINA publica, e não
+    // uma constante — se um dia o número entrar, ele entra como link novo em
+    // `CONTACT_LINKS` e este teste falha.
     const { container } = await renderHome();
     expect(container.textContent).not.toMatch(/whats\s?app/i);
     const hrefs = Array.from(container.querySelectorAll('a')).map((a) => a.getAttribute('href'));
@@ -360,8 +350,8 @@ describe('Home — contato (§3.4)', () => {
   });
 });
 
-describe('Home — guardrails do brief', () => {
-  it('não existe seção sobre IA (§4.2.1)', async () => {
+describe('Home — guardrails de conteúdo', () => {
+  it('não existe seção sobre IA', async () => {
     const { container } = await renderHome();
     const titulos = screen.getAllByRole('heading').map((h) => h.textContent ?? '');
     expect(titulos.filter((t) => /^ia\b|intelig[êe]ncia artificial/i.test(t))).toEqual([]);
@@ -374,13 +364,13 @@ describe('Home — guardrails do brief', () => {
     expect(container.querySelector('main')).toBeNull();
   });
 
-  it('mantém a ordem de blocos do §3.1', async () => {
+  it('mantém a ordem dos quatro blocos da home', async () => {
     await renderHome();
     const h2 = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
     expect(h2).toEqual(['Projetos próprios', 'Trajetória', 'Como eu trabalho', 'Contato']);
   });
 
-  it('não se adjetiva — nada do vocabulário de venda do §4', async () => {
+  it('não se adjetiva — nada do vocabulário de venda', async () => {
     const { container } = await renderHome();
     expect(container.textContent).not.toMatch(
       /soluç(ão|ões)|experiências digitais|impulsionar|inovador|excepcional|apaixonad/i,
@@ -388,22 +378,21 @@ describe('Home — guardrails do brief', () => {
   });
 });
 
-describe('Home — fim da página (§6.4, §9)', () => {
+describe('Home — fim da página', () => {
   it('fecha com o "voltar ao topo", no mesmo idioma dos cases', async () => {
-    // O bloco só existia nos cases, e a razão da exclusão era altura de desktop
-    // (a home mede 4,4 telas em 1440×900). Em 360px o mesmo conteúdo é duas a
-    // três vezes mais alto, e no Android não há o gesto de tocar a barra de
-    // status que o iOS oferece. Como é uma âncora estática, não havia custo a
-    // economizar. A forma é a de `components/EndNav.tsx`, não uma variação.
+    // A forma vem de `components/EndNav.tsx` e é a mesma em quatro rotas — não
+    // uma variação escrita aqui. O alvo é `#topo`, nunca `href="#"`: os dois
+    // rolam igual, mas o fragmento vazio deixa o ponto de partida do Tab no
+    // rodapé.
     await renderHome();
     const topo = screen.getByRole('link', { name: 'Voltar ao topo' });
     expect(topo).toHaveAttribute('href', '#topo');
     expect(screen.getByRole('navigation', { name: 'Fim da página' })).toContainElement(topo);
   });
 
-  it('não inventa um "próximo" — o bloco leva só a âncora (§4.6)', async () => {
-    // A corrente de próximo case é dos cases, onde o §4.6 argumenta uma
-    // sequência. Na home ela seria menu de navegação repetido.
+  it('não inventa um "próximo" — o bloco leva só a âncora', async () => {
+    // A corrente de "próximo case" só existe nos cases, que têm uma sequência a
+    // oferecer. Na home ela seria menu de navegação repetido.
     await renderHome();
     const bloco = screen.getByRole('navigation', { name: 'Fim da página' });
     expect(within(bloco).getAllByRole('link')).toHaveLength(1);

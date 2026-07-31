@@ -55,7 +55,7 @@ describe('ThemeToggle', () => {
     expect(root.getAttribute('data-theme')).not.toBe('dark');
   });
 
-  it('é operável por teclado (§9)', async () => {
+  it('é operável por teclado', async () => {
     render(<ThemeToggle />);
     const button = screen.getByRole('button');
 

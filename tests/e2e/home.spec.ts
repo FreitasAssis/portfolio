@@ -7,21 +7,21 @@ function accentVar(page: import('@playwright/test').Page) {
   );
 }
 
-test('a home é autossuficiente (§2)', async ({ page }) => {
+test('a home é autossuficiente', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   await expect(page.getByRole('link', { name: /projetos/i }).first()).toBeVisible();
   await expect(page.getByText(/400 mil/i)).toBeVisible();
 });
 
-test('não existe seção de IA (§4.2.1)', async ({ page }) => {
+test('não existe seção de IA', async ({ page }) => {
   await page.goto('/');
   await expect(
     page.getByRole('heading', { name: /^ia$|intelig[êe]ncia artificial/i }),
   ).toHaveCount(0);
 });
 
-test('os blocos aparecem na ordem do §3.1', async ({ page }) => {
+test('os blocos aparecem na ordem: projetos, trajetória, como eu trabalho, contato', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 2 })).toHaveText([
     'Projetos próprios',
@@ -31,7 +31,7 @@ test('os blocos aparecem na ordem do §3.1', async ({ page }) => {
   ]);
 });
 
-test('os cards abrem os apps no ar, com o case em segundo plano (§3.1)', async ({ page }) => {
+test('os cards abrem os apps no ar, com o case em segundo plano', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('link', { name: 'Abrir o Asafe' })).toHaveAttribute(
     'href',
@@ -47,13 +47,13 @@ test('os cards abrem os apps no ar, com o case em segundo plano (§3.1)', async 
   );
 });
 
-test('o acento troca conforme o projeto na tela (§6.1)', async ({ page }) => {
+test('o acento troca conforme o projeto na tela', async ({ page }) => {
   await page.goto('/');
   const html = page.locator('html');
 
   await page.locator('[data-accent="asafe"]').scrollIntoViewIfNeeded();
   await expect(html).toHaveAttribute('data-accent', 'asafe');
-  // Não basta o atributo: o que o §6.1 promete é a COR virando. Este é o elo
+  // Não basta o atributo: o que se promete é a COR virando. Este é o elo
   // que o teste unitário não alcança — o jsdom não faz cascata de custom
   // properties nem layout.
   expect(await accentVar(page)).toBe('#2f3a5e');
@@ -63,7 +63,7 @@ test('o acento troca conforme o projeto na tela (§6.1)', async ({ page }) => {
   expect(await accentVar(page)).toBe('#a83c55');
 });
 
-test('a base volta a ser neutra fora dos projetos (§6.1)', async ({ page }) => {
+test('a base volta a ser neutra fora dos projetos', async ({ page }) => {
   await page.goto('/');
   await page.locator('[data-accent="eaifez"]').scrollIntoViewIfNeeded();
   await expect(page.locator('html')).toHaveAttribute('data-accent', 'eaifez');
@@ -72,12 +72,12 @@ test('a base volta a ser neutra fora dos projetos (§6.1)', async ({ page }) => 
   await expect(page.locator('html')).not.toHaveAttribute('data-accent', /.*/);
 });
 
-test('a prosa fica na faixa de 65–75 caracteres (§6.3)', async ({ page }) => {
+test('a prosa fica na faixa de 65–75 caracteres', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   // Mede o subhead do hero e os blocos do "Como eu trabalho" — o texto corrido
   // da home. A coluna de leitura já esteve em 36rem, o que dava 56,5 caracteres:
-  // abaixo do piso do §6.3, e ninguém percebia porque só o teto era verificado.
+  // abaixo do piso da faixa, e ninguém percebia porque só o teto era medido.
   const medidas = await page.locator('section p.prose-measure').evaluateAll((els) =>
     els.map((el) => {
       const sonda = document.createElement('div');
@@ -95,7 +95,7 @@ test('a prosa fica na faixa de 65–75 caracteres (§6.3)', async ({ page }) => 
   }
 });
 
-test('a trajetória cabe em uma linha por posição em tela larga (§3.1)', async ({ page }) => {
+test('a trajetória cabe em uma linha por posição em tela larga', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   // O "Sênior" da Analytica caía sozinho na segunda linha quando a coluna de
@@ -108,7 +108,7 @@ test('a trajetória cabe em uma linha por posição em tela larga (§3.1)', asyn
   expect(Math.max(...alturas)).toBe(Math.min(...alturas));
 });
 
-test('cabe em 360px sem rolagem horizontal (§9)', async ({ page }) => {
+test('cabe em 360px sem rolagem horizontal', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto('/');
   const overflow = await page.evaluate(
@@ -117,7 +117,7 @@ test('cabe em 360px sem rolagem horizontal (§9)', async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test('o foco de teclado é visível nos CTAs (§9)', async ({ page }) => {
+test('o foco de teclado é visível nos CTAs', async ({ page }) => {
   await page.goto('/');
   const cta = page.getByRole('link', { name: 'Ver os projetos' });
   await cta.focus();
@@ -125,12 +125,11 @@ test('o foco de teclado é visível nos CTAs (§9)', async ({ page }) => {
   expect(outline).not.toBe('0px');
 });
 
-test('o que ainda falta está escrito na tela, não escondido (§0)', async ({ page }) => {
+test('o que ainda falta está escrito na tela, não escondido', async ({ page }) => {
   await page.goto('/');
-  // Os prints chegaram (Task 6b), os cards saem do conteúdo desde a Task 7, o
-  // CV entrou na Task 8 e o retrato fechou a lista — o site inteiro não
-  // tem mais buraco nenhum. A contagem de duas imagens aqui segue sendo dos
-  // dois cards: o retrato mora no /sobre e no /contato, e a home não tem foto.
+  // `{{ }}` é a marca de asset que ainda não chegou; nenhuma sobra no site. A
+  // contagem de duas imagens é a dos dois cards: o retrato mora no /sobre e no
+  // /contato, e a home não tem foto.
   await expect(page.getByText(/\{\{ print:/)).toHaveCount(0);
   await expect(page.locator('article img')).toHaveCount(2);
   await expect(page.getByText('{{ CV em PDF }}')).toHaveCount(0);
@@ -142,12 +141,12 @@ test('o que ainda falta está escrito na tela, não escondido (§0)', async ({ p
   await expect(page.getByText(/URL do documento de decisões/)).toHaveCount(0);
 });
 
-test('os dois documentos de decisão do Asafe são linkáveis (§4.2.1)', async ({ page }) => {
+test('os dois documentos de decisão do Asafe são linkáveis', async ({ page }) => {
   await page.goto('/');
   // São os links que substituem qualquer declaração sobre método — sem eles, a
-  // afirmação do §4.2 fica sem o convite de auditoria que a sustenta. O §4.2.1
-  // nomeia três arquivos; o repo público versiona estes dois, e só se linka o
-  // que existe.
+  // afirmação fica sem o convite de auditoria que a sustenta. São estes dois
+  // porque são os que o repo público do Asafe versiona, e só se linka o que
+  // existe: link de auditoria em 404 desfaz o convite que ele faz.
   await expect(page.getByRole('link', { name: 'DESIGN.md' })).toHaveAttribute(
     'href',
     'https://github.com/FreitasAssis/Asafe/blob/main/docs/DESIGN.md',
@@ -158,7 +157,7 @@ test('os dois documentos de decisão do Asafe são linkáveis (§4.2.1)', async 
   );
 });
 
-test('a trajetória é um índice de cinco linhas, não conteúdo (§3.1)', async ({ page }) => {
+test('a trajetória é um índice de cinco linhas, não conteúdo', async ({ page }) => {
   await page.goto('/');
   const traj = page
     .locator('section')
@@ -167,26 +166,23 @@ test('a trajetória é um índice de cinco linhas, não conteúdo (§3.1)', asyn
   await expect(traj).not.toContainText('em paralelo');
 });
 
-test('não há formulário de contato (§11)', async ({ page }) => {
+test('não há formulário de contato', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('form')).toHaveCount(0);
 });
 
 /* ------------------------------------------------------------------------- *
- * Fim da página (§6.4, §9).
+ * Fim da página.
  *
- * O bloco de `components/EndNav.tsx` era só dos cases. A exclusão da home, da
- * `/projetos` e do `/sobre` tinha sido decidida medindo altura de DESKTOP — a
- * home mede 4,4 telas em 1440×900 —, e em 360px o mesmo conteúdo é duas a três
- * vezes mais alto. Como a solução é uma âncora estática (sem JS, sem movimento,
- * sem elemento flutuante), não havia custo a racionar. O `/contato` continua
- * fora: ele cabe numa tela.
+ * O bloco de `components/EndNav.tsx` está na home, na `/projetos`, no `/sobre`
+ * e nos dois cases — uma âncora estática, sem JS, sem movimento e sem elemento
+ * flutuante. O `/contato` fica fora: ele cabe numa tela.
  * ------------------------------------------------------------------------- */
 
 const fimDaPagina = (page: import('@playwright/test').Page) =>
   page.getByRole('navigation', { name: 'Fim da página' });
 
-test('o "voltar ao topo" da home leva ao topo de verdade (§9)', async ({ page }) => {
+test('o "voltar ao topo" da home leva ao topo de verdade', async ({ page }) => {
   // `href` para fragmento inexistente é falha silenciosa: o navegador não
   // reclama, só não sai do lugar. Por isso o teste CLICA e mede onde parou, como
   // já faz o da âncora da experiência em projetos.spec.ts.
@@ -205,14 +201,14 @@ test('o "voltar ao topo" da home leva ao topo de verdade (§9)', async ({ page }
   expect(await page.locator('#topo').evaluate((el) => el.tagName)).toBe('HEADER');
 });
 
-test('o bloco do fim é o mesmo idioma dos cases, e cabe em 360px (§6.4, §9)', async ({ page }) => {
+test('o bloco do fim é o mesmo idioma dos cases, e cabe em 360px', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto('/');
 
   const bloco = fimDaPagina(page);
-  // Um link só: a corrente de "próximo" é dos cases (§4.6).
+  // Um link só: a corrente de "próximo" é dos cases.
   await expect(bloco.getByRole('link')).toHaveCount(1);
-  // Texto e uma régua — nem ícone, nem caixa, nem nada flutuando (§6.4).
+  // Texto e uma régua — nem ícone, nem caixa, nem nada flutuando.
   await expect(bloco.locator('svg, img')).toHaveCount(0);
   const forma = await bloco.evaluate((el) => {
     const s = getComputedStyle(el);
@@ -230,7 +226,7 @@ test('o bloco do fim é o mesmo idioma dos cases, e cabe em 360px (§6.4, §9)',
   expect(caixa.x + caixa.width).toBeLessThanOrEqual(360);
 });
 
-test('depois do salto, o Tab continua do topo e não do rodapé (§9)', async ({ page }) => {
+test('depois do salto, o Tab continua do topo e não do rodapé', async ({ page }) => {
   // O motivo de o alvo ser um `id` e não um `href="#"` vazio. Com `#`, a página
   // rola e o ponto de partida da navegação sequencial fica para trás.
   await page.goto('/');

@@ -23,7 +23,7 @@ describe('timeline', () => {
     expect([...starts].sort().reverse()).toEqual(starts);
   });
 
-  it('rotula exatamente as posições que se sobrepõem no tempo (§4.5)', () => {
+  it('rotula exatamente as posições que se sobrepõem no tempo', () => {
     // O invariante: o conjunto rotulado é DERIVADO das datas, não escrito à mão.
     // Mexer numa data sem mexer no rótulo (ou o contrário) quebra aqui.
     const sobrepostas = experience
@@ -73,12 +73,7 @@ describe('timeline', () => {
     expect(`${boomer.built} ${boomer.impact}`).not.toMatch(/\d[\d.,]*\s*(usuários|mil)/i);
   });
 
-  /* ----------------------------------------------------------------------- *
-   * Os quatro acima vêm do plano. Os de baixo travam o resto do §4.5 que
-   * também é fácil de perder numa edição distraída.
-   * ----------------------------------------------------------------------- */
-
-  it('tem exatamente as cinco posições do §4.5', () => {
+  it('tem exatamente as cinco posições curadas', () => {
     expect(experience.map((e) => e.company)).toEqual([
       'Analytica Ensino',
       'Opah IT',
@@ -88,13 +83,13 @@ describe('timeline', () => {
     ]);
   });
 
-  it('deixa de fora a Agga System e a SERT, de propósito (§4.5)', () => {
+  it('deixa de fora a Agga System e a SERT, de propósito', () => {
     const companies = experience.map((e) => e.company);
     expect(companies).not.toContain('Agga System');
     expect(companies).not.toContain('SERT');
   });
 
-  it('carrega o que foi construído e o que mudou em cada posição (§2)', () => {
+  it('carrega o que foi construído e o que mudou em cada posição', () => {
     for (const item of experience) {
       expect(item.built.length, item.company).toBeGreaterThan(80);
       expect(item.impact.length, item.company).toBeGreaterThan(40);

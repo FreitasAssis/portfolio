@@ -42,10 +42,10 @@ describe('texto de corpo passa AA nos dois temas', () => {
 });
 
 /* ------------------------------------------------------------------------- *
- * Daqui pra baixo os valores NÃO são copiados do brief: saem do próprio
- * app/globals.css. Os blocos acima travam o contrato do §6.2; estes travam que
- * o CSS que vai pro ar realmente cumpre esse contrato — inclusive quando o
- * data-accent cai no <html>, que é o que o AccentTracker da Task 2 faz.
+ * Daqui pra baixo os valores NÃO são escritos à mão: saem do próprio
+ * app/globals.css. Os blocos acima travam os pares esperados; estes travam que
+ * o CSS que vai pro ar realmente os cumpre — inclusive quando o `data-accent`
+ * cai no <html>, que é onde o `AccentTracker` o escreve.
  * ------------------------------------------------------------------------- */
 
 const THEMES: Theme[] = ['claro', 'escuro'];
@@ -60,10 +60,10 @@ const THEMES: Theme[] = ['claro', 'escuro'];
 const ACCENTS = accentSlugsInCss();
 const COMBOS = THEMES.flatMap((theme) => ACCENTS.map((accent) => ({ theme, accent })));
 
-/** O par do §6.2 esperado para o acento, ou um erro que diz o que falta. */
+/** O par esperado para o acento, ou um erro que diz o que falta. */
 function pairFor(accent: string, theme: Theme) {
   const pair = PAIRS.find((p) => p.name === `${accent} / ${theme}`);
-  if (!pair) throw new Error(`o acento '${accent}' existe no CSS mas não tem par travado no §6.2`);
+  if (!pair) throw new Error(`o acento '${accent}' existe no CSS mas não tem par em PAIRS`);
   return pair;
 }
 
@@ -75,7 +75,7 @@ describe('CSS real: --accent-text sobre --paper passa AA (data-accent no <html>)
   });
 });
 
-describe('CSS real: --accent-text bate com os hex travados no §6.2', () => {
+describe('CSS real: --accent-text bate com os hex travados no topo deste arquivo', () => {
   it.each(COMBOS)('$accent / $theme', ({ theme, accent }) => {
     const esperado = pairFor(accent, theme).fg;
     expect(token(resolveTokens(theme, accent), '--accent-text').toLowerCase()).toBe(
@@ -116,11 +116,11 @@ describe('CSS real: o corpo do botão de acento é texto de tamanho normal', () 
   });
 });
 
-describe('CSS real: o anel de foco é visível sobre o papel (§9, WCAG 1.4.11)', () => {
-  // Desvio deliberado do §6.2, que atribui o foco a --accent: o hex cru da marca
-  // não vira com o tema e daria 1.713:1 no par asafe/escuro. O piso do §9 vence.
-  // O teste lê qual token o CSS realmente usa, então reverter para --accent
-  // reprova aqui em vez de sair invisível no ar.
+describe('CSS real: o anel de foco é visível sobre o papel (WCAG 1.4.11)', () => {
+  // O anel de foco NÃO usa --accent: o hex cru da marca não vira com o tema e
+  // daria 1.713:1 no par asafe/escuro. O teste lê qual token o CSS realmente
+  // usa, então reverter para --accent reprova aqui em vez de sair invisível no
+  // ar.
   it.each(COMBOS)('$accent / $theme', ({ theme, accent }) => {
     const tokens = resolveTokens(theme, accent);
     const ratio = contrastRatio(token(tokens, focusOutlineToken()), token(tokens, '--paper'));
