@@ -1,14 +1,30 @@
 # Reconstrução do luizfreitas.com.br — Plano de implementação
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **Registro histórico, de 28/07/2026.** Este é o plano como foi escrito **antes** do trabalho,
+> preservado porque a parte interessante dele é o que foi decidido de antemão e por quê — em
+> especial a seção logo abaixo, sobre onde o plano se afastou do contrato de propósito.
+>
+> Ele não descreve o estado atual, e três coisas mudaram na execução:
+>
+> - **A hospedagem é Cloudflare Workers com static assets, não Pages.** O plano dizia Pages; o
+>   painel da Cloudflare hoje cria Workers, e o `next-on-pages` foi descontinuado por eles. O
+>   `wrangler.jsonc` na raiz é o que manda. `_headers` e `_redirects` funcionam igual, o que foi
+>   verificado antes da virada.
+> - **A ordem das tasks não sobreviveu inteira.** A captura dos prints exigiu montar ambientes
+>   locais dos dois apps, e a Task 6 virou duas.
+> - **O `/contato` encolheu.** O contrato foi revisado no meio do caminho e removeu os dois
+>   caminhos de contato, que pressupunham venda ativa.
+>
+> Para o estado atual, o README descreve a arquitetura e a publicação; os testes encodam as
+> regras e falham quando alguma é violada.
 
-**Goal:** Reconstruir o portfólio do zero conforme o contrato em `docs/private/PORTFOLIO-BRIEF.md`, mantendo apenas o domínio, e publicar na Cloudflare Pages com os redirects das rotas antigas.
+**Goal:** Reconstruir o portfólio do zero conforme o contrato em `docs/private/PORTFOLIO-BRIEF.md`, mantendo apenas o domínio, e publicar na Cloudflare com os redirects das rotas antigas.
 
 > **Nota sobre `docs/`.** O repo é público. `docs/private/` (o brief e o PDF do CV) é ignorado pelo git — é nota interna, e o §4.2.1 do próprio brief avisa que documento interno vira peça de vitrine no instante em que fica público, então publicar é decisão deliberada e curada, não efeito colateral. `docs/cv/luiz-freitas.html` é versionado por ser a **fonte** do CV; verificado como livre de RG, CPF, data de nascimento, endereço e telefone (§4.3). O PDF publicado vai separado em `public/cv/` na Task 8 — esse precisa ser versionado, senão a Cloudflare não tem o que servir.
 
-**Architecture:** Next.js App Router em **export estático puro** (`output: 'export'`) — sem servidor, sem banco, sem CMS, saída em `out/` servida pela Cloudflare Pages. Conteúdo dos projetos em arquivos MDX lidos do filesystem em build time. Identidade visual construída sobre CSS custom properties: a base é neutra e o acento é injetado por `data-accent` na seção/página, conforme §6.1 do brief.
+**Architecture:** Next.js App Router em **export estático puro** (`output: 'export'`) — sem servidor, sem banco, sem CMS, saída em `out/` servida pela Cloudflare. Conteúdo dos projetos em arquivos MDX lidos do filesystem em build time. Identidade visual construída sobre CSS custom properties: a base é neutra e o acento é injetado por `data-accent` na seção/página, conforme §6.1 do brief.
 
-**Tech Stack:** Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS 4 (config CSS-first via `@theme`) · `next-mdx-remote/rsc` + `gray-matter` · Vitest + Testing Library · Playwright · Cloudflare Pages.
+**Tech Stack:** Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS 4 (config CSS-first via `@theme`) · `next-mdx-remote/rsc` + `gray-matter` · Vitest + Testing Library · Playwright · Cloudflare Workers com static assets.
 
 ---
 
@@ -794,7 +810,7 @@ Fonte de verdade são as landings dos dois apps (§4.6). Vou lê-las com WebFetc
 Seção **Decisões**: 3 a 5 itens, cada um no formato *"escolhi X em vez de Y, porque Z"*. As decisões a cobrir já estão listadas no §4.6 e não são negociáveis:
 
 - **Asafe** — os dois eixos de busca; AGPL-3.0 em vez de MIT; consentimento e licença (não cessão) das cifras da comunidade; snapshot litúrgico congelado; RLS no Supabase. Usar o termo técnico **perícope** aqui (§4.6, nota de escrita).
-- **E aí, fez?** — a "unidade" como competidora (1..N membros); Cloudflare Pages em vez de Vercel pela cláusula não-comercial do Hobby; check-in na honra; separação privado × de mostrar como arquitetura de privacidade; zero IA no MVP.
+- **E aí, fez?** — a "unidade" como competidora (1..N membros); Cloudflare em vez de Vercel pela cláusula não-comercial do Hobby; check-in na honra; separação privado × de mostrar como arquitetura de privacidade; zero IA no MVP.
 
 **Step 3: Prints**
 
