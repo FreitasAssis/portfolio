@@ -63,16 +63,27 @@ medidas em pixel, e o jsdom não faz layout.
 
 ## Publicando
 
-Cloudflare Pages, conectado a este repositório:
+Cloudflare Workers com static assets, conectado a este repositório. Não é Cloudflare Pages: a
+Cloudflare vem unificando os dois, e o fluxo atual do painel cria um Worker.
 
 | campo | valor |
 |---|---|
-| Framework preset | None |
 | Build command | `npm run build` |
-| Build output directory | `out` |
-| Node version | 22 |
+| Deploy command | `npx wrangler deploy` |
 
 Nenhuma variável de ambiente: não há chave, banco nem serviço externo.
+
+O que publicar vem do `wrangler.jsonc`, não do painel. É um Worker **só de assets** — sem
+`main`, nenhum código roda por requisição; ele existe para servir o `out/`. As duas opções que
+não são default valem uma linha cada: `html_handling` porque o export escreve `sobre.html` e
+não `sobre/index.html`, e `not_found_handling` porque sem ele um caminho inexistente devolve
+resposta vazia em vez da 404 gerada no build.
+
+Para exercitar tudo isso localmente, com a mesma semântica de assets da produção:
+
+```bash
+npm run build && npx wrangler dev --port 8788
+```
 
 Dois arquivos em `public/` governam a hospedagem e chegam à raiz do output:
 
@@ -91,5 +102,6 @@ curl -sI https://<host>/projects            | grep -iE 'HTTP/|location'   # 301 
 curl -sI https://<host>/projetos/asafe/opengraph-image | grep -i content-type   # image/png
 ```
 
-O `Content-Type` é o que decide se o cartão do LinkedIn aparece ou quebra, e é a única regra
-cuja aplicação depende do host — vale conferir antes de apontar o domínio.
+As duas regras foram verificadas contra o `wrangler dev` antes do primeiro deploy: os três 301
+respondem com o `Location` certo, e as OG images saem como `image/png` — sem isso o cartão de
+link quebra, que é o custo mais caro e mais invisível de errar aqui.

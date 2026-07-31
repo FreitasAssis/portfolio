@@ -36,3 +36,4 @@ next-env.d.ts
 
 # material de trabalho - nao vai para o repo publico
 /docs/private/
+/.wrangler/
