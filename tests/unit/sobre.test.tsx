@@ -68,6 +68,10 @@ describe('/sobre — o texto do §4.3', () => {
     // vírgula trocada ou um "porta escancarada" no lugar do condicional do §4.3
     // falham aqui — que é o ponto: o §12 declara o texto do site terminado, e
     // texto terminado não se "melhora" em passagem.
+    //
+    // O retrato passou a morar DENTRO desta seção, entre os parágrafos, então a
+    // contagem virou também a trava contra legenda: uma linha de texto sob a
+    // foto entra aqui como sexto parágrafo e reprova.
     expect(paragrafos).toEqual(PARAGRAFOS_DO_BRIEF);
   });
 
@@ -204,12 +208,44 @@ describe('/sobre — retrato e formação', () => {
     expect(alt).toMatch(/microfone/i);
   });
 
+  it('o retrato vem logo depois do terceiro parágrafo, em ordem de DOM', () => {
+    const { container } = renderPagina();
+    const secao = secaoDoTexto(container);
+    const retrato = secao.querySelector('img');
+
+    // A foto mora na mesma seção do texto, e não num bloco solto depois dela:
+    // é assim que ela deixa de ser apêndice e vira a prova do parágrafo que
+    // diz que ele já tocava na igreja antes de programar.
+    expect(retrato, 'o retrato saiu da seção do texto').not.toBeNull();
+
+    // Ordem de DOM, não posição em pixel: é ela que decide o que um leitor de
+    // tela ouve, e ela continua certa se alguém trocar o CSS por grade ou
+    // `order`. O teste em pixel que confere a centralização é o de e2e — aqui
+    // o jsdom não faz layout nenhum.
+    const terceiro = screen.getByText(PARAGRAFOS_DO_BRIEF[2]);
+    const quarto = screen.getByText(PARAGRAFOS_DO_BRIEF[3]);
+    expect(
+      terceiro.compareDocumentPosition(retrato!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      'o retrato não vem depois do terceiro parágrafo',
+    ).toBeTruthy();
+    expect(
+      quarto.compareDocumentPosition(retrato!) & Node.DOCUMENT_POSITION_PRECEDING,
+      'o retrato não vem antes do quarto parágrafo',
+    ).toBeTruthy();
+  });
+
   it('o retrato não disputa banda com o LCP, que aqui é um parágrafo', () => {
     const { container } = renderPagina();
     const retrato = container.querySelector('img')!;
-    // Medido: o LCP desta rota é um dos parágrafos do texto — a foto só entra
-    // depois dos cinco. `lazy` sozinho não segura (a margem do lazy-loading do
-    // Chrome é maior que a distância até ela), daí a prioridade baixa.
+    // A foto subiu para o meio do texto, que é onde imagem costuma virar LCP —
+    // e foi medida de novo lá. Na emulação móvel do Lighthouse ela nasce em
+    // y=936, fora da dobra de 823; na de desktop aparece inteira e ainda perde
+    // em área para o segundo parágrafo (73.872px² contra 93.555px²), que é o
+    // elemento de LCP que o Lighthouse aponta nas duas.
+    //
+    // `lazy` sozinho não segura (a margem do lazy-loading do Chrome é maior que
+    // a distância até ela), daí a prioridade baixa. O dia em que o Lighthouse
+    // apontar a foto, este teste inverte — mas por medição, não por palpite.
     expect(retrato.getAttribute('loading')).toBe('lazy');
     expect(retrato.getAttribute('fetchpriority')).toBe('low');
   });

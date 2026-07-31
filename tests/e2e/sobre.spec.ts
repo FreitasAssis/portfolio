@@ -43,16 +43,61 @@ test('são os cinco parágrafos do §4.3, e nenhum a mais', async ({ page }) => 
 });
 
 test('a prosa fica na faixa de 65–75 caracteres (§6.3)', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/sobre');
   // Piso E teto: a coluna já esteve em 56,5 caracteres neste repo porque só o
   // teto era verificado. E o parágrafo da camada 2 fica de fora de propósito —
   // ele é `text-xs`, e 68ch medidos em 18px dariam 76 na fonte menor.
-  const larguras = await medidas(page.locator('section p.prose-measure'));
-  expect(larguras).toHaveLength(5);
-  for (const m of larguras) {
-    expect(m).toBeGreaterThanOrEqual(65);
-    expect(m).toBeLessThanOrEqual(75);
+  //
+  // Em várias larguras, e não só em 1440, porque a foto passou a morar dentro
+  // da coluna de texto: um retrato que flutuasse ou dividisse a linha derrubaria
+  // a medida em alguma delas sem derrubar nas outras.
+  //
+  // 768 é a menor da lista **de propósito**: dali para baixo a coluna é ditada
+  // pela viewport e não pelos 68ch (640px dão 54 caracteres, 360px dão 31), e
+  // não existe coluna de 65 caracteres que caiba num celular. Medir a faixa lá
+  // seria exigir da página o que a tela não tem.
+  for (const width of [768, 1024, 1280, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    const larguras = await medidas(page.locator('section p.prose-measure'));
+    expect(larguras, `${width}px`).toHaveLength(5);
+    for (const m of larguras) {
+      expect(m, `${width}px`).toBeGreaterThanOrEqual(65);
+      expect(m, `${width}px`).toBeLessThanOrEqual(75);
+    }
+  }
+});
+
+test('o retrato fica centrado entre o terceiro e o quarto parágrafo (§6.3)', async ({ page }) => {
+  // A posição virou argumento: a foto é dele tocando na igreja, e o terceiro
+  // parágrafo é o que diz que ele já tocava na igreja antes de programar. Antes
+  // ela vinha depois dos cinco, sozinha, com um vazio enorme ao lado.
+  //
+  // A ordem de DOM está travada no teste unitário; o que só existe aqui é o
+  // pixel — o jsdom não faz layout, então "centrado" e "entre um parágrafo e o
+  // outro" só podem ser medidos contra o artefato renderizado.
+  await page.goto('/sobre');
+  const paragrafos = page.locator('section p.prose-measure');
+
+  for (const width of [1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const terceiro = (await paragrafos.nth(2).boundingBox())!;
+    const quarto = (await paragrafos.nth(3).boundingBox())!;
+    const foto = (await page.locator('img[src^="/retrato/"]').boundingBox())!;
+
+    // Depois do terceiro e antes do quarto, na vertical.
+    expect(foto.y, `${width}px`).toBeGreaterThanOrEqual(terceiro.y + terceiro.height);
+    expect(foto.y + foto.height, `${width}px`).toBeLessThanOrEqual(quarto.y);
+
+    // Centrada na coluna, e não encostada numa das margens: uma versão anterior
+    // punha a foto na margem direita, e a diferença entre as duas não aparece em
+    // teste nenhum que só olhe o DOM. 2px de tolerância para arredondamento.
+    const centroDaFoto = foto.x + foto.width / 2;
+    const centroDaColuna = terceiro.x + terceiro.width / 2;
+    expect(Math.abs(centroDaFoto - centroDaColuna), `${width}px`).toBeLessThanOrEqual(2);
+
+    // E dentro da coluna: uma foto mais larga que o texto reabriria a rolagem
+    // horizontal que o teste de 360px guarda.
+    expect(foto.width, `${width}px`).toBeLessThanOrEqual(terceiro.width);
   }
 });
 

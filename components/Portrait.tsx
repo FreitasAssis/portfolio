@@ -32,9 +32,22 @@ const RETRATOS = {
      * só fecha encolhendo a caixa.
      */
     largura: 'max-w-[13.5rem]',
-    // O LCP do /sobre é um PARÁGRAFO, não a foto: ela vem depois dos cinco do
-    // texto, e o Lighthouse confirma. Sem `priority`, então — o preload só
-    // disputaria banda com as fontes de que o parágrafo depende.
+    /**
+     * O LCP do `/sobre` é um PARÁGRAFO, não a foto — e isso foi **medido de
+     * novo** depois de ela subir para o meio do texto, que é justo onde uma
+     * imagem costuma virar o LCP.
+     *
+     * Na emulação móvel do Lighthouse (412×823) ela nasce em y=936: fora da
+     * dobra, área zero, fora da disputa. Na de desktop (1350×940) ela aparece
+     * inteira e ainda assim perde — 243×304 = 73.872px² contra os 693×135 =
+     * 93.555px² do segundo parágrafo, que é o elemento que o Lighthouse aponta
+     * nas duas emulações.
+     *
+     * Sem `priority`, então: o preload só disputaria banda com as fontes de que
+     * o parágrafo depende. Mas a folga no desktop é de 26%, e não de uma ordem
+     * de grandeza — quem aumentar a caixa da foto ou encurtar aquele parágrafo
+     * mede de novo antes de confiar nesta linha.
+     */
     prioridade: false,
   },
   inline: {
@@ -66,6 +79,17 @@ const RETRATOS = {
   },
 } as const;
 
+/**
+ * Sem prop de `className`: quem chama posiciona a foto pelo elemento em volta,
+ * não por classe injetada aqui. `tests/unit/sobre.test.tsx` lê o teto de largura
+ * direto da classe, por regex, para conferir que a caixa não pede mais pixels do
+ * que o arquivo tem — um segundo `max-w` vindo de fora faria essa leitura casar
+ * com a classe errada.
+ *
+ * (E escrever o nome dessa classe com colchetes aqui teria custo real: o
+ * Tailwind varre o texto do arquivo inteiro, comentário incluído, e publica uma
+ * regra a partir do que achar.)
+ */
 export function Portrait({
   /** `page` no /sobre; `inline` no bloco de contato, onde ela é "versão pequena". */
   size = 'page',
