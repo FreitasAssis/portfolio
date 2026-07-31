@@ -50,6 +50,36 @@ test('o CV está publicado e responde 200 (§7)', async ({ page, request }) => {
   expect(corpo.subarray(0, 5).toString('latin1')).toBe('%PDF-');
 });
 
+test('o retrato vai ao ar, no recorte quadrado', async ({ page }) => {
+  await page.goto('/contato');
+  // Último asset pendente do site: nenhum `{{ }}` sobra na página.
+  await expect(page.getByText(/\{\{/)).toHaveCount(0);
+
+  const retrato = page.locator('img[src^="/retrato/"]');
+  await expect(retrato).toHaveCount(1);
+  await retrato.scrollIntoViewIfNeeded();
+  // `naturalWidth`/`naturalHeight` e não os atributos: o src quebrado dá 0, e o
+  // layout continuaria certo porque a caixa é reservada pelos atributos.
+  const natural = await retrato.evaluate((el: HTMLImageElement) => [
+    el.naturalWidth,
+    el.naturalHeight,
+  ]);
+  expect(natural[0]).toBe(natural[1]);
+
+  // O arquivo tem o dobro da caixa — a regra dos dois recortes. Menos que isso
+  // amplia num display 2x, que é o mais comum; mais que isso são bytes que a
+  // tela não usa, e aqui eles custam caro: esta foto é o elemento de LCP da
+  // rota, e o recorte de 490px derrubava a performance de 95 para 94.
+  const caixa = (await retrato.boundingBox())!;
+  expect(natural[0]).toBe(Math.round(caixa.width * 2));
+
+  // E ela é pré-carregada: aqui a foto É o elemento de LCP, e com `lazy` o
+  // Lighthouse reprova `lcp-lazy-loaded`. É a decisão inversa à da home, onde o
+  // `priority` saiu do primeiro card por o LCP ser a h1; decide a medição.
+  await expect(page.locator('link[rel="preload"][as="image"][href^="/retrato/"]')).toHaveCount(1);
+  await expect(retrato).not.toHaveAttribute('loading', 'lazy');
+});
+
 test('o e-mail está escrito por extenso, sem botão de copiar (§3.4)', async ({ page }) => {
   await page.goto('/contato');
   const email = page.getByRole('link', { name: 'luiz_dev@outlook.com' });

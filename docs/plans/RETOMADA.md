@@ -256,9 +256,10 @@ não cabia numa mensagem ficou aqui.
   em primeiro. O "E aí, fez?" em segundo não é diminuído: para leitor técnico é o case que
   mais impressiona. Travado em `tests/unit/projects.test.ts`, `tests/unit/projetos.test.tsx`
   e `tests/unit/home.test.tsx`.
-- **Retrato pequeno (§6.5).** A caixa do `/contato` tem 160px e o briefing inteiro viraria
-  seis linhas dentro dela, então ela mostra só `4:5 · versão pequena`. O briefing completo
-  mora na constante `BRIEFING` de `components/Portrait.tsx`, que é a caixa grande do `/sobre`.
+- **Retrato pequeno (§6.5).** A caixa do `/contato` tem 180px, e num recorte 4:5 o rosto
+  cairia para uns 50px de altura. Por isso as duas escalas usam recortes **diferentes do
+  mesmo frame**: 4:5 no `/sobre`, quadrado no `/contato`. É uma foto só, e a justificativa
+  inteira está em `components/Portrait.tsx`.
 
 ---
 
@@ -361,19 +362,27 @@ logo em seguida, da Opah IT. O trecho da Task 7 no plano dizia duas; o dado mand
 | Lockup e ícone do E aí, fez? | ✅ `eaifez/public/brand/{lockup,icon}.svg` |
 | Ícone do Asafe | ✅ `asafe/apps/web/app/icon.svg` |
 | 8 prints | ✅ Task 6b |
-| Retrato do Luiz | ⬜ §6.5 — 4:5, com instrumento ou em Natal, não headshot |
+| Retrato do Luiz | ✅ `public/retrato/{4x5,1x1}.webp` — dois recortes do mesmo frame |
 | CV em PDF para `public/cv/` | ✅ `luiz-freitas-2026-07.pdf`, regerado pelo Luiz com o "desde 2017" |
 | Últimas frases do `/sobre` | ✅ §4.3 tem cinco parágrafos, os dois últimos escritos pelo Luiz |
 | WhatsApp no `/contato` | ✅ resolvido — a pendência saiu do §12 e o andaime saiu do código |
 
-**Retrato (§6.5).** O buraco está no `/sobre` (`max-w-[16rem]`) e, pequeno, no
-`/contato` (`max-w-[10rem]`), nos dois casos em `4:5` — proporção que é premissa
-de `components/Portrait.tsx`, não do brief. Quando a foto chegar: salvar em
-`public/sobre/retrato.webp` com dimensões declaradas (§9), trocar o
-`AssetPlaceholder` por `next/image` com `alt` descritivo, e mexer só nesse
-arquivo — as duas chamadas passam por ele. Um `<Portrait size="inline" />` no
-`ContactBlock` põe a foto também na home, se o Luiz quiser essa leitura de
-"bloco de contato".
+**Retrato (§6.5) — o último asset, e o que a resolução obrigou a decidir.** A foto é um
+frame de vídeo: o recorte maior tem **490px de largura** e não existe nem existirá original
+melhor. A raiz do site é 18px (`app/globals.css`), então os `max-w-[16rem]` do buraco antigo
+eram **288px**, não 256 — e 288 × 2 pede 576px de uma fonte de 490. O `/sobre` já ampliava em
+toda tela retina. A caixa desceu para `max-w-[13.5rem]` = **243px**, cujo 2× são 486px: cabe
+nos 490 do arquivo.
+
+A regra que saiu daí vale para os dois: **cada arquivo tem exatamente 2× a caixa em que é
+desenhado** — 490 para os 243px do `/sobre`, 360 para os 180px do `/contato`. O recorte de
+490 no `/contato` custava 5KB e, medido, 80ms de LCP, o bastante para derrubar a rota de 95
+para 94: lá a foto **é** o elemento de LCP, e por isso é a única do site com `priority`. No
+`/sobre` o LCP é um parágrafo, e a foto fica `lazy` com `fetchPriority="low"`, como os prints.
+
+Um `<Portrait size="inline" />` no `ContactBlock` põe a foto também na home, se o Luiz quiser
+essa leitura de "bloco de contato" — mas aí a home passa a ter três imagens, e há teste
+contando duas.
 
 **WhatsApp (§12) — resolvido, e o andaime saiu.** A pendência "decidir se expõe
 WhatsApp" **não está mais no §12**, e o caminho "Tenho um projeto", que era o

@@ -127,10 +127,10 @@ test('o foco de teclado é visível nos CTAs (§9)', async ({ page }) => {
 
 test('o que ainda falta está escrito na tela, não escondido (§0)', async ({ page }) => {
   await page.goto('/');
-  // Os prints chegaram (Task 6b), os cards saem do conteúdo desde a Task 7 e o
-  // CV entrou na Task 8 — a home não tem mais buraco nenhum. O que ainda falta
-  // no site (o retrato do §6.5) está escrito na tela do /sobre e do /contato,
-  // que é onde ele vai morar.
+  // Os prints chegaram (Task 6b), os cards saem do conteúdo desde a Task 7, o
+  // CV entrou na Task 8 e o retrato fechou a lista — o site inteiro não
+  // tem mais buraco nenhum. A contagem de duas imagens aqui segue sendo dos
+  // dois cards: o retrato mora no /sobre e no /contato, e a home não tem foto.
   await expect(page.getByText(/\{\{ print:/)).toHaveCount(0);
   await expect(page.locator('article img')).toHaveCount(2);
   await expect(page.getByText('{{ CV em PDF }}')).toHaveCount(0);

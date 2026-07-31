@@ -1,8 +1,12 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import SobrePage from '@/app/sobre/page';
 import { LAYER_1, LAYER_2, LAYER_2_CAVEAT, LAYER_3_NEVER } from '@/content/tech';
+import { caminhoDoArquivo } from '../helpers/next-image';
 
 /**
  * `/sobre` (§3.4, §4.3, §4.4).
@@ -86,17 +90,14 @@ describe('/sobre — o texto do §4.3', () => {
     expect(texto).toContain('Se um dia aparecer um próximo desafio');
   });
 
-  it('não sobrou placeholder de texto na página (§12)', () => {
+  it('não sobrou placeholder nenhum na página', () => {
     const { container } = renderPagina();
-    // §12: "todo o texto do site está escrito. O que falta é imagem e código."
-    // Nada de "em breve", nada de lorem, nada de `{{ }}` de texto — o único
-    // buraco legítimo da página é o do retrato, que é imagem.
+    // O retrato era o último buraco aberto do site; com a foto no lugar, a
+    // contagem de `{{ }}` aqui é ZERO, e não mais "um, o do retrato".
     const texto = container.textContent ?? '';
     expect(texto).not.toMatch(/\bem breve\b/i);
     expect(texto).not.toMatch(/lorem ipsum/i);
-    const buracos = texto.match(/\{\{[^}]*\}\}/g) ?? [];
-    expect(buracos).toHaveLength(1);
-    expect(buracos[0]).toMatch(/retrato/i);
+    expect(texto.match(/\{\{[^}]*\}\}/g) ?? []).toEqual([]);
   });
 
   it('não escreve adjetivo de venda (§4)', () => {
@@ -166,16 +167,62 @@ describe('/sobre — as camadas de tecnologia (§4.4)', () => {
 });
 
 describe('/sobre — retrato e formação', () => {
-  it('reserva o lugar do retrato, e o buraco diz o que a foto precisa ser (§6.5)', () => {
+  it('publica o retrato — uma imagem só, com dimensões declaradas', () => {
     const { container } = renderPagina();
-    // A foto ainda não existe (§12). O buraco tem que gritar: se for ao ar por
-    // engano, é impossível não ver — e quem for produzir o arquivo lê a
-    // restrição na tela, sem abrir o brief.
-    expect(screen.getByText(/\{\{ retrato do Luiz/i)).toBeInTheDocument();
-    expect(screen.getByText(/com o instrumento ou em Natal/i)).toBeInTheDocument();
-    expect(screen.getByText(/não headshot corporativo/i)).toBeInTheDocument();
-    // Enquanto for placeholder, não há imagem nenhuma na página.
-    expect(container.querySelectorAll('img')).toHaveLength(0);
+    const imagens = Array.from(container.querySelectorAll('img'));
+    expect(imagens).toHaveLength(1);
+    const [retrato] = imagens;
+
+    // Sem `width`/`height` nos atributos a caixa não reserva altura nenhuma sob
+    // `images.unoptimized`, e a foto abre em 0×0 empurrando a formação para
+    // cima. É a mesma trava dos prints da galeria.
+    expect(Number(retrato.getAttribute('width'))).toBeGreaterThan(0);
+    expect(Number(retrato.getAttribute('height'))).toBeGreaterThan(0);
+
+    // O arquivo é 4:5 — a proporção é premissa do componente, e o /contato usa
+    // outro recorte justamente porque esta não serve lá.
+    const largura = Number(retrato.getAttribute('width'));
+    const altura = Number(retrato.getAttribute('height'));
+    expect(largura / altura).toBeCloseTo(4 / 5, 2);
+
+    // A caixa não pode voltar a pedir mais pixels do que o arquivo tem: 490px
+    // de fonte cobrem 245px de CSS num display 2x, e a raiz do site é 18px.
+    const teto = retrato.className.match(/max-w-\[([\d.]+)rem\]/);
+    expect(teto, `sem teto de largura em ${retrato.className}`).not.toBeNull();
+    expect(Number(teto![1]) * 18 * 2).toBeLessThanOrEqual(largura);
+  });
+
+  it('o alt descreve a fotografia, não o papel dela na página', () => {
+    const { container } = renderPagina();
+    const alt = container.querySelector('img')!.getAttribute('alt') ?? '';
+    // A mesma régua de `lib/projects.ts` para os prints: alt curto ou genérico
+    // é a regressão mais fácil que existe, porque ninguém revisa alt.
+    expect(alt.trim().length).toBeGreaterThan(20);
+    expect(alt.trim()).not.toMatch(/^(print|screenshot|imagem|foto|retrato)$/i);
+    // E ele conta o que se vê: o violão e o microfone estão na foto.
+    expect(alt).toMatch(/viol[ãa]o/i);
+    expect(alt).toMatch(/microfone/i);
+  });
+
+  it('o retrato não disputa banda com o LCP, que aqui é um parágrafo', () => {
+    const { container } = renderPagina();
+    const retrato = container.querySelector('img')!;
+    // Medido: o LCP desta rota é um dos parágrafos do texto — a foto só entra
+    // depois dos cinco. `lazy` sozinho não segura (a margem do lazy-loading do
+    // Chrome é maior que a distância até ela), daí a prioridade baixa.
+    expect(retrato.getAttribute('loading')).toBe('lazy');
+    expect(retrato.getAttribute('fetchpriority')).toBe('low');
+  });
+
+  it('o arquivo do retrato existe no repo, e é o que o componente declara', () => {
+    const { container } = renderPagina();
+    const img = container.querySelector('img')!;
+    // `src` quebrado não dá sintoma nenhum num export estático: o build não
+    // confere `/public`, e o buraco só aparece pra quem abriu a página. Mesma
+    // razão do teste do CV, em tests/unit/contato.test.tsx.
+    const src = caminhoDoArquivo(img);
+    expect(src).toMatch(/^\/retrato\/.+\.webp$/);
+    expect(existsSync(join(process.cwd(), 'public', src))).toBe(true);
   });
 
   it('mostra a formação sem nenhum dado de documento (§4.3)', () => {

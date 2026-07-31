@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import ContatoPage from '@/app/contato/page';
 import { CONTACT_LINKS, CV, EMAIL } from '@/content/contact';
+import { caminhoDoArquivo } from '../helpers/next-image';
 
 /**
  * `/contato` (§3.4): "**simples, porque o objetivo é ser alcançável, não
@@ -138,11 +139,48 @@ describe('/contato — guardrails do brief', () => {
     expect(hrefs.filter((h) => /wa\.me|whatsapp|^tel:/i.test(h ?? ''))).toEqual([]);
   });
 
-  it('põe o retrato em versão pequena, ainda como buraco (§6.5)', () => {
+  it('põe o retrato em versão pequena, e é o recorte quadrado', () => {
     const { container } = renderPagina();
-    expect(screen.getByText('{{ retrato }}')).toBeInTheDocument();
-    expect(screen.getByText(/4:5 · versão pequena/i)).toBeInTheDocument();
-    expect(container.querySelectorAll('img')).toHaveLength(0);
+    const imagens = Array.from(container.querySelectorAll('img'));
+    expect(imagens).toHaveLength(1);
+    const [retrato] = imagens;
+
+    const largura = Number(retrato.getAttribute('width'));
+    const altura = Number(retrato.getAttribute('height'));
+    // Quadrado, e não o 4:5 do /sobre. A caixa aqui tem 180px (10rem sobre uma
+    // raiz de 18px): num 4:5 o rosto cai para uns 50px de altura, e o recorte
+    // quadrado devolve o rosto maior na MESMA largura. Se alguém "unificar" os
+    // dois recortes num arquivo só, é aqui que a unificação custa.
+    expect(largura).toBe(altura);
+    // E as duas dimensões existem: sem elas a caixa não reserva altura nenhuma
+    // sob `images.unoptimized`, e a foto abre em 0×0.
+    expect(largura).toBeGreaterThan(0);
+
+    const arquivo = caminhoDoArquivo(retrato);
+    expect(arquivo).toMatch(/^\/retrato\/.+\.webp$/);
+    expect(existsSync(join(process.cwd(), 'public', arquivo))).toBe(true);
+
+    // Alt descritivo, na mesma régua que `lib/projects.ts` aplica aos prints.
+    const alt = retrato.getAttribute('alt') ?? '';
+    expect(alt.trim().length).toBeGreaterThan(20);
+    expect(alt.trim()).not.toMatch(/^(print|screenshot|imagem|foto|retrato)$/i);
+  });
+
+  it('o retrato não é lazy — nesta rota ele é o elemento de LCP', () => {
+    const { container } = renderPagina();
+    const retrato = container.querySelector('img')!;
+    // Medido, não presumido: o Lighthouse elege esta foto como LCP (a página
+    // tem um título, uma linha e quatro links), reprova `lcp-lazy-loaded` e a
+    // performance cai a 94 — abaixo do piso de 95 que o repo mantém. No /sobre é o
+    // contrário, e lá o `lazy` fica; ver tests/unit/sobre.test.tsx.
+    expect(retrato.getAttribute('loading')).not.toBe('lazy');
+    expect(retrato.getAttribute('fetchpriority')).not.toBe('low');
+  });
+
+  it('não sobrou buraco de asset na página', () => {
+    const { container } = renderPagina();
+    // O retrato era o último `{{ }}` do site. Zero, e não "um, o do retrato".
+    expect((container.textContent ?? '').match(/\{\{[^}]*\}\}/g) ?? []).toEqual([]);
   });
 
   it('não renderiza um <main> próprio — a landmark é do layout', () => {

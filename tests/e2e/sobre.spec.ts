@@ -98,9 +98,40 @@ test('cabe em 360px sem rolagem horizontal (§9)', async ({ page }) => {
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   expect(overflow).toBeLessThanOrEqual(0);
-  // O buraco do retrato é o elemento mais largo depois do texto; se ele
-  // estourasse, estouraria aqui.
-  await expect(page.getByText(/\{\{ retrato do Luiz/)).toBeVisible();
+  // O retrato é o elemento mais largo depois do texto; se ele estourasse,
+  // estouraria aqui. `scrollIntoViewIfNeeded` porque ele nasce abaixo da dobra
+  // e é `loading="lazy"` — sem rolar até ele, o byte nem é pedido.
+  const retrato = page.locator('img[src^="/retrato/"]');
+  await retrato.scrollIntoViewIfNeeded();
+  await expect(retrato).toBeVisible();
+  // E ele chegou de verdade: `naturalWidth` é 0 num src quebrado, e o layout
+  // continuaria certinho porque a caixa é reservada pelos atributos.
+  expect(await retrato.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
+});
+
+test('o retrato vai ao ar como imagem, não como buraco', async ({ page }) => {
+  await page.goto('/sobre');
+  // O retrato era o último asset pendente do site. Nenhum `{{ }}` sobra em
+  // lugar nenhum da página — nem o dele, nem outro que tenha entrado de carona.
+  await expect(page.getByText(/\{\{/)).toHaveCount(0);
+
+  const retrato = page.locator('img[src^="/retrato/"]');
+  await expect(retrato).toHaveCount(1);
+  await retrato.scrollIntoViewIfNeeded();
+
+  // A caixa renderizada não pode pedir mais pixels do que o arquivo tem: num
+  // display 2x, 490px de fonte cobrem 245px de CSS. A raiz do site é 18px, e
+  // foi por ela que os 16rem antigos (288px) davam upscale em toda tela retina
+  // — 16rem são 288px, não 256, e 288 × 2 = 576 de uma fonte que tem 490.
+  const caixa = (await retrato.boundingBox())!;
+  const natural = await retrato.evaluate((el: HTMLImageElement) => el.naturalWidth);
+  expect(caixa.width * 2).toBeLessThanOrEqual(natural);
+  // E não tão pequeno que deixe de ser presença: é a única pessoa no site.
+  expect(caixa.width).toBeGreaterThan(200);
+
+  // Alt descritivo — a mesma régua que lib/projects.ts aplica aos prints.
+  const alt = (await retrato.getAttribute('alt')) ?? '';
+  expect(alt.length).toBeGreaterThan(20);
 });
 
 test('o tema escuro não quebra a página (§9)', async ({ page }) => {
