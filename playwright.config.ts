@@ -5,7 +5,7 @@ const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 /**
  * E2E roda contra o artefato de produção, não contra `next dev`. O site é um
- * export estático (§7) e é o `out/` que vai ao ar; testar o dev server testaria
+ * export estático e é o `out/` que vai ao ar; testar o dev server testaria
  * um build que ninguém publica.
  *
  * O Vitest ignora `tests/e2e/**` (ver `vitest.config.ts`), então `npm run test`
