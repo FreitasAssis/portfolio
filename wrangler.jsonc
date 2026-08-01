@@ -3,6 +3,12 @@
   "name": "portfolio",
   "compatibility_date": "2026-07-31",
 
+  // O site responde em luizfreitas.com.br. Sem esta chave o wrangler habilita
+  // portfolio.<subdominio>.workers.dev por padrão, e o site passa a existir em
+  // dois endereços — desligar no painel não resolve, porque o próximo deploy lê
+  // este arquivo e volta ao padrão.
+  "workers_dev": false,
+
   // Worker só de assets: não há `main`, então nenhum código roda por requisição.
   // O site é export estático e o Worker existe só para servir `out/`, com o
   // `_headers` e o `_redirects` que moram lá dentro.
