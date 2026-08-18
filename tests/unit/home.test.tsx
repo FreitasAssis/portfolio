@@ -207,7 +207,7 @@ describe('Home — trajetória condensada', () => {
 
   /* Âncora, não o topo. O link promete "detalhe de cada posição", e o topo do
      /projetos é a seção de projetos próprios — cair lá obrigaria a rolar
-     passando por dois cards grandes até achar o que foi prometido. O alvo
+     passando pelos cards grandes até achar o que foi prometido. O alvo
      `#experiencia` vive em components/Timeline.tsx; um e2e confere que ele
      existe de fato na página construída, porque href apontando para âncora
      inexistente é falha silenciosa: o navegador não reclama, só não sai do

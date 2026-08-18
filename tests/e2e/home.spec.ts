@@ -181,7 +181,7 @@ test('não há formulário de contato', async ({ page }) => {
  * Fim da página.
  *
  * O bloco de `components/EndNav.tsx` está na home, na `/projetos`, no `/sobre`
- * e nos dois cases — uma âncora estática, sem JS, sem movimento e sem elemento
+ * e nos cases — uma âncora estática, sem JS, sem movimento e sem elemento
  * flutuante. O `/contato` fica fora: ele cabe numa tela.
  * ------------------------------------------------------------------------- */
 

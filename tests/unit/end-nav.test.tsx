@@ -13,7 +13,7 @@ import { CSS } from '../helpers/globals-css';
 
 /**
  * O bloco de fim de conteúdo, na forma compartilhada por quatro rotas: a home,
- * a `/projetos`, o `/sobre` e os dois cases. O `/contato` fica de fora, e a
+ * a `/projetos`, o `/sobre` e os cases. O `/contato` fica de fora, e a
  * razão está em `tests/unit/contato.test.tsx`.
  *
  * O que estes testes protegem é o **idioma único**: a mesma âncora, o mesmo

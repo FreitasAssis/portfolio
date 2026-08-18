@@ -188,7 +188,7 @@ test('o card leva ao app e ao case', async ({ page }) => {
 });
 
 test('o "voltar ao topo" da /projetos leva ao topo de verdade', async ({ page }) => {
-  // A página mais alta do site fora dos cases: dois cards grandes e cinco
+  // A página mais alta do site fora dos cases: os cards grandes e cinco
   // posições com `built`, `impact` e `stack`. Medido em 360px, que é onde o
   // atalho importa — e onde o Android não tem o gesto de barra de status do iOS.
   await page.setViewportSize({ width: 360, height: 740 });

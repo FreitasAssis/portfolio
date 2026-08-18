@@ -420,13 +420,12 @@ describe('prints', () => {
   /* ----------------------------------------------------------------------- *
    * `cardShot` — o print do card, que não é necessariamente a capa.
    *
-   * As duas capas têm orientações diferentes, e de propósito: a do Asafe é
-   * retrato (uma tela de repertório) e a do "E aí, fez?" é a imagem OG do app,
-   * 1200×630 — o único elemento do app projetado para ser visto fora dele.
-   * Nas páginas de case isso é certo e fica. No card, não: ali os dois são
-   * vistos no mesmo instante oferecendo a mesma coisa, e um celular alto ao
-   * lado de um cartão largo faz o olho ler duas CATEGORIAS de coisa em vez de
-   * duas ofertas paralelas.
+   * As capas têm orientações diferentes, e de propósito: a do Asafe é retrato
+   * (uma tela de repertório), a do "E aí, fez?" é a imagem OG do app, 1200×630,
+   * e a da Ciranda é a exibição rodando numa TV. Nas páginas de case isso é
+   * certo e fica. No card, não: ali todas são vistas no mesmo instante
+   * oferecendo a mesma coisa, e um celular alto ao lado de um cartão largo faz o
+   * olho ler CATEGORIAS diferentes de coisa em vez de ofertas paralelas.
    * ----------------------------------------------------------------------- */
 
   it('o card do Asafe usa a capa; o do "E aí, fez?" usa o print retrato', async () => {
@@ -454,7 +453,7 @@ describe('prints', () => {
     expect(ciranda.shots.map((s) => s.src)).not.toContain(ciranda.cardShot.src);
   });
 
-  it('todo cardShot é retrato — é o que faz os dois cards lerem como pares', async () => {
+  it('todo cardShot é retrato — é o que faz os cards lerem como pares', async () => {
     for (const p of await getAllProjects()) {
       const shot = p.cardShot;
       if (isShotPending(shot)) continue;
@@ -576,7 +575,7 @@ describe('dimensão dos prints', () => {
   });
 
   it('nenhum print pendente sobrou', async () => {
-    // Os dois cases estão capturados. A regra por print continua valendo mesmo
+    // Os três cases estão capturados. A regra por print continua valendo mesmo
     // assim, e é ela que segura o próximo projeto.
     for (const p of await getAllProjects()) {
       for (const shot of todosOsPrints(p)) {

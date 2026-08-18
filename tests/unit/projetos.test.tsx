@@ -115,7 +115,7 @@ describe('/projetos — projetos próprios', () => {
 
   it('o card mostra o `cardShot` do conteúdo, retrato nos dois', async () => {
     // A orientação é decisão de conteúdo (frontmatter `cardShot`), não um
-    // `if (slug === ...)` no componente: os dois cards são vistos no mesmo
+    // `if (slug === ...)` no componente: os cards são vistos no mesmo
     // instante oferecendo a mesma coisa, e retrato ao lado de paisagem lê como
     // duas categorias de coisa em vez de duas ofertas paralelas.
     const { container } = await renderPagina();
@@ -299,7 +299,7 @@ const byCompany = (company: string) => experience.find((e) => e.company === comp
 
 describe('/projetos — fim da página', () => {
   it('fecha com o "voltar ao topo", no mesmo idioma dos cases', async () => {
-    // A página mais alta do site fora dos cases: dois cards grandes e cinco
+    // A página mais alta do site fora dos cases: os cards grandes e cinco
     // posições com `built`, `impact` e `stack` — 4,9 telas em 1440×900, e em
     // 360px muito mais. A forma vem de `components/EndNav.tsx`.
     await renderPagina();
