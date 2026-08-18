@@ -55,9 +55,10 @@ describe('Home — hero', () => {
     expect(hero.querySelector('img')).toBeNull();
     // Só existem duas fontes de imagem no site — prints de projeto e o retrato
     // —, e nenhuma delas é decoração. Na home, as únicas imagens são os prints
-    // dos dois cards.
+    // dos cards: uma por projeto, contada a partir do conteúdo para que um case
+    // novo não possa entrar trazendo imagem de enfeite junto.
     const imagens = Array.from(container.querySelectorAll('img'));
-    expect(imagens).toHaveLength(2);
+    expect(imagens).toHaveLength((await getAllProjects()).length);
     for (const img of imagens) {
       expect(img.closest('article')).not.toBeNull();
     }
@@ -70,7 +71,7 @@ describe('Home — projetos próprios', () => {
     const nomes = within(section(/projetos próprios/i))
       .getAllByRole('heading', { level: 3 })
       .map((h) => h.textContent);
-    expect(nomes).toEqual(['Asafe', 'E aí, fez?']);
+    expect(nomes).toEqual(['Asafe', 'E aí, fez?', 'Ciranda']);
   });
 
   it('o link principal leva ao app no ar, não ao case', async () => {
@@ -102,7 +103,11 @@ describe('Home — projetos próprios', () => {
   it('cada card empresta a própria cor ao site', async () => {
     const { container } = await renderHome();
     const zonas = Array.from(container.querySelectorAll('[data-accent]'));
-    expect(zonas.map((z) => z.getAttribute('data-accent'))).toEqual(['asafe', 'eaifez']);
+    expect(zonas.map((z) => z.getAttribute('data-accent'))).toEqual([
+      'asafe',
+      'eaifez',
+      'ciranda',
+    ]);
     expect(within(zonas[0] as HTMLElement).getByRole('heading', { level: 3 })).toHaveTextContent(
       'Asafe',
     );

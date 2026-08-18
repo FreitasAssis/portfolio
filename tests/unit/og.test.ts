@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { META, OG_CARDS } from '@/content/site';
 import { contrastRatio } from '@/lib/contrast';
-import { OG_MIN_FONT_SIZE, OG_NEUTRAL, OG_SIZE, ogHeadlineSize } from '@/lib/og';
+import { OG_MIN_FONT_SIZE, OG_NEUTRAL, OG_SIZE, ogHeadlineSize, ogInk } from '@/lib/og';
 import { getAllProjects } from '@/lib/projects';
+
+import { resolveTokens, token } from '../helpers/globals-css';
 
 /**
  * O card de OG na origem: o texto e as cores, antes de virarem PNG.
@@ -89,15 +91,31 @@ describe('contraste do texto sobre o preenchimento', () => {
   });
 
   it('cada acento emprestado sustenta o texto do card', async () => {
-    // O piso é o de texto grande porque o card não tem texto pequeno. Os dois
+    // O piso é o de texto grande porque o card não tem texto pequeno. Os
     // acentos de hoje sobram: são os mesmos hex que `--accent` carrega em
     // app/globals.css, e lá o par precisa aguentar 4.5:1 por causa do botão
     // "Abrir o app" — quem trava a igualdade entre os dois lados é
     // tests/unit/projects.test.ts.
     for (const project of await getAllProjects()) {
-      const ratio = contrastRatio('#FAFAFA', project.accent);
+      const ratio = contrastRatio(ogInk(project.accent), project.accent);
       expect(ratio, `${project.slug}: ${ratio.toFixed(2)}:1 sobre ${project.accent}`)
         .toBeGreaterThanOrEqual(AA_TEXTO_GRANDE);
+    }
+  });
+
+  it('a tinta do card é a mesma que o CSS declara em --accent-ink', async () => {
+    // O terceiro lado do acordo. O card de OG não lê o `globals.css`: ele
+    // escolhe a tinta medindo contraste contra o preenchimento, e este teste é
+    // o que garante que a escolha coincide com a do site — senão o mesmo
+    // projeto sairia com tinta clara no feed e escura na capa do case.
+    //
+    // Antes da Ciranda a tinta era `#FAFAFA` fixo, e passava: os dois acentos
+    // eram escuros. O âmbar dela mede 2.07:1 contra o branco — o card teria
+    // saído ilegível, e nada no build reclamaria, porque o PNG é gerado igual.
+    for (const project of await getAllProjects()) {
+      expect(ogInk(project.accent).toLowerCase(), project.slug).toBe(
+        token(resolveTokens('claro', project.slug), '--accent-ink'),
+      );
     }
   });
 });

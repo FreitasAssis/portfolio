@@ -3,6 +3,8 @@ import { join } from 'node:path';
 
 import { ImageResponse } from 'next/og';
 
+import { contrastRatio } from '@/lib/contrast';
+
 /** O recorte que LinkedIn, Twitter e Facebook mostram inteiro, sem cortar. */
 export const OG_SIZE = { width: 1200, height: 630 } as const;
 
@@ -12,7 +14,7 @@ export const OG_SIZE = { width: 1200, height: 630 } as const;
  * **sem extensão**, e quem serve o arquivo deduz o tipo do nome. Sem extensão
  * isso vira `application/octet-stream` e o crawler recusa a imagem — card
  * quebrado é pior que card nenhum. É `public/_headers` que fecha o buraco, e
- * `tests/e2e/seo.spec.ts` confere que ele cobre as seis rotas.
+ * `tests/e2e/seo.spec.ts` confere que ele cobre as rotas do site.
  *
  * O `generateImageMetadata`, que poria o `.png` na URL, não serve aqui: dentro
  * de um segmento dinâmico o Next substitui o `generateStaticParams` do arquivo
@@ -26,9 +28,29 @@ export const OG_CONTENT_TYPE = 'image/png';
 /**
  * O card sem projeto na tela. Não é cor nova: é o que `:root` já declara em
  * `app/globals.css` para `--accent` e `--accent-ink` enquanto nenhum projeto
- * emprestou a sua. Os dois cases sobrescrevem com o hex da própria marca.
+ * emprestou a sua. Cada case sobrescreve com o hex da própria marca.
  */
 export const OG_NEUTRAL = { fill: '#14161A', ink: '#FAFAFA' } as const;
+
+/**
+ * O texto sobre o preenchimento da marca, escolhido pela MEDIDA e não fixado em
+ * `#FAFAFA`.
+ *
+ * Os dois candidatos são os mesmos `--ink` e `--paper` que `app/globals.css`
+ * declara; o que muda é qual deles o acento aguenta. O âmbar da Ciranda mede
+ * 2.07:1 contra o claro e 8.40:1 contra o escuro — com o branco fixo, o card de
+ * OG dela sairia ilegível no feed e nada no build reclamaria, porque o PNG é
+ * gerado do mesmo jeito.
+ *
+ * Que a escolha daqui bate com o `--accent-ink` do CSS em todo acento é
+ * `tests/unit/og.test.ts` quem confere: é o terceiro lado do acordo entre o
+ * frontmatter, o CSS e o card.
+ */
+export function ogInk(fill: string): string {
+  const claro = '#FAFAFA';
+  const escuro = '#14161A';
+  return contrastRatio(claro, fill) >= contrastRatio(escuro, fill) ? claro : escuro;
+}
 
 /**
  * O menor corpo de texto do card, em pixels.
@@ -42,7 +64,7 @@ export const OG_MIN_FONT_SIZE = 26;
 
 /**
  * O corpo da manchete, e o comprimento em que ela deixa de caber numa linha.
- * "Projetos e experiência" é a única das seis que quebra em duas.
+ * "Projetos e experiência" é a única das quatro fixas que quebra em duas.
  */
 const HEADLINE_SIZE = { grande: 128, pequena: 96, limite: 14 } as const;
 

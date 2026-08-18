@@ -1,0 +1,191 @@
+---
+slug: ciranda
+name: Ciranda
+tagline: Suas fotos passando na TV, com música por trás.
+# A meta description, lida fora da página. Não é a tagline.
+description: Um site estático que passa fotos em tela cheia na TV, com música por trás. Sem build, sem dependência e sem servidor — tudo mora no navegador de quem usa.
+kind: own
+status: live
+liveUrl: https://freitasassis.github.io/ciranda/
+repoUrl: https://github.com/FreitasAssis/ciranda
+accent: '#E8A33D'
+accentDark: '#EFB25C'
+order: 3
+stack:
+  - name: HTML, CSS e JavaScript sem build
+    why: três arquivos servidos como estão — `index.html`, `app.css` e `app.js`. Sem empacotador, sem dependência de runtime e sem etapa de compilação. O `package.json` existe só para os testes.
+  - name: IndexedDB
+    why: fotos, músicas, logotipo e ajustes ficam no navegador de quem usa. É o que dispensa conta e servidor, e o que faz o dado não sair do aparelho — em troca, nada sincroniza entre aparelhos.
+  - name: Service worker e manifest
+    why: a casca fica em cache para abrir offline e para o navegador oferecer a instalação. Instalada, a página ganha armazenamento persistente, e as fotos param de ser descartadas quando o disco aperta.
+  - name: IFrame Player API do YouTube
+    why: a trilha é um vídeo ou uma playlist dentro de um iframe, com o teclado do player desligado por `disablekb=1` — sem isso, clicar no player faria a barra de espaço pausar o vídeo em vez de pausar a troca de fotos.
+  - name: Playwright
+    why: os testes rodam num Chromium de verdade, porque tudo que importa aqui é comportamento de navegador — tela cheia, IndexedDB, decodificação de imagem e o service worker. Nada disso um teste de mentirinha pega.
+  - GitHub Pages
+cover:
+  src: /projects/ciranda/cover.webp
+  width: 2560
+  height: 1440
+  alt: exibição da Ciranda numa TV, com a foto de um prato ocupando a tela inteira e o rodapé mostrando o logotipo do restaurante, o nome da casa e a hora
+# A capa é paisagem, e o card exige retrato — daí este campo. `alt` próprio
+# porque no card a imagem aparece sozinha, sem a galeria em volta.
+cardShot:
+  src: /projects/ciranda/card.webp
+  width: 1290
+  height: 2796
+  alt: exibição da Ciranda em retrato, com a foto de um prato entre as faixas grafite da moldura e a telinha do vídeo no canto de baixo
+shots:
+  - src: /projects/ciranda/01.webp
+    width: 2560
+    height: 1832
+    alt: tela de ajustes da Ciranda, com a prévia do logotipo sobre o quadriculado de transparência e as duas ordens de exibição rotuladas pelo uso — na ordem para cardápio e catálogo, sorteada para festa e retrospectiva
+  - src: /projects/ciranda/02.webp
+    width: 2560
+    height: 2124
+    alt: painel Transmitir para a TV da Ciranda, com os três caminhos abertos — pelo navegador para Chromecast, pelo espelhamento do sistema para as outras TVs, e por cabo HDMI
+  - src: /projects/ciranda/03.webp
+    width: 1290
+    height: 2796
+    alt: montagem de uma ciranda num celular, com a playlist da trilha e a grade das fotos importadas na ordem em que vão aparecer
+decisions:
+  - chose: um site estático, sem build, sem dependência e sem servidor
+    insteadOf: um app com framework, conta e backend
+    because: |-
+      O que vai ao ar são `index.html`, `app.css` e `app.js`, servidos como
+      estão. Não há empacotador, dependência de runtime nem etapa de
+      compilação: editar e publicar. O `package.json` do repo existe só para os
+      testes, e não entra no que é servido.
+
+      Quem guarda as fotos, as músicas, o logotipo e os ajustes é o IndexedDB
+      do navegador de quem usa. Isso derruba a conta, o login, o upload e a
+      fatura de armazenamento de uma vez — e a privacidade chega por **não
+      existir servidor**, não por um desenho cuidadoso de permissões. Não há o
+      que vazar de um lugar que não recebe nada.
+
+      O preço é real e está escrito na tela: nada sincroniza entre aparelhos, e
+      limpar os dados de navegação do site apaga a ciranda montada. Para uma
+      parede que roda sempre no mesmo computador, é troca boa; para uma
+      ferramenta de equipe, não seria.
+
+      É também a decisão que os meus outros dois projetos não poderiam tomar.
+      Um app com repertório compartilhado ou com placar entre amigos precisa de
+      um lugar comum; uma parede não precisa. Reconhecer isso foi metade do
+      trabalho de desenho.
+  - chose: servir de um endereço `https://`
+    insteadOf: distribuir como extensão do Chrome
+    because: |-
+      Era uma extensão, e por um bom motivo aparente: extensão instala, aparece
+      com ícone e não depende de o usuário guardar um link. Só que o Chrome não
+      envia cabeçalho de referência para iframes dentro de páginas de extensão,
+      e sem ele o YouTube recusa o player com o erro 153. Não há atributo,
+      permissão nem opção de manifesto que resolva — a origem `chrome-extension:`
+      não tem como se apresentar ao player.
+
+      Servida de `https://`, a mesma página funciona sem nenhuma mudança de
+      código. O que a extensão dava de bom — ícone próprio, janela sem barra,
+      abrir offline — o PWA instalável devolve inteiro, e ainda funciona em
+      navegador que não é o Chrome.
+
+      A lição que ficou não é sobre o YouTube: é que a escolha do invólucro
+      muda quais requisições o navegador considera legítimas. Isso não aparece
+      em nenhum tutorial de extensão, e só apareceu no console.
+  - chose: manter uma foto decodificada por vez, com a seguinte pronta
+    insteadOf: carregar o álbum e deixar o navegador administrar
+    because: |-
+      Um álbum de festa passa de centenas de imagens, e a exibição pode rodar a
+      noite inteira. A ciranda lê apenas a lista de identificadores e mantém no
+      máximo quatro imagens em memória, descartando as que já passaram.
+
+      A parte que só o relógio ensina: criar o endereço da imagem **não basta**.
+      A decodificação do JPEG só acontece quando alguém pede a imagem para
+      desenhar, e é ela — não a leitura do banco — que atrasa a troca. Por isso
+      a próxima foto é decodificada antes de entrar, e não no instante em que
+      deveria aparecer. Sem isso a troca pisca, e pisca justamente quando a
+      máquina está mais ocupada, com o vídeo tocando por trás.
+
+      As fotos ainda são reduzidas na importação, o que mantém o banco leve; mas
+      redução sozinha não resolveria, porque o problema não é o tamanho do
+      arquivo e sim o momento em que ele vira pixel.
+  - chose: reduzir a foto na importação e guardar o logotipo exatamente como veio
+    insteadOf: passar tudo pelo mesmo caminho de importação
+    because: |-
+      Foto vira JPEG de no máximo 2400px. Sobra para qualquer TV, mantém o banco
+      leve e deixa a importação de centenas de arquivos terminar em tempo
+      razoável.
+
+      O logotipo é a exceção, e é uma exceção com motivo: ele quase sempre é um
+      PNG de fundo transparente, e converter para JPEG trocaria a transparência
+      por um retângulo branco em volta da marca do cliente, bem no rodapé que
+      existe para assinar a tela. Guardado como veio, continua transparente. A
+      prévia ao lado do botão mostra o resultado exato sobre o rodapé, sobre o
+      quadriculado de transparência, antes de a tela ir para a TV.
+  - chose: documentar os três caminhos de transmissão
+    insteadOf: um botão "Transmitir" dentro da página
+    because: |-
+      Qual caminho funciona depende da TV, e não do app. O Firefox não fala
+      Google Cast. Samsung, LG mais antigas, Roku, Fire TV e Apple TV não
+      respondem ao menu de transmitir do navegador — ali quem espelha é o
+      sistema, por Miracast ou AirPlay. E há sempre o cabo HDMI, que é o único
+      caminho que não depende de Wi-Fi bom e o mais seguro quando o evento não
+      pode falhar.
+
+      Um botão único prometeria uniformidade que não existe: ele funcionaria num
+      terço dos casos e falharia calado nos outros dois, sem nada a dizer sobre
+      o porquê. Então o app não tem botão de transmitir — tem um painel que
+      nomeia os três caminhos, com o menu exato de cada navegador e de cada
+      sistema, e diz de saída que a escolha é da TV.
+
+      Fica também o aviso que se paga caro por não saber: se aparecer a opção de
+      enviar o áudio junto, ela precisa ficar marcada, e a transmissão precisa
+      ser de **aba**, não de arquivo — é a única forma de a música ir junto com
+      a imagem.
+---
+
+## O problema
+
+Uns amigos meus, um casal que tem um bar de petiscos, penduraram uma TV na parede com um
+Chromecast e deixam o YouTube rolando. Vendo aquilo, pensei que na mesma tela cabia também o
+cardápio: as fotos dos pratos passando, com a música que já estava tocando.
+
+O que existe para isso é sinalização digital de verdade — assinatura mensal, aparelho próprio,
+conta e painel de administração. É muito para uma parede só. E a mesma ciranda que serve o
+cardápio serve as fotos de um aniversário, o catálogo de uma loja e o portfólio na parede de um
+estúdio: é sempre foto girando com música tocando, e a tela indo para a TV.
+
+## O que é
+
+Uma página web que passa as fotos em tela cheia com música por trás, e a tela vai para a TV —
+por Chromecast, pelo espelhamento do próprio sistema, ou por um cabo HDMI. Não pede conta, não
+pede instalação e não tem plano pago.
+
+A trilha vem de um vídeo ou de uma playlist do YouTube, ou de arquivos de música arrastados
+para a página. Dá para ajustar o tempo de cada foto, a ordem — na lista ou sorteada —, quem
+ocupa a tela entre as fotos e o vídeo, e um rodapé que assina a exibição com logotipo, nome e
+hora. Há ainda uma tela de abertura, para o nome dos noivos ou a capa do catálogo.
+
+Tudo fica no navegador de quem usa e não sai dali. É PWA instalável, abre offline, e o código é
+aberto sob MIT.
+
+<Decisoes />
+
+<Stack />
+
+## Estado
+
+No ar desde agosto de 2026, com tudo o que está descrito acima de pé: importação de fotos em
+lote, trilha por YouTube ou por arquivos, ordem na lista ou sorteada, as quatro combinações de
+foto e vídeo na tela, o rodapé assinado, a tela de abertura, os atalhos de teclado durante a
+exibição e o painel com os três caminhos de transmissão. É PWA instalável, abre offline, e os
+testes rodam num Chromium de verdade a cada push.
+
+E uma ressalva que importa mais que a lista: **ela ainda não está em uso de verdade.** Foi
+construída para aquela TV do bar e não entrou em serviço — nenhuma parede está rodando uma
+ciranda hoje. Registro isso porque o contrário seria fácil de escrever e impossível de conferir,
+e porque é o uso que costuma reescrever metade das decisões de um projeto assim.
+
+O que vem depois depende desse uso que ainda não houve. Uma pendência já é conhecida e não é
+técnica: som ambiente em estabelecimento comercial no Brasil passa pelo ECAD, e os termos do
+YouTube são de uso pessoal. Para um bar ficar em dia, a trilha precisa vir de um serviço com
+plano comercial, em outra aba, com a Ciranda transmitindo só as fotos. Isso hoje está no README
+e precisa estar na própria tela, onde a decisão é tomada.

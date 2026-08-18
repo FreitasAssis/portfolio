@@ -87,7 +87,7 @@ describe('/projetos — projetos próprios', () => {
     const nomes = within(secao(/projetos próprios/i))
       .getAllByRole('heading', { level: 3 })
       .map((h) => h.textContent);
-    expect(nomes).toEqual(['Asafe', 'E aí, fez?']);
+    expect(nomes).toEqual(['Asafe', 'E aí, fez?', 'Ciranda']);
   });
 
   it('cada card leva ao app e ao case, e empresta a própria cor', async () => {
@@ -110,7 +110,7 @@ describe('/projetos — projetos próprios', () => {
       Array.from(container.querySelectorAll('[data-accent]')).map((z) =>
         z.getAttribute('data-accent'),
       ),
-    ).toEqual(['asafe', 'eaifez']);
+    ).toEqual(['asafe', 'eaifez', 'ciranda']);
   });
 
   it('o card mostra o `cardShot` do conteúdo, retrato nos dois', async () => {

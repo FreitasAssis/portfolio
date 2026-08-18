@@ -1,6 +1,6 @@
 # luizfreitas.com.br
 
-Meu portfólio: dois produtos que construí por conta própria, com o raciocínio por trás de cada
+Meu portfólio: os produtos que construí por conta própria, com o raciocínio por trás de cada
 decisão técnica, e a trajetória profissional. No ar em [luizfreitas.com.br](https://luizfreitas.com.br).
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · conteúdo em MDX.
@@ -19,6 +19,12 @@ injeta a sua via `data-accent`, e um `IntersectionObserver` propaga para o `<htm
 quem está dominando a viewport. As marcas fortes aqui são as dos apps, não a do portfólio.
 `components/AccentTracker.tsx` — o limiar é cobertura de viewport, não `intersectionRatio`, e o
 comentário lá explica por quê.
+
+O acento não é um hex só: `--accent` é **preenchimento** (capa, botão, borda) e `--accent-text` é
+o único que vai a texto e link. Os dois primeiros projetos usavam o mesmo valor nos dois papéis,
+o que fazia a separação parecer enfeite; o âmbar da Ciranda é o caso em que ela morde — reprova
+como texto sobre papel claro e passa folgado como fundo. `tests/unit/contrast.test.ts` resolve a
+cascata do CSS e mede os quatro pares de cada acento.
 
 **Projeto novo é um arquivo.** Um `.mdx` em `content/projects/` com o frontmatter completo, e
 mais nada. O carregador (`lib/projects.ts`) valida campo a campo e **quebra o build** citando
@@ -50,8 +56,8 @@ npm run dev          # http://localhost:3000
 ## Verificando
 
 ```bash
-npm run verify       # typecheck + lint + 264 testes + build
-npm run test:e2e     # 81 testes de ponta a ponta, contra o export estático
+npm run verify       # typecheck + lint + 297 testes + build
+npm run test:e2e     # 142 testes de ponta a ponta, contra o export estático
 ```
 
 Os testes de ponta a ponta rodam contra o `out/`, que é o artefato que vai ao ar — e não contra

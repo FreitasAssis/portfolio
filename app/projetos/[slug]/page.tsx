@@ -118,13 +118,46 @@ function Shot({
 }
 
 /**
- * A capa tem linha própria porque a proporção dela varia por projeto (a do
- * "E aí, fez?" é paisagem, a do Asafe retrato). Numa grade única a linha ganha a
- * altura do print mais alto e o card paisagem flutua no meio dela.
+ * Paisagem pela MEDIDA declarada, nunca pelo slug: é o mesmo dado que o
+ * carregador já usa para recusar `cardShot` paisagem, e é o que faz um projeto
+ * novo entrar na galeria certa sem tocar neste arquivo. Print ainda pendente cai
+ * em retrato, que é a proporção do buraco tracejado.
+ */
+function ehPaisagem(shot: Project['cover']): boolean {
+  return !isShotPending(shot) && shot.width > shot.height;
+}
+
+/**
+ * Os prints em faixas de mesma orientação, na ordem do frontmatter.
+ *
+ * Não é `filter` duas vezes de propósito: separar por orientação reordenaria a
+ * galeria se um dia um retrato viesse entre dois paisagens, e a ordem dos prints
+ * é conteúdo — o primeiro é o que sustenta a primeira decisão.
+ */
+function faixas(shots: readonly Project['cover'][]) {
+  const out: { paisagem: boolean; shots: Project['cover'][] }[] = [];
+  for (const shot of shots) {
+    const paisagem = ehPaisagem(shot);
+    const ultima = out.at(-1);
+    if (ultima?.paisagem === paisagem) ultima.shots.push(shot);
+    else out.push({ paisagem, shots: [shot] });
+  }
+  return out;
+}
+
+/**
+ * A capa tem linha própria porque a proporção dela varia por projeto (a da
+ * Ciranda e a do "E aí, fez?" são paisagem, a do Asafe retrato). Numa grade única
+ * a linha ganha a altura do print mais alto e o card paisagem flutua no meio dela.
+ *
+ * O mesmo raciocínio vale para os prints, e desde a Ciranda ele morde: ela é o
+ * primeiro case cuja galeria mistura as duas orientações. Um retrato numa coluna
+ * de 272px tem 585px de altura e os paisagens ao lado dele têm ~200px — a linha
+ * ganha a altura do retrato e os outros dois boiam. Por isso cada faixa de mesma
+ * orientação recebe a própria linha, com a trilha larga para paisagem e a
+ * estreita para retrato.
  */
 function Gallery({ project }: { readonly project: Project }) {
-  const capaPaisagem = !isShotPending(project.cover) && project.cover.width > project.cover.height;
-
   return (
     <Container as="section" width="wide" className="py-14">
       <h2 className="sr-only">Prints do {project.name}</h2>
@@ -133,19 +166,49 @@ function Gallery({ project }: { readonly project: Project }) {
           que a coluna chega em `lg`) porque o strip cresce com a coluna e ela
           não: igualando os tetos, a capa sai menor que os prints que encabeça. */}
       <div className="flex justify-center">
-        <Shot shot={project.cover} className={capaPaisagem ? 'max-w-[34rem]' : 'max-w-[20rem]'} />
+        <Shot
+          shot={project.cover}
+          className={ehPaisagem(project.cover) ? 'max-w-[34rem]' : 'max-w-[20rem]'}
+        />
       </div>
 
-      {/* O strip só abre em `lg`: empilhado cada print tem 270px, e numa grade de
-          três a coluna só alcança 270px a partir de ~874px de viewport. Abrir em
-          `sm` (165px) ou `md` (202px) faz a captura ENCOLHER ao ganhar tela. */}
-      <ul className="mt-10 grid justify-items-center gap-8 lg:grid-cols-3">
-        {project.shots.map((shot) => (
-          <li key={shot.alt} className="w-full max-w-[15rem] lg:max-w-none">
-            <Shot shot={shot} />
-          </li>
+      {/* As trilhas só abrem em `lg`: empilhado cada print retrato tem 240px, e
+          numa grade de três a coluna só alcança isso a partir de ~874px de
+          viewport. Abrir em `sm` (165px) ou `md` (202px) faz a captura ENCOLHER
+          ao ganhar tela.
+
+          `auto-fit` com trilha de largura FIXA, e não `grid-cols-3` com `1fr`: a
+          faixa de uma imagem só (o retrato da Ciranda, sozinho depois de dois
+          paisagens) ocuparia a coluna 1 de três e ficaria encostada na esquerda.
+          Com auto-fit as trilhas vazias colapsam e o `justify-center` centraliza
+          o que sobrou. Com três retratos as trilhas dão os mesmos 272px de antes,
+          então Asafe e "E aí, fez?" não mudam de tamanho.
+
+          O `justify-center` vale só de `lg` pra cima porque abaixo dele a trilha
+          é implícita e `auto`: centralizar o conteúdo a faria medir por
+          max-content, e a imagem de 2560px estouraria a viewport de 360px em vez
+          de caber nela. */}
+      <div className="mt-10 space-y-8">
+        {faixas(project.shots).map((faixa) => (
+          <ul
+            key={faixa.shots[0].alt}
+            className={`grid justify-items-center gap-8 lg:justify-center ${
+              faixa.paisagem
+                ? 'lg:grid-cols-[repeat(auto-fit,minmax(0,26rem))]'
+                : 'lg:grid-cols-[repeat(auto-fit,minmax(0,17rem))]'
+            }`}
+          >
+            {faixa.shots.map((shot) => (
+              <li
+                key={shot.alt}
+                className={`w-full ${faixa.paisagem ? 'max-w-[34rem] lg:max-w-none' : 'max-w-[15rem] lg:max-w-none'}`}
+              >
+                <Shot shot={shot} />
+              </li>
+            ))}
+          </ul>
         ))}
-      </ul>
+      </div>
     </Container>
   );
 }

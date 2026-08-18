@@ -39,7 +39,7 @@ const newsreader = Newsreader({
 /**
  * A única das três sem `<link rel="preload">`. As três preloadadas somam 140KB
  * disputando a mesma banda, e a mono nunca é o elemento de LCP em nenhuma das
- * seis rotas — ela desenha metadado: datas, stack, rótulos. Tirá-la da fila de
+ * rotas do site — ela desenha metadado: datas, stack, rótulos. Tirá-la da fila de
  * prioridade alta é o que deixa a display e a serifada, que SÃO o LCP, chegarem
  * antes. Ela continua no CSS e continua em `swap`: chega logo depois, e o que
  * pisca é um rótulo curto.

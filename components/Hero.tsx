@@ -25,7 +25,7 @@ export function Hero() {
       <p className="prose-measure mt-7 text-ink-2">
         Hoje construo, na Analytica Ensino, uma plataforma educacional usada por cerca de 400 mil
         alunos, professores e gestores da rede pública do Paraná. Fora do expediente sou músico, e
-        foi daí que surgiu o Asafe. Os dois apps abaixo estão no ar; te convido a testá-los.
+        foi daí que surgiu o Asafe. Os apps abaixo estão no ar; te convido a testá-los.
       </p>
 
       <div className="mt-9 flex flex-wrap items-center gap-x-4 gap-y-3 font-mono text-sm">

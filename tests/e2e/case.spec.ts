@@ -55,6 +55,12 @@ test('o case empresta a cor ao site inteiro', async ({ page }) => {
   await page.goto('/projetos/eaifez');
   await expect(page.locator('html')).toHaveAttribute('data-accent', 'eaifez');
   expect(await accentVar(page)).toBe('#a83c55');
+
+  // O primeiro acento em que o preenchimento e a cor do texto divergem: aqui se
+  // mede o preenchimento, e o par de texto sai medido em tests/unit/contrast.
+  await page.goto('/projetos/ciranda');
+  await expect(page.locator('html')).toHaveAttribute('data-accent', 'ciranda');
+  expect(await accentVar(page)).toBe('#e8a33d');
 });
 
 test('a linha do corpo fica na faixa de 65–75 caracteres', async ({ page }) => {
@@ -80,11 +86,12 @@ test('a linha do corpo fica na faixa de 65–75 caracteres', async ({ page }) =>
   expect(medida).toBeLessThanOrEqual(75);
 });
 
-// Os dois, e não só um: o `because` compila `code` inline, e identificador
+// Todos, e não só um: o `because` compila `code` inline, e identificador
 // longo (`repertoire.liturgical_snapshot`) é palavra que não quebra. Quem
 // estoura a viewport de 360px é o case do Asafe, que é justamente o que a
-// versão anterior deste teste não abria.
-for (const slug of ['asafe', 'eaifez']) {
+// versão anterior deste teste não abria. A Ciranda acrescenta o outro jeito de
+// estourar: prints de 2560px de largura numa coluna de 320px.
+for (const slug of ['asafe', 'eaifez', 'ciranda']) {
   test(`o case do ${slug} cabe em 360px sem rolagem horizontal`, async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 740 });
     await page.goto(`/projetos/${slug}`);
@@ -113,9 +120,9 @@ test('a decisão longa respira em parágrafos', async ({ page }) => {
   expect(await primeira.locator('p').count()).toBeGreaterThan(1 + 1);
 });
 
-// Os dois cases estão capturados: nenhum dos dois pode mostrar buraco, e os
-// dois precisam ter as quatro imagens com dimensão declarada.
-for (const slug of ['asafe', 'eaifez']) {
+// Os três cases estão capturados: nenhum pode mostrar buraco, e todos precisam
+// ter as quatro imagens com dimensão declarada.
+for (const slug of ['asafe', 'eaifez', 'ciranda']) {
   test(`o case do ${slug} não mostra buraco nenhum`, async ({ page }) => {
     await page.goto(`/projetos/${slug}`);
     await expect(page.getByText(/\{\{/)).toHaveCount(0);
@@ -140,23 +147,67 @@ for (const slug of ['asafe', 'eaifez']) {
 test('a capa encabeça a galeria em vez de sumir dentro dela', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
 
-  // A do "E aí, fez?" é paisagem (1200×630, a imagem OG do app); a do Asafe é
-  // retrato de celular. As duas orientações convivem na mesma galeria, e em
-  // nenhuma das duas a capa pode sair MENOR que os prints que ela encabeça —
-  // que é o que acontecia com a capa retrato antes de ela ganhar teto próprio.
-  for (const slug of ['asafe', 'eaifez']) {
+  // A do "E aí, fez?" é paisagem (1200×630, a imagem OG do app), a da Ciranda
+  // também (a exibição na TV), e a do Asafe é retrato de celular. As duas
+  // orientações convivem na mesma galeria, e em nenhuma a capa pode sair MENOR
+  // que os prints que ela encabeça — que é o que acontecia com a capa retrato
+  // antes de ela ganhar teto próprio.
+  for (const slug of ['asafe', 'eaifez', 'ciranda']) {
     await page.goto(`/projetos/${slug}`);
     const imagens = page
       .locator('section', { has: page.getByRole('heading', { name: /^Prints do/ }) })
       .getByRole('img');
 
-    const caixa = async (n: number) => (await imagens.nth(n).boundingBox())!;
-    const capa = await caixa(0);
-    const print = await caixa(1);
-
-    expect(capa.width, `${slug}: capa mais estreita que o print`).toBeGreaterThan(print.width);
-    expect(print.width / print.height, `${slug}: print não é retrato`).toBeLessThan(1);
+    // Contra TODOS os prints, e não só contra o primeiro: com orientações
+    // misturadas o print mais largo não é necessariamente o de cima.
+    const caixas = await Promise.all(
+      (await imagens.all()).map(async (img) => (await img.boundingBox())!),
+    );
+    const [capa, ...prints] = caixas;
+    for (const print of prints) {
+      expect(capa.width, `${slug}: capa mais estreita que um print`).toBeGreaterThan(print.width);
+    }
   }
+});
+
+/**
+ * A galeria com as duas orientações misturadas — a Ciranda é o primeiro case
+ * assim, e o arranjo é derivado da MEDIDA declarada de cada print, nunca do
+ * slug: dois paisagens numa faixa, o retrato na faixa de baixo.
+ *
+ * O que se mede aqui é o motivo de a faixa existir. Numa grade única de três
+ * colunas de 272px, o retrato teria 585px de altura e os paisagens ao lado dele
+ * ~200px: a linha ganharia a altura do retrato e os outros dois boiariam no meio
+ * dela. Separados, cada um fica na linha da própria proporção — e nenhum dos
+ * dois arranjos tem sintoma no código, só na tela.
+ */
+test('a galeria mistura orientações sem que uma linha ganhe a altura da outra', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/projetos/ciranda');
+
+  const imagens = page
+    .locator('section', { has: page.getByRole('heading', { name: /^Prints do/ }) })
+    .getByRole('img');
+  const caixas = await Promise.all(
+    (await imagens.all()).map(async (img) => (await img.boundingBox())!),
+  );
+  const [capa, um, dois, tres] = caixas;
+
+  // Os dois paisagens dividem a mesma linha, e o retrato desce para a seguinte.
+  expect(um.y, 'os dois paisagens não estão na mesma linha').toBeCloseTo(dois.y, 0);
+  expect(tres.y).toBeGreaterThan(um.y + um.height);
+
+  // Cada faixa centralizada na coluna, e não encostada na esquerda: é o que a
+  // trilha `auto-fit` resolve e o `grid-cols-3` com `1fr` não resolveria para
+  // uma imagem só.
+  const centro = (c: { x: number; width: number }) => c.x + c.width / 2;
+  expect(centro(tres)).toBeCloseTo(centro(capa), 0);
+  expect(centro({ x: um.x, width: dois.x + dois.width - um.x })).toBeCloseTo(centro(capa), 0);
+
+  // E a capa continua encabeçando: mais larga que qualquer print sob ela.
+  for (const print of [um, dois, tres]) expect(capa.width).toBeGreaterThan(print.width);
 });
 
 /* ------------------------------------------------------------------------- *
@@ -182,7 +233,15 @@ test('a corrente do próximo case é derivada, não um par escrito à mão', asy
     '/projetos/eaifez',
   );
 
+  // O elo que se moveu sozinho ao a Ciranda entrar: o "E aí, fez?" fechava a
+  // corrente e passou a apontar para ela, sem uma linha de código.
   await page.goto('/projetos/eaifez');
+  await expect(fimDoCase(page).getByRole('link', { name: /próximo case/i })).toHaveAttribute(
+    'href',
+    '/projetos/ciranda',
+  );
+
+  await page.goto('/projetos/ciranda');
   const fim = fimDoCase(page);
   await expect(fim.getByRole('link', { name: /próximo case/i })).toHaveCount(0);
   await expect(fim.getByRole('link', { name: 'Ver todos os projetos' })).toHaveAttribute(
@@ -224,7 +283,8 @@ test('depois do salto, o Tab continua do topo e não do rodapé', async ({ page 
 
 test('os dois links do fim têm nomes distinguíveis e cabem em 360px', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
-  await page.goto('/projetos/eaifez');
+  // O último da corrente, que é onde o bloco tem só os dois links.
+  await page.goto('/projetos/ciranda');
 
   const nomes = await fimDoCase(page)
     .getByRole('link')
@@ -250,6 +310,7 @@ test('o acento não se apaga no fim do case', async ({ page }) => {
   for (const [slug, hex] of [
     ['asafe', '#2f3a5e'],
     ['eaifez', '#a83c55'],
+    ['ciranda', '#e8a33d'],
   ] as const) {
     await page.goto(`/projetos/${slug}`);
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));

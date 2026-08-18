@@ -130,7 +130,7 @@ test('não tem "voltar ao topo" — a página cabe numa tela', async ({ page }) 
   // página que cabe numa tela é ruído.
   //
   // É também o teste que impede a "simplificação" de mover o bloco para o
-  // rodapé: lá ele apareceria nas seis rotas de uma vez, inclusive aqui.
+  // rodapé: lá ele apareceria nas rotas do site de uma vez, inclusive aqui.
   await expect(page.getByRole('link', { name: 'Voltar ao topo' })).toHaveCount(0);
   await expect(page.getByRole('navigation', { name: 'Fim da página' })).toHaveCount(0);
 

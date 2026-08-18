@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { getAllProjects } from '@/lib/projects';
+
 /**
  * `/projetos` contra o export estático, que é o artefato que vai ao ar.
  *
@@ -87,7 +89,7 @@ test('as duas marcas da Opah IT não se parecem', async ({ page }) => {
   expect(larguraDoFio).toEqual(['0px', '0px', '0px', '2px']);
 });
 
-test('o acento dispara de verdade nos dois cards', async ({ page }) => {
+test('o acento dispara de verdade nos três cards', async ({ page }) => {
   await page.setViewportSize({ width: 1512, height: 900 });
   await page.goto('/projetos');
   const html = page.locator('html');
@@ -95,6 +97,7 @@ test('o acento dispara de verdade nos dois cards', async ({ page }) => {
   for (const [slug, hex] of [
     ['asafe', '#2f3a5e'],
     ['eaifez', '#a83c55'],
+    ['ciranda', '#e8a33d'],
   ] as const) {
     // `div[...]`: o próprio <html> ganha o atributo assim que o tracker o
     // elege, e um seletor solto casaria com os dois.
@@ -175,12 +178,13 @@ test('o card leva ao app e ao case', async ({ page }) => {
     'href',
     '/projetos/eaifez',
   );
-  // Os dois cards mostram print retrato — é o que faz as duas ofertas lerem
-  // como pares em vez de duas categorias de coisa.
+  // Todo card mostra print retrato — é o que faz as ofertas lerem como pares em
+  // vez de categorias diferentes de coisa. A contagem sai do conteúdo: um case
+  // novo entra nesta medida sozinho, em vez de passar por fora dela.
   const formatos = await page
     .locator('article img')
     .evaluateAll((els) => els.map((el) => el.getBoundingClientRect()).map((r) => r.height > r.width));
-  expect(formatos).toEqual([true, true]);
+  expect(formatos).toEqual((await getAllProjects()).map(() => true));
 });
 
 test('o "voltar ao topo" da /projetos leva ao topo de verdade', async ({ page }) => {
