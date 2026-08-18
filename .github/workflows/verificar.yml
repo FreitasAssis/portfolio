@@ -1,7 +1,7 @@
 name: Verificar
 
-# A `main` publica sozinha na Cloudflare. Sem este workflow, os 281 testes
-# unitários e os 133 de ponta a ponta só rodariam na máquina de quem editou — o
+# A `main` publica sozinha na Cloudflare. Sem este workflow, os 297 testes
+# unitários e os 142 de ponta a ponta só rodariam na máquina de quem editou — o
 # que não protege nada assim que o deploy é automático.
 #
 # Roda no pull request (que é onde ele bloqueia, via regra de proteção da branch)
@@ -38,7 +38,7 @@ jobs:
       # vai ao ar.
       - run: npm ci
 
-      # typecheck + lint + 281 unitários + build.
+      # typecheck + lint + 297 unitários + build.
       - run: npm run verify
 
       # Só o Chromium: é o único projeto declarado no playwright.config.ts.
