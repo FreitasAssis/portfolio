@@ -18,7 +18,7 @@ import sitemap, { STATIC_ROUTES } from '@/app/sitemap';
  * que não recebeu metadado nenhum.
  */
 
-/** As seis rotas do site, com o par de cada uma. Os cases vêm do conteúdo. */
+/** As rotas do site, com o par de cada uma. Os cases vêm do conteúdo. */
 async function todasAsRotas(): Promise<{ path: string; title: string; description: string }[]> {
   const projects = await getAllProjects();
   return [
@@ -35,12 +35,13 @@ async function todasAsRotas(): Promise<{ path: string; title: string; descriptio
 }
 
 describe('dicionário de metadados', () => {
-  it('cobre as seis rotas do site', async () => {
+  it('cobre as sete rotas do site', async () => {
     expect((await todasAsRotas()).map((r) => r.path)).toEqual([
       '/',
       '/projetos',
       '/projetos/asafe',
       '/projetos/eaifez',
+      '/projetos/ciranda',
       '/sobre',
       '/contato',
     ]);
@@ -133,12 +134,13 @@ describe('metadata por rota', () => {
 });
 
 describe('sitemap', () => {
-  it('lista as seis rotas, em URL absoluta sob o domínio', async () => {
+  it('lista as sete rotas, em URL absoluta sob o domínio', async () => {
     expect((await sitemap()).map((entry) => entry.url)).toEqual([
       'https://luizfreitas.com.br',
       'https://luizfreitas.com.br/projetos',
       'https://luizfreitas.com.br/projetos/asafe',
       'https://luizfreitas.com.br/projetos/eaifez',
+      'https://luizfreitas.com.br/projetos/ciranda',
       'https://luizfreitas.com.br/sobre',
       'https://luizfreitas.com.br/contato',
     ]);

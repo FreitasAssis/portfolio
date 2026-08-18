@@ -84,11 +84,24 @@
   --accent-ink: #fafafa;
 }
 
+/* O primeiro acento em que --accent e --accent-text NÃO são o mesmo hex, e é
+   este par que o token separado sempre existiu para resolver: o âmbar da marca
+   mede 2.07:1 sobre papel claro, e escurecê-lo até passar chega em #96601a, que
+   já não parece a marca. Então o âmbar fica no PREENCHIMENTO (capa, botão,
+   borda), com tinta escura por cima — que é o que o próprio app faz nos botões
+   dele —, e o texto sobre papel usa a variante escurecida. Medido em
+   tests/unit/contrast.test.ts. */
+[data-accent='ciranda'] {
+  --accent: #e8a33d;
+  --accent-text: #96601a;
+  --accent-ink: #14161a;
+}
+
 /* O seletor duplo não é redundância: o AccentTracker escreve `data-accent` no
    PRÓPRIO <html>, e um elemento não é descendente de si mesmo. Colapsar na forma
    descendente faz o override escuro nunca disparar — --accent-text fica no valor
-   do tema claro (1.71:1 asafe, 3.12:1 eaifez sobre papel escuro), sem sintoma
-   visível no código. */
+   do tema claro (1.71:1 asafe, 3.12:1 eaifez, 3.62:1 ciranda sobre papel
+   escuro), sem sintoma visível no código. */
 :root[data-theme='dark'][data-accent='asafe'],
 :root[data-theme='dark'] [data-accent='asafe'] {
   --accent-text: #8e9ac4;
@@ -96,6 +109,10 @@
 :root[data-theme='dark'][data-accent='eaifez'],
 :root[data-theme='dark'] [data-accent='eaifez'] {
   --accent-text: #e88ba0;
+}
+:root[data-theme='dark'][data-accent='ciranda'],
+:root[data-theme='dark'] [data-accent='ciranda'] {
+  --accent-text: #efb25c;
 }
 
 html {

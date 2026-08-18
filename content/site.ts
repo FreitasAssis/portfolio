@@ -75,7 +75,7 @@ export const META = {
   projetos: {
     title: 'Projetos e experiência — Luiz Freitas',
     description:
-      'Os dois apps que construí por conta própria, Asafe e E aí, fez?, e a trajetória desde 2017: IFRN, startup, consultoria e educação.',
+      'Os apps que construí por conta própria — Asafe, E aí, fez? e Ciranda — e a trajetória desde 2017: IFRN, startup, consultoria e educação.',
   },
 
   /** Cada informação daqui está, com estas palavras, em `content/about.ts`. */
@@ -125,7 +125,7 @@ export const OG_CARDS = {
   },
   projetos: {
     headline: 'Projetos e experiência',
-    tagline: 'Os dois apps que construí por conta própria, Asafe e E aí, fez?',
+    tagline: 'Os apps que construí por conta própria — Asafe, E aí, fez? e Ciranda',
   },
   sobre: {
     headline: 'Sobre',

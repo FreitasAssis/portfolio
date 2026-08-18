@@ -16,8 +16,12 @@ const DARK_PAPER = '#0E1013';
 const PAIRS = [
   { name: 'asafe / claro', fg: '#2F3A5E', bg: LIGHT_PAPER },
   { name: 'eaifez / claro', fg: '#A83C55', bg: LIGHT_PAPER },
+  // Não é o `#E8A33D` da marca: o âmbar mede 2.07:1 sobre papel claro. Aqui vai
+  // a variante escurecida que só o texto usa; o preenchimento continua âmbar.
+  { name: 'ciranda / claro', fg: '#96601A', bg: LIGHT_PAPER },
   { name: 'asafe / escuro', fg: '#8E9AC4', bg: DARK_PAPER },
   { name: 'eaifez / escuro', fg: '#E88BA0', bg: DARK_PAPER },
+  { name: 'ciranda / escuro', fg: '#EFB25C', bg: DARK_PAPER },
 ];
 
 describe('--accent-text passa AA em texto de tamanho normal', () => {
@@ -95,6 +99,30 @@ describe('CSS real: --accent-ink sobre o preenchimento --accent passa AA cheio',
     const tokens = resolveTokens(theme, accent);
     const ratio = contrastRatio(token(tokens, '--accent-ink'), token(tokens, '--accent'));
     expect(ratio).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe('CSS real: --accent só se separa de --accent-text quando precisa', () => {
+  /**
+   * Até a Ciranda os dois eram sempre o mesmo hex, e era fácil ler isso como
+   * regra. Não é: `--accent` é o PREENCHIMENTO (capa, botão, borda) e
+   * `--accent-text` é o único que vai a texto e link. O âmbar `#e8a33d` mede
+   * 2.07:1 sobre papel claro — reprova como texto e passa folgado como fundo,
+   * que é exatamente o caso em que os dois papéis exigem hex diferentes.
+   *
+   * O que este teste segura é a divergência GRATUITA: separar os dois sem
+   * necessidade dá ao case uma cor de texto que não é a da marca, sem ganho
+   * nenhum. Ou o hex é o mesmo, ou o preenchimento reprovaria como texto.
+   */
+  it.each([...ACCENTS])('%s', (accent) => {
+    const tokens = resolveTokens('claro', accent);
+    const fill = token(tokens, '--accent');
+    const text = token(tokens, '--accent-text');
+    if (fill === text) return;
+    expect(
+      contrastRatio(fill, token(tokens, '--paper')),
+      `${accent}: --accent e --accent-text divergem, mas o preenchimento passaria como texto`,
+    ).toBeLessThan(4.5);
   });
 });
 

@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { getAllProjects } from '@/lib/projects';
+
 /** Valor calculado de `--accent` no `<html>`, que é onde o AccentTracker escreve. */
 function accentVar(page: import('@playwright/test').Page) {
   return page.evaluate(() =>
@@ -61,12 +63,16 @@ test('o acento troca conforme o projeto na tela', async ({ page }) => {
   await page.locator('[data-accent="eaifez"]').scrollIntoViewIfNeeded();
   await expect(html).toHaveAttribute('data-accent', 'eaifez');
   expect(await accentVar(page)).toBe('#a83c55');
+
+  await page.locator('[data-accent="ciranda"]').scrollIntoViewIfNeeded();
+  await expect(html).toHaveAttribute('data-accent', 'ciranda');
+  expect(await accentVar(page)).toBe('#e8a33d');
 });
 
 test('a base volta a ser neutra fora dos projetos', async ({ page }) => {
   await page.goto('/');
-  await page.locator('[data-accent="eaifez"]').scrollIntoViewIfNeeded();
-  await expect(page.locator('html')).toHaveAttribute('data-accent', 'eaifez');
+  await page.locator('[data-accent="ciranda"]').scrollIntoViewIfNeeded();
+  await expect(page.locator('html')).toHaveAttribute('data-accent', 'ciranda');
 
   await page.getByRole('heading', { name: 'Contato' }).scrollIntoViewIfNeeded();
   await expect(page.locator('html')).not.toHaveAttribute('data-accent', /.*/);
@@ -128,10 +134,10 @@ test('o foco de teclado é visível nos CTAs', async ({ page }) => {
 test('o que ainda falta está escrito na tela, não escondido', async ({ page }) => {
   await page.goto('/');
   // `{{ }}` é a marca de asset que ainda não chegou; nenhuma sobra no site. A
-  // contagem de duas imagens é a dos dois cards: o retrato mora no /sobre e no
-  // /contato, e a home não tem foto.
+  // contagem sai do conteúdo, e é uma imagem por card: o retrato mora no /sobre
+  // e no /contato, e a home não tem foto.
   await expect(page.getByText(/\{\{ print:/)).toHaveCount(0);
-  await expect(page.locator('article img')).toHaveCount(2);
+  await expect(page.locator('article img')).toHaveCount((await getAllProjects()).length);
   await expect(page.getByText('{{ CV em PDF }}')).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Baixar o CV em PDF' })).toHaveAttribute(
     'href',
@@ -175,7 +181,7 @@ test('não há formulário de contato', async ({ page }) => {
  * Fim da página.
  *
  * O bloco de `components/EndNav.tsx` está na home, na `/projetos`, no `/sobre`
- * e nos dois cases — uma âncora estática, sem JS, sem movimento e sem elemento
+ * e nos cases — uma âncora estática, sem JS, sem movimento e sem elemento
  * flutuante. O `/contato` fica fora: ele cabe numa tela.
  * ------------------------------------------------------------------------- */
 

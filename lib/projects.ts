@@ -60,7 +60,7 @@ export type Project = {
   cover: Shot;
   /**
    * O print do CARD (home e `/projetos`), que não é necessariamente a capa: no
-   * card os dois projetos são vistos no mesmo instante, e um celular alto ao lado
+   * card os projetos são vistos no mesmo instante, e um celular alto ao lado
    * de um cartão largo lê como duas categorias de coisa em vez de duas ofertas
    * paralelas. Daí a exigência de retrato, validada abaixo. Omitir no frontmatter
    * é dizer "a capa serve"; não é opcional no tipo porque quem renderiza o card
@@ -384,7 +384,7 @@ export function parseProject(source: string, file: string): Project {
   if (!isShotPending(cardShot) && cardShot.width >= cardShot.height) {
     fail(
       file,
-      `\`cardShot\` precisa ser retrato (veio ${cardShot.width}×${cardShot.height}) — no card os dois projetos são vistos lado a lado e uma paisagem ao lado de um retrato lê como outra categoria de coisa. Declare \`cardShot\` com um print retrato quando a capa for paisagem.`,
+      `\`cardShot\` precisa ser retrato (veio ${cardShot.width}×${cardShot.height}) — no card os projetos são vistos lado a lado e uma paisagem ao lado de um retrato lê como outra categoria de coisa. Declare \`cardShot\` com um print retrato quando a capa for paisagem.`,
     );
   }
 

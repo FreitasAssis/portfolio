@@ -18,7 +18,15 @@ import { contrastRatio } from '@/lib/contrast';
  * em vez de "97".
  */
 
-const ROTAS = ['/', '/projetos', '/projetos/asafe', '/projetos/eaifez', '/sobre', '/contato'];
+const ROTAS = [
+  '/',
+  '/projetos',
+  '/projetos/asafe',
+  '/projetos/eaifez',
+  '/projetos/ciranda',
+  '/sobre',
+  '/contato',
+];
 const TEMAS = ['light', 'dark'] as const;
 
 /** O piso de largura que o site atende. */

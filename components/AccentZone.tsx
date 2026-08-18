@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
  * `app/globals.css` e no frontmatter de `content/projects/` — e os três são
  * comparados em `tests/unit/projects.test.ts`.
  */
-export const ACCENTS = ['asafe', 'eaifez'] as const;
+export const ACCENTS = ['asafe', 'eaifez', 'ciranda'] as const;
 
 export type Accent = (typeof ACCENTS)[number];
 

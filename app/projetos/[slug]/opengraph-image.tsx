@@ -1,4 +1,4 @@
-import { OG_CONTENT_TYPE, OG_SIZE, ogCard } from '@/lib/og';
+import { OG_CONTENT_TYPE, OG_SIZE, ogCard, ogInk } from '@/lib/og';
 import { getAllProjects, getProject } from '@/lib/projects';
 
 /** Sem esta linha o build estático para na rota; o porquê está em `app/robots.ts`. */
@@ -20,9 +20,10 @@ export async function generateStaticParams() {
 
 /**
  * O único card que não é neutro: aqui ele empresta o hex da marca, como a capa
- * do case. O `ink` é `#FAFAFA` fixo, e não derivado do tema — é o mesmo
- * `--accent-ink` que `app/globals.css` fixa por acento, porque o preenchimento
- * é a cor da marca e não vira com o tema.
+ * do case. O `ink` não vira com o tema — o preenchimento é a cor da marca e não
+ * vira —, mas também não é `#FAFAFA` fixo: quem escolhe é `ogInk`, pela medida
+ * de contraste contra o preenchimento, e o resultado é o mesmo `--accent-ink`
+ * que `app/globals.css` declara para cada acento.
  */
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -32,6 +33,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
     headline: project.name,
     tagline: project.tagline,
     fill: project.accent,
-    ink: '#FAFAFA',
+    ink: ogInk(project.accent),
   });
 }

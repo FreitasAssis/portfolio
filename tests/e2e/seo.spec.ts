@@ -38,12 +38,13 @@ const OUT = fileURLToPath(new URL('../../out/', import.meta.url));
  */
 const SITE = 'https://luizfreitas.com.br';
 
-/** As seis rotas do site, com o arquivo que cada uma produz no export. */
+/** As rotas do site, com o arquivo que cada uma produz no export. */
 const ROTAS = [
   { path: '/', file: 'index.html' },
   { path: '/projetos', file: 'projetos.html' },
   { path: '/projetos/asafe', file: 'projetos/asafe.html' },
   { path: '/projetos/eaifez', file: 'projetos/eaifez.html' },
+  { path: '/projetos/ciranda', file: 'projetos/ciranda.html' },
   { path: '/sobre', file: 'sobre.html' },
   { path: '/contato', file: 'contato.html' },
 ] as const;
@@ -86,7 +87,7 @@ function descriptions(): string[] {
 }
 
 test.describe('metadados por rota', () => {
-  test('nenhuma das seis rotas fica sem title', () => {
+  test('nenhuma das sete rotas fica sem title', () => {
     for (const [i, title] of titles().entries()) {
       expect(title, `sem <title> em ${ROTAS[i].path}`).not.toBe('');
     }
@@ -137,6 +138,9 @@ test.describe('metadados por rota', () => {
     );
     expect(lista[ROTAS.findIndex((r) => r.path === '/projetos/eaifez')]).toBe(
       'E aí, fez? — projeto de Luiz Freitas',
+    );
+    expect(lista[ROTAS.findIndex((r) => r.path === '/projetos/ciranda')]).toBe(
+      'Ciranda — projeto de Luiz Freitas',
     );
   });
 
@@ -244,7 +248,7 @@ test.describe('OG image por rota', () => {
     return new URL(url).pathname.replace(/^\//, '');
   }
 
-  test('nenhuma das seis rotas fica sem og:image', () => {
+  test('nenhuma das sete rotas fica sem og:image', () => {
     for (const { path, file } of ROTAS) {
       expect(metaContent(html(file), 'og:image'), `og:image de ${path}`).not.toBe('');
     }
@@ -271,6 +275,10 @@ test.describe('OG image por rota', () => {
     // mesmo `accent` do frontmatter, e não uma cor escrita à mão aqui.
     expect(png(arquivoDaImagem('projetos/asafe.html')).fill).toBe('#2F3A5E');
     expect(png(arquivoDaImagem('projetos/eaifez.html')).fill).toBe('#A83C55');
+    // O âmbar da Ciranda é o primeiro preenchimento claro do site: aqui se mede
+    // que o card saiu com ele, e `tests/unit/og.test.ts` mede que o texto por
+    // cima virou tinta escura em vez do `#FAFAFA` que os outros dois usam.
+    expect(png(arquivoDaImagem('projetos/ciranda.html')).fill).toBe('#E8A33D');
   });
 
   test('as quatro rotas sem projeto ficam na base neutra', () => {
@@ -318,7 +326,7 @@ test.describe('sitemap e robots', () => {
     expect(() => html('robots.txt')).not.toThrow();
   });
 
-  test('o sitemap é XML bem formado e lista as seis rotas', () => {
+  test('o sitemap é XML bem formado e lista as sete rotas', () => {
     const xml = html('sitemap.xml');
     expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
     expect(xml).toContain('http://www.sitemaps.org/schemas/sitemap/0.9');
@@ -329,6 +337,7 @@ test.describe('sitemap e robots', () => {
       'https://luizfreitas.com.br/projetos',
       'https://luizfreitas.com.br/projetos/asafe',
       'https://luizfreitas.com.br/projetos/eaifez',
+      'https://luizfreitas.com.br/projetos/ciranda',
       'https://luizfreitas.com.br/sobre',
       'https://luizfreitas.com.br/contato',
     ]);

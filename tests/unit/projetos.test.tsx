@@ -87,7 +87,7 @@ describe('/projetos — projetos próprios', () => {
     const nomes = within(secao(/projetos próprios/i))
       .getAllByRole('heading', { level: 3 })
       .map((h) => h.textContent);
-    expect(nomes).toEqual(['Asafe', 'E aí, fez?']);
+    expect(nomes).toEqual(['Asafe', 'E aí, fez?', 'Ciranda']);
   });
 
   it('cada card leva ao app e ao case, e empresta a própria cor', async () => {
@@ -110,12 +110,12 @@ describe('/projetos — projetos próprios', () => {
       Array.from(container.querySelectorAll('[data-accent]')).map((z) =>
         z.getAttribute('data-accent'),
       ),
-    ).toEqual(['asafe', 'eaifez']);
+    ).toEqual(['asafe', 'eaifez', 'ciranda']);
   });
 
   it('o card mostra o `cardShot` do conteúdo, retrato nos dois', async () => {
     // A orientação é decisão de conteúdo (frontmatter `cardShot`), não um
-    // `if (slug === ...)` no componente: os dois cards são vistos no mesmo
+    // `if (slug === ...)` no componente: os cards são vistos no mesmo
     // instante oferecendo a mesma coisa, e retrato ao lado de paisagem lê como
     // duas categorias de coisa em vez de duas ofertas paralelas.
     const { container } = await renderPagina();
@@ -299,7 +299,7 @@ const byCompany = (company: string) => experience.find((e) => e.company === comp
 
 describe('/projetos — fim da página', () => {
   it('fecha com o "voltar ao topo", no mesmo idioma dos cases', async () => {
-    // A página mais alta do site fora dos cases: dois cards grandes e cinco
+    // A página mais alta do site fora dos cases: os cards grandes e cinco
     // posições com `built`, `impact` e `stack` — 4,9 telas em 1440×900, e em
     // 360px muito mais. A forma vem de `components/EndNav.tsx`.
     await renderPagina();

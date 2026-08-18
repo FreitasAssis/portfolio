@@ -39,9 +39,9 @@ describe('carregador de projetos', () => {
     expect(p.accent).toMatch(/^#[0-9A-Fa-f]{6}$/);
   });
 
-  it('traz os dois cases publicados, e só eles', async () => {
+  it('traz os três cases publicados, e só eles', async () => {
     const all = await getAllProjects();
-    expect(all.map((p) => p.slug)).toEqual(['asafe', 'eaifez']);
+    expect(all.map((p) => p.slug)).toEqual(['asafe', 'eaifez', 'ciranda']);
   });
 
   it('o repo do "E aí, fez?" é privado — repoUrl vem nulo', async () => {
@@ -107,10 +107,14 @@ describe('próximo case', () => {
     expect(() => nextProject([fake('asafe', 1)], 'fantasma')).toThrow(/fantasma/);
   });
 
-  it('no conteúdo real, o Asafe leva ao "E aí, fez?" e ele fecha a corrente', async () => {
+  it('no conteúdo real, a corrente vai do Asafe à Ciranda e para nela', async () => {
+    // A prova de que a derivação vale no conteúdo publicado: a Ciranda entrou
+    // como um arquivo, e o elo do "E aí, fez?" — que antes fechava a corrente —
+    // passou a apontar para ela sozinho.
     const all = await getAllProjects();
     expect(nextProject(all, 'asafe')?.name).toBe('E aí, fez?');
-    expect(nextProject(all, 'eaifez')).toBeNull();
+    expect(nextProject(all, 'eaifez')?.name).toBe('Ciranda');
+    expect(nextProject(all, 'ciranda')).toBeNull();
   });
 });
 
@@ -416,13 +420,12 @@ describe('prints', () => {
   /* ----------------------------------------------------------------------- *
    * `cardShot` — o print do card, que não é necessariamente a capa.
    *
-   * As duas capas têm orientações diferentes, e de propósito: a do Asafe é
-   * retrato (uma tela de repertório) e a do "E aí, fez?" é a imagem OG do app,
-   * 1200×630 — o único elemento do app projetado para ser visto fora dele.
-   * Nas páginas de case isso é certo e fica. No card, não: ali os dois são
-   * vistos no mesmo instante oferecendo a mesma coisa, e um celular alto ao
-   * lado de um cartão largo faz o olho ler duas CATEGORIAS de coisa em vez de
-   * duas ofertas paralelas.
+   * As capas têm orientações diferentes, e de propósito: a do Asafe é retrato
+   * (uma tela de repertório), a do "E aí, fez?" é a imagem OG do app, 1200×630,
+   * e a da Ciranda é a exibição rodando numa TV. Nas páginas de case isso é
+   * certo e fica. No card, não: ali todas são vistas no mesmo instante
+   * oferecendo a mesma coisa, e um celular alto ao lado de um cartão largo faz o
+   * olho ler CATEGORIAS diferentes de coisa em vez de ofertas paralelas.
    * ----------------------------------------------------------------------- */
 
   it('o card do Asafe usa a capa; o do "E aí, fez?" usa o print retrato', async () => {
@@ -439,7 +442,18 @@ describe('prints', () => {
     );
   });
 
-  it('todo cardShot é retrato — é o que faz os dois cards lerem como pares', async () => {
+  it('o card da Ciranda é um retrato que não está na galeria', async () => {
+    // O terceiro arranjo possível do `cardShot`, e o que mostra que ele não é
+    // "ou a capa, ou um dos prints": a capa da Ciranda é paisagem e os três
+    // prints dela não incluem nenhum retrato da exibição rodando. O card recebe
+    // uma captura própria, que existe só para ele.
+    const ciranda = await getProject('ciranda');
+    expect(ciranda.cover.src).toBe('/projects/ciranda/cover.webp');
+    expect(ciranda.cardShot.src).toBe('/projects/ciranda/card.webp');
+    expect(ciranda.shots.map((s) => s.src)).not.toContain(ciranda.cardShot.src);
+  });
+
+  it('todo cardShot é retrato — é o que faz os cards lerem como pares', async () => {
     for (const p of await getAllProjects()) {
       const shot = p.cardShot;
       if (isShotPending(shot)) continue;
@@ -556,12 +570,12 @@ describe('dimensão dos prints', () => {
       }
     }
     // Se um dia todo mundo virar `{{ }}` de novo, o laço acima passa vazio e o
-    // teste vira decoração. Dois cases × (capa + card + 3 prints) é o piso.
-    expect(conferidos).toBe(10);
+    // teste vira decoração. Três cases × (capa + card + 3 prints) é o piso.
+    expect(conferidos).toBe(15);
   });
 
   it('nenhum print pendente sobrou', async () => {
-    // Os dois cases estão capturados. A regra por print continua valendo mesmo
+    // Os três cases estão capturados. A regra por print continua valendo mesmo
     // assim, e é ela que segura o próximo projeto.
     for (const p of await getAllProjects()) {
       for (const shot of todosOsPrints(p)) {
@@ -632,9 +646,16 @@ describe('acento', () => {
     expect(accentSlugsInCss()).toEqual(doConteudo);
   });
 
-  it.each(['asafe', 'eaifez'])('o hex do frontmatter de %s é o hex do CSS', async (slug) => {
+  // A lista sai da união `Accent`, e não escrita à mão: acento novo entra aqui
+  // no mesmo commit em que nasce, sem depender de alguém lembrar.
+  it.each([...ACCENTS])('o hex do frontmatter de %s é o hex do CSS', async (slug) => {
     // Divergir aqui renderiza a capa numa cor e o texto do case em outra, sem
     // nenhum erro: o frontmatter alimenta a capa e o CSS alimenta os tokens.
+    //
+    // Repare no par: `accent` é o PREENCHIMENTO (`--accent`) e `accentDark` é o
+    // texto no tema escuro (`--accent-text`). O texto no tema claro não está no
+    // frontmatter, e é por isso que a Ciranda pode ter âmbar de fundo e âmbar
+    // escurecido em texto sem que nada aqui reclame.
     const p = await getProject(slug);
     expect(p.accent.toLowerCase()).toBe(token(resolveTokens('claro', slug), '--accent'));
     expect(p.accentDark.toLowerCase()).toBe(
