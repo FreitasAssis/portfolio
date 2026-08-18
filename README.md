@@ -24,7 +24,7 @@ O acento não é um hex só: `--accent` é **preenchimento** (capa, botão, bord
 o único que vai a texto e link. Os dois primeiros projetos usavam o mesmo valor nos dois papéis,
 o que fazia a separação parecer enfeite; o âmbar da Ciranda é o caso em que ela morde — reprova
 como texto sobre papel claro e passa folgado como fundo. `tests/unit/contrast.test.ts` resolve a
-cascata do CSS e mede os quatro pares de cada acento.
+cascata do CSS e mede, nos dois temas, todo par que cada acento produz.
 
 **Projeto novo é um arquivo.** Um `.mdx` em `content/projects/` com o frontmatter completo, e
 mais nada. O carregador (`lib/projects.ts`) valida campo a campo e **quebra o build** citando
