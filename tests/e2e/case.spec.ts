@@ -16,7 +16,7 @@ test('o case segue o template fixo, na ordem', async ({ page }) => {
     'Decisões',
     'Stack',
     'Estado',
-    'Prints do Asafe',
+    'Prints do projeto Asafe',
   ]);
 });
 
@@ -128,7 +128,7 @@ for (const slug of ['asafe', 'eaifez', 'ciranda']) {
     await expect(page.getByText(/\{\{/)).toHaveCount(0);
 
     const galeria = page.locator('section', {
-      has: page.getByRole('heading', { name: /^Prints do/ }),
+      has: page.getByRole('heading', { name: /^Prints do projeto/ }),
     });
     const imagens = galeria.getByRole('img');
     await expect(imagens).toHaveCount(4);
@@ -155,7 +155,7 @@ test('a capa encabeça a galeria em vez de sumir dentro dela', async ({ page }) 
   for (const slug of ['asafe', 'eaifez', 'ciranda']) {
     await page.goto(`/projetos/${slug}`);
     const imagens = page
-      .locator('section', { has: page.getByRole('heading', { name: /^Prints do/ }) })
+      .locator('section', { has: page.getByRole('heading', { name: /^Prints do projeto/ }) })
       .getByRole('img');
 
     // Contra TODOS os prints, e não só contra o primeiro: com orientações
@@ -188,7 +188,7 @@ test('a galeria mistura orientações sem que uma linha ganhe a altura da outra'
   await page.goto('/projetos/ciranda');
 
   const imagens = page
-    .locator('section', { has: page.getByRole('heading', { name: /^Prints do/ }) })
+    .locator('section', { has: page.getByRole('heading', { name: /^Prints do projeto/ }) })
     .getByRole('img');
   const caixas = await Promise.all(
     (await imagens.all()).map(async (img) => (await img.boundingBox())!),

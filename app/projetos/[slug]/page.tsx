@@ -160,7 +160,10 @@ function faixas(shots: readonly Project['cover'][]) {
 function Gallery({ project }: { readonly project: Project }) {
   return (
     <Container as="section" width="wide" className="py-14">
-      <h2 className="sr-only">Prints do {project.name}</h2>
+      {/* "do projeto X", e não "do X": o artigo tem gênero e o nome do projeto
+          vem do frontmatter — "Prints do Ciranda" sai errado, e num título
+          sr-only ninguém vê o erro, só quem usa leitor de tela ouve. */}
+      <h2 className="sr-only">Prints do projeto {project.name}</h2>
 
       {/* O teto da capa retrato é maior que o dos prints (20rem contra os 17rem a
           que a coluna chega em `lg`) porque o strip cresce com a coluna e ela
